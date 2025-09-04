@@ -1,0 +1,1 @@
+# Invitations commands tests package
