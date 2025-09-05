@@ -9,25 +9,29 @@ In the routers directory:
 * Define an APIRouter instance with:
 * prefix="/<model_plural>" or for nested: prefix="/workspaces/{workspace_id}/<model_plural>"
 * tags=["<Model>"]
-* Implement the following endpoints:
+
+Endpoints:
+
 * GET / – list all items, returns { "data": [...] }
 * GET /{id} – retrieve a specific item by ID
 * POST / – create a new item
 * PUT /{id} – update an existing item
 * DELETE /{id} – delete an item
+
+Implementation:
+
 * Use the corresponding service (<Model>Service) for database interaction
 * Use Pydantic schemas for validation (<Model>CreateRequest, <Model>Update)
-* Do not include workspace_id in the request body schema if it’s passed via the URL
+* For nested resources, do not include the parent_id (e.g., workspace_id) in the request body schema if it’s in the URL
 
 Nested Resources
 
-For workspace-scoped routes:
-* Use prefix="/workspaces/{workspace_id}/<resource_plural>"
-* Accept workspace_id as a path parameter in each route function
-* Always call get_workspace_by_id(workspace_id, db) at the start of the route to:
-* Validate the workspace exists
-* Enforce access control and scope
-* Inject workspace_id manually into service-layer calls, not the request body
+* Use prefix="/<parent_plural>/{parent_id}/<resource_plural>"
+* Accept parent_id as a path parameter in each route function
+* Always call a scoped dependency like get_workspace_by_id(workspace_id, db) at the start of the route to:
+  * Validate the parent exists
+  * Enforce access control and scope
+* Inject parent_id manually into service-layer calls, not the request body
 
 ```python
 @router.post("/", response_model=CredentialRead)

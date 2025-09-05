@@ -14,6 +14,8 @@ from .routers import (
     project,
     system,
     invitation,
+    entry,
+    comment,
 )
 from .ws import status
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -70,6 +72,9 @@ def create_app(testing: bool = False, auth_middleware=None) -> FastAPI:
     app.include_router(membership.workspace_membership_router)
     app.include_router(membership.membership_router)
     app.include_router(project.router)
+    app.include_router(entry.router)
+    app.include_router(comment.router)
+    app.include_router(comment.standalone_router)
     app.include_router(status.router)
     app.include_router(system.router)
     app.include_router(invitation.router)

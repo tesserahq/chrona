@@ -13,6 +13,10 @@ from app.services.project_service import ProjectService
 from app.models.project import Project
 from app.models.project_membership import ProjectMembership
 from app.services.project_membership_service import ProjectMembershipService
+from app.services.entry_service import EntryService
+from app.models.entry import Entry
+from app.services.comment_service import CommentService
+from app.models.comment import Comment
 
 
 def get_workspace_by_id(
@@ -124,3 +128,47 @@ def get_project_membership_by_id(
     if pm is None or pm.project_id != project.id:
         raise HTTPException(status_code=404, detail="Project membership not found")
     return pm
+
+
+def get_entry_by_id(
+    entry_id: UUID,
+    db: Session = Depends(get_db),
+) -> Entry:
+    """FastAPI dependency to get an entry by ID.
+
+    Args:
+        entry_id: The UUID of the entry to retrieve
+        db: Database session dependency
+
+    Returns:
+        Entry: The retrieved entry
+
+    Raises:
+        HTTPException: If the entry is not found
+    """
+    entry = EntryService(db).get_entry(entry_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    return entry
+
+
+def get_comment_by_id(
+    comment_id: UUID,
+    db: Session = Depends(get_db),
+) -> Comment:
+    """FastAPI dependency to get a comment by ID.
+
+    Args:
+        comment_id: The UUID of the comment to retrieve
+        db: Database session dependency
+
+    Returns:
+        Comment: The retrieved comment
+
+    Raises:
+        HTTPException: If the comment is not found
+    """
+    comment = CommentService(db).get_comment(comment_id)
+    if comment is None:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    return comment
