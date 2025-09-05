@@ -30,3 +30,4 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
     memberships = relationship(
         "ProjectMembership", back_populates="project", cascade="all, delete-orphan"
     )
+    entries = relationship("Entry", back_populates="project")
