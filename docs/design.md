@@ -60,13 +60,13 @@ erDiagram
     uuid id PK
     uuid project_id FK
     uuid author_id FK
-    string source      // jira, github_issue, github_pr, etc.
-    string external_id // id in source system
+    string source
+    string external_id
     string title
     text body
     string[] tags
     string[] labels
-    jsonb metadata     // source-specific fields
+    jsonb metadata
     datetime created_at
     datetime updated_at
   }
@@ -76,7 +76,7 @@ erDiagram
     uuid entry_id FK
     uuid author_id FK
     text body
-    jsonb metadata     // source-specific fields
+    jsonb metadata
     datetime created_at
     datetime updated_at
   }
@@ -87,7 +87,7 @@ erDiagram
     uuid id PK
     string source
     uuid requested_by FK
-    string status // queued, processing, completed, partial, failed
+    string status
     int received_count
     int success_count
     int failure_count
@@ -100,15 +100,15 @@ erDiagram
   IMPORT_ITEMS {
     uuid id PK
     uuid job_id FK
-    string kind // entry | comment
+    string kind
     string source
     string external_id
     jsonb raw_payload
-    uuid created_entry_id FK // nullable
-    uuid created_comment_id FK // nullable
-    string status // pending, succeeded, failed
-    string error_code // nullable
-    string error_message // nullable
+    uuid created_entry_id FK
+    uuid created_comment_id FK
+    string status
+    string error_code
+    string error_message
     datetime created_at
     datetime updated_at
   }

@@ -1,6 +1,3 @@
-
-
-
 # Database Design
 
 Chrona stores a large amount of structured and semi-structured data coming from different sources such as Jira, GitHub, and other services. This data is written frequently and queried for summaries, project updates, and dashboards.
