@@ -23,13 +23,11 @@ class Entry(Base, TimestampMixin, SoftDeleteMixin):
     external_id = Column(String, nullable=False)
     tags = Column(ARRAY(String), default=list, nullable=False)
     labels = Column(JSONB, default=dict, nullable=False)  # Dictionary of labels
-    meta_data = Column('meta_data', JSONB, default=dict, nullable=False)  # Dictionary of metadata
-    author_id = Column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
-    )
-    project_id = Column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
-    )
+    meta_data = Column(
+        "meta_data", JSONB, default=dict, nullable=False
+    )  # Dictionary of metadata
+    author_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
 
     # Relationships
     project = relationship("Project", back_populates="entries")

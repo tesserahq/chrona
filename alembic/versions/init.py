@@ -218,7 +218,7 @@ def upgrade() -> None:
         ["id"],
         ondelete="CASCADE",
     )
-    
+
     op.create_table(
         "entries",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),

@@ -42,5 +42,3 @@ class EntryService(SoftDeleteService[Entry]):
         query = self.db.query(Entry)
         query = apply_filters(query, Entry, filters)
         return [EntrySchema.model_validate(entry) for entry in query.all()]
-
-

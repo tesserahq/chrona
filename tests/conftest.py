@@ -21,6 +21,7 @@ pytest_plugins = [
     "tests.fixtures.membership_fixtures",
     "tests.fixtures.project_membership_fixtures",
     "tests.fixtures.invitation_fixtures",
+    "tests.fixtures.entry_fixtures",
 ]
 
 logger = logging.getLogger(__name__)

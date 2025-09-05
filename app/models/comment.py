@@ -18,15 +18,13 @@ class Comment(Base, TimestampMixin, SoftDeleteMixin):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     body = Column(String, nullable=False)
-    author_id = Column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
-    )
-    entry_id = Column(
-        UUID(as_uuid=True), ForeignKey("entries.id"), nullable=False
-    )
+    author_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    entry_id = Column(UUID(as_uuid=True), ForeignKey("entries.id"), nullable=False)
     tags = Column(ARRAY(String), default=list, nullable=False)
     labels = Column(JSONB, default=dict, nullable=False)  # Dictionary of labels
-    meta_data = Column('meta_data', JSONB, default=dict, nullable=False)  # Dictionary of metadata
+    meta_data = Column(
+        "meta_data", JSONB, default=dict, nullable=False
+    )  # Dictionary of metadata
 
     # Relationships
     author = relationship("User", back_populates="comments")

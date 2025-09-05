@@ -70,5 +70,3 @@ class EntrySearchFilters(BaseModel):
 
 class EntrySearchResponse(BaseModel):
     data: List[Entry]
-
-
