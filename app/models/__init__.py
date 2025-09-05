@@ -5,6 +5,13 @@ from app.models.membership import Membership
 from app.models.app_setting import AppSetting
 from app.models.invitation import Invitation
 from app.models.project_membership import ProjectMembership
+from app.models.source import Source
+from app.models.source_author import SourceAuthor
+from app.models.entry import Entry
+from app.models.comment import Comment
+from app.models.import_request import ImportRequest
+from app.models.import_request_item import ImportRequestItem
+from app.models.author import Author
 
 
 __all__ = [
@@ -15,4 +22,11 @@ __all__ = [
     "Project",
     "Invitation",
     "ProjectMembership",
+    "Source",
+    "SourceAuthor",
+    "Entry",
+    "Comment",
+    "ImportRequest",
+    "ImportRequestItem",
+    "Author",
 ]

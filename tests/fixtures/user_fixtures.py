@@ -13,7 +13,7 @@ def test_user(db, faker):
         "first_name": faker.first_name(),
         "last_name": faker.last_name(),
         "provider": "google",
-        "external_id": faker.uuid4(),
+        "external_id": str(faker.uuid4()),
     }
 
     user = User(**user_data)
@@ -35,7 +35,7 @@ def setup_user(db, faker):
         "first_name": faker.first_name(),
         "last_name": faker.last_name(),
         "provider": "google",
-        "external_id": faker.uuid4(),
+        "external_id": str(faker.uuid4()),
     }
 
     user = User(**user_data)
@@ -57,7 +57,7 @@ def setup_another_user(db, faker):
         "first_name": faker.first_name(),
         "last_name": faker.last_name(),
         "provider": "google",
-        "external_id": faker.uuid4(),
+        "external_id": str(faker.uuid4()),
     }
 
     user = User(**user_data)

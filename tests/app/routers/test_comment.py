@@ -19,7 +19,7 @@ def test_list_comments(client, setup_comment):
         if item["id"] == str(comment.id):
             comment_found = True
             assert item["body"] == comment.body
-            assert item["author_id"] == str(comment.author_id)
+            assert item["source_author_id"] == str(comment.source_author_id)
             assert item["entry_id"] == str(comment.entry_id)
             break
     assert comment_found
@@ -42,7 +42,7 @@ def test_get_comment(client, setup_comment):
     data = response.json()
     assert data["id"] == str(comment.id)
     assert data["body"] == comment.body
-    assert data["author_id"] == str(comment.author_id)
+    assert data["source_author_id"] == str(comment.source_author_id)
     assert data["entry_id"] == str(comment.entry_id)
 
 
@@ -55,37 +55,39 @@ def test_get_comment_not_found(client):
     assert response.json()["detail"] == "Comment not found"
 
 
-def test_create_comment(client, setup_user, setup_entry):
+def test_create_comment(client, setup_source_author, setup_entry):
     """Test POST /entries/{entry_id}/comments endpoint."""
-    user = setup_user
+    source_author = setup_source_author
     entry = setup_entry
 
     comment_data = {
         "body": "This is a test comment",
-        "author_id": str(user.id),
+        "source_author_id": str(source_author.id),
+        "source_id": str(entry.source_id),
         "tags": ["feedback"],
         "labels": {"priority": "medium"},
         "meta_data": {"source": "test"},
+        "entry_id": str(entry.id),
     }
 
     response = client.post(f"/entries/{entry.id}/comments", json=comment_data)
     assert response.status_code == 201
     data = response.json()
     assert data["body"] == comment_data["body"]
-    assert data["author_id"] == str(user.id)
+    assert data["source_author_id"] == str(source_author.id)
     assert data["entry_id"] == str(entry.id)
     assert "feedback" in data["tags"]
     assert data["labels"]["priority"] == "medium"
 
 
-def test_create_comment_entry_not_found(client, setup_user):
+def test_create_comment_entry_not_found(client, setup_source_author):
     """Test POST /entries/{entry_id}/comments with non-existent entry."""
-    user = setup_user
+    source_author = setup_source_author
     fake_entry_id = uuid4()
 
     comment_data = {
         "body": "This is a test comment",
-        "author_id": str(user.id),
+        "source_author_id": str(source_author.id),
     }
 
     response = client.post(f"/entries/{fake_entry_id}/comments", json=comment_data)
@@ -175,14 +177,16 @@ def test_list_comments_pagination(client, setup_comment):
     assert isinstance(data["data"], list)
 
 
-def test_create_comment_auto_sets_entry_id(client, setup_user, setup_entry):
+def test_create_comment_auto_sets_entry_id(client, setup_source_author, setup_entry):
     """Test that creating a comment automatically sets the entry_id from the URL."""
-    user = setup_user
     entry = setup_entry
+    source_author = setup_source_author
 
     comment_data = {
         "body": "This is a test comment",
-        "author_id": str(user.id),
+        "source_author_id": str(source_author.id),
+        "source_id": str(entry.source_id),
+        "entry_id": str(entry.id),
         # Note: not providing entry_id in the request body
     }
 

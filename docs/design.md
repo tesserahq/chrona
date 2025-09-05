@@ -80,10 +80,10 @@ erDiagram
     datetime created_at
     datetime updated_at
   }
-  IMPORT_JOBS ||--o{ IMPORT_ITEMS : "has"
+  IMPORT_REQUESTS ||--o{ IMPORT_ITEMS : "has"
   IMPORT_ITEMS ||--o{ IMPORT_ERRORS : "has"
 
-  IMPORT_JOBS {
+  IMPORT_REQUESTS {
     uuid id PK
     string source
     uuid requested_by FK
