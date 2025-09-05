@@ -1,0 +1,44 @@
+from typing import List, Optional, Dict, Any
+from uuid import UUID
+from sqlalchemy.orm import Session
+
+from app.models.entry import Entry
+from app.schemas.entry import EntryCreate, EntryUpdate, Entry as EntrySchema
+from app.services.soft_delete_service import SoftDeleteService
+from app.utils.db.filtering import apply_filters
+
+
+class EntryService(SoftDeleteService[Entry]):
+    def __init__(self, db: Session):
+        super().__init__(db, Entry)
+
+    def get_entry(self, entry_id: UUID) -> Optional[Entry]:
+        return self.db.query(Entry).filter(Entry.id == entry_id).first()
+
+    def get_entries(self, skip: int = 0, limit: int = 100) -> List[Entry]:
+        return self.db.query(Entry).offset(skip).limit(limit).all()
+
+    def create_entry(self, entry: EntryCreate) -> Entry:
+        db_entry = Entry(**entry.model_dump())
+        self.db.add(db_entry)
+        self.db.commit()
+        self.db.refresh(db_entry)
+        return db_entry
+
+    def update_entry(self, entry_id: UUID, entry: EntryUpdate) -> Optional[Entry]:
+        db_entry = self.db.query(Entry).filter(Entry.id == entry_id).first()
+        if db_entry:
+            update_data = entry.model_dump(exclude_unset=True)
+            for key, value in update_data.items():
+                setattr(db_entry, key, value)
+            self.db.commit()
+            self.db.refresh(db_entry)
+        return db_entry
+
+    def delete_entry(self, entry_id: UUID) -> bool:
+        return self.delete_record(entry_id)
+
+    def search(self, filters: Dict[str, Any]) -> List[EntrySchema]:
+        query = self.db.query(Entry)
+        query = apply_filters(query, Entry, filters)
+        return [EntrySchema.model_validate(entry) for entry in query.all()]

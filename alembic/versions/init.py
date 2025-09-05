@@ -219,6 +219,70 @@ def upgrade() -> None:
         ondelete="CASCADE",
     )
 
+    op.create_table(
+        "entries",
+        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("title", sa.String(), nullable=False),
+        sa.Column("body", sa.String(), nullable=True),
+        sa.Column("source", sa.String(), nullable=False),
+        sa.Column("external_id", sa.String(), nullable=False),
+        sa.Column("tags", postgresql.ARRAY(sa.String()), nullable=False),
+        sa.Column("labels", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("meta_data", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("author_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("project_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_foreign_key(
+        "fk_entries_author_id",
+        "entries",
+        "users",
+        ["author_id"],
+        ["id"],
+        ondelete="CASCADE",
+    )
+    op.create_foreign_key(
+        "fk_entries_project_id",
+        "entries",
+        "projects",
+        ["project_id"],
+        ["id"],
+        ondelete="CASCADE",
+    )
+    op.create_table(
+        "comments",
+        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("body", sa.String(), nullable=False),
+        sa.Column("tags", postgresql.ARRAY(sa.String()), nullable=False),
+        sa.Column("labels", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("meta_data", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("author_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("entry_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_foreign_key(
+        "fk_comments_author_id",
+        "comments",
+        "users",
+        ["author_id"],
+        ["id"],
+        ondelete="CASCADE",
+    )
+    op.create_foreign_key(
+        "fk_comments_entry_id",
+        "comments",
+        "entries",
+        ["entry_id"],
+        ["id"],
+        ondelete="CASCADE",
+    )
+
 
 def downgrade() -> None:
     # Drop the partial unique index
@@ -230,3 +294,5 @@ def downgrade() -> None:
     op.drop_table("memberships")
     op.drop_table("project_memberships")
     op.drop_column("invitations", "projects")
+    op.drop_table("entries")
+    op.drop_table("comments")
