@@ -7,6 +7,7 @@ import uuid
 
 from app.db import Base
 from app.models.membership import Membership
+from app.models.comment import Comment
 from app.models.project_membership import ProjectMembership
 
 
@@ -53,6 +54,8 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    entries = relationship("Entry", back_populates="author")
+    comments = relationship("Comment", back_populates="author")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
