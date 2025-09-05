@@ -19,17 +19,18 @@ class Entry(Base, TimestampMixin, SoftDeleteMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String, nullable=False)
     body = Column(String, nullable=True)
-    source = Column(String, nullable=False)
+    source_id = Column(UUID(as_uuid=True), ForeignKey("sources.id"), nullable=False)
     external_id = Column(String, nullable=False)
     tags = Column(ARRAY(String), default=list, nullable=False)
     labels = Column(JSONB, default=dict, nullable=False)  # Dictionary of labels
-    meta_data = Column(
-        "meta_data", JSONB, default=dict, nullable=False
-    )  # Dictionary of metadata
-    author_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    meta_data = Column(JSONB, default=dict, nullable=False)  # Dictionary of metadata
+    source_author_id = Column(
+        UUID(as_uuid=True), ForeignKey("source_authors.id"), nullable=False
+    )
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
 
     # Relationships
+    source_author = relationship("SourceAuthor", back_populates="entries")
     project = relationship("Project", back_populates="entries")
-    author = relationship("User", back_populates="entries")
+    source = relationship("Source", back_populates="entries")
     comments = relationship("Comment", back_populates="entry")

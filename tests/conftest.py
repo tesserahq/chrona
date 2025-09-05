@@ -23,6 +23,10 @@ pytest_plugins = [
     "tests.fixtures.invitation_fixtures",
     "tests.fixtures.entry_fixtures",
     "tests.fixtures.comment_fixtures",
+    "tests.fixtures.import_request_fixtures",
+    "tests.fixtures.author_fixtures",
+    "tests.fixtures.source_fixtures",
+    "tests.fixtures.source_author_fixtures",
 ]
 
 logger = logging.getLogger(__name__)

@@ -6,10 +6,10 @@ from typing import Literal
 
 
 class EntryBase(BaseModel):
-    title: str = Field(..., min_length=1, max_length=200)
+    title: str = Field(..., min_length=1)
     body: Optional[str] = Field(None)
-    source: str = Field(..., min_length=1)
-    external_id: str = Field(..., min_length=1)
+    source_id: UUID = Field(...)
+    external_id: str = Field(...)
     tags: Optional[List[str]] = Field(
         None, description="Optional list of tags associated with the entry."
     )
@@ -19,7 +19,7 @@ class EntryBase(BaseModel):
     meta_data: Optional[Dict[str, Any]] = Field(
         None, description="Optional metadata dictionary for the entry."
     )
-    author_id: Optional[UUID] = Field(
+    source_author_id: Optional[UUID] = Field(
         None, description="UUID of the author (user) who created the entry."
     )
     project_id: Optional[UUID] = Field(
@@ -32,9 +32,9 @@ class EntryCreate(EntryBase):
 
 
 class EntryUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=200)
+    title: Optional[str] = Field(None)
     body: Optional[str] = None
-    source: Optional[str] = None
+    source_id: Optional[UUID] = None
     external_id: Optional[str] = None
     tags: Optional[List[str]] = None
     labels: Optional[Dict[str, Any]] = None
@@ -62,9 +62,9 @@ class SearchOperator(BaseModel):
 
 class EntrySearchFilters(BaseModel):
     title: Optional[Union[str, SearchOperator]] = None
-    source: Optional[Union[str, SearchOperator]] = None
+    source_id: Optional[Union[UUID, SearchOperator]] = None
     external_id: Optional[Union[str, SearchOperator]] = None
-    author_id: Optional[Union[UUID, SearchOperator]] = None
+    source_author_id: Optional[Union[UUID, SearchOperator]] = None
     project_id: Optional[Union[UUID, SearchOperator]] = None
 
 

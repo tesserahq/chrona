@@ -1,24 +1,35 @@
 from uuid import uuid4
-from sqlalchemy.orm import Session
 
-from app.schemas.comment import CommentUpdate
+from app.schemas.comment import CommentCreate, CommentUpdate
 from app.services.comment_service import CommentService
 
 
-def test_create_comment(db: Session, setup_comment):
+def test_create_comment(db, setup_source_author, setup_entry):
     service = CommentService(db)
-    comment = setup_comment
+    source_author = setup_source_author
+    entry = setup_entry
+
+    comment = CommentCreate(
+        body="This is a test comment",
+        source_author_id=str(source_author.id),
+        entry_id=str(entry.id),
+        tags=["feedback"],
+        labels={"priority": "medium"},
+        meta_data={"source": "test"},
+    )
+
+    comment = service.create_comment(comment)
 
     assert comment.id is not None
     assert comment.body is not None
-    assert comment.author_id is not None
+    assert comment.source_author_id is not None
     assert comment.entry_id is not None
     assert "feedback" in comment.tags
     assert comment.labels["priority"] == "medium"
     assert comment.meta_data["source"] == "test"
 
 
-def test_get_comment(db: Session, setup_comment):
+def test_get_comment(db, setup_comment):
     service = CommentService(db)
     comment = setup_comment
 
@@ -27,7 +38,7 @@ def test_get_comment(db: Session, setup_comment):
     assert retrieved.id == comment.id
 
 
-def test_get_comments(db: Session, setup_comment):
+def test_get_comments(db, setup_comment):
     service = CommentService(db)
     comment = setup_comment
     comments = service.get_comments()
@@ -35,7 +46,7 @@ def test_get_comments(db: Session, setup_comment):
     assert len(comments) >= 1
 
 
-def test_update_comment(db: Session, setup_comment):
+def test_update_comment(db, setup_comment):
     service = CommentService(db)
     comment = setup_comment
 
@@ -47,7 +58,7 @@ def test_update_comment(db: Session, setup_comment):
     assert "updated" in updated.tags
 
 
-def test_delete_comment(db: Session, setup_comment):
+def test_delete_comment(db, setup_comment):
     service = CommentService(db)
     comment = setup_comment
 
@@ -55,7 +66,7 @@ def test_delete_comment(db: Session, setup_comment):
     assert service.get_comment(comment.id) is None
 
 
-def test_search_comments(db: Session, setup_comment):
+def test_search_comments(db, setup_comment):
     service = CommentService(db)
     comment = setup_comment
 
@@ -70,7 +81,7 @@ def test_search_comments(db: Session, setup_comment):
     assert len(results) >= 1
 
     # filter by author_id
-    results = service.search({"author_id": comment.author_id})
+    results = service.search({"source_author_id": comment.source_author_id})
     assert len(results) >= 1
 
     # filter by entry_id
@@ -78,5 +89,5 @@ def test_search_comments(db: Session, setup_comment):
     assert len(results) >= 1
 
     # no match case
-    results = service.search({"author_id": str(uuid4())})
+    results = service.search({"source_author_id": str(uuid4())})
     assert len(results) == 0

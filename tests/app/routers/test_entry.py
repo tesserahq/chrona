@@ -19,7 +19,7 @@ def test_list_entries(client, setup_entry):
             entry_found = True
             assert item["title"] == entry.title
             assert item["body"] == entry.body
-            assert item["author_id"] == str(entry.author_id)
+            assert item["source_author_id"] == str(entry.source_author_id)
             assert item["project_id"] == str(entry.project_id)
             break
     assert entry_found
@@ -35,7 +35,7 @@ def test_get_entry(client, setup_entry):
     assert data["id"] == str(entry.id)
     assert data["title"] == entry.title
     assert data["body"] == entry.body
-    assert data["author_id"] == str(entry.author_id)
+    assert data["source_author_id"] == str(entry.source_author_id)
     assert data["project_id"] == str(entry.project_id)
 
 
@@ -47,20 +47,21 @@ def test_get_entry_not_found(client):
     assert response.json()["detail"] == "Entry not found"
 
 
-def test_create_entry(client, setup_user, setup_project):
+def test_create_entry(client, setup_project, setup_source, setup_source_author):
     """Test POST /entries endpoint."""
-    user = setup_user
     project = setup_project
+    source = setup_source
+    source_author = setup_source_author
 
     entry_data = {
         "title": "Test Entry",
         "body": "This is a test entry body",
-        "source": "test",
+        "source_id": str(source.id),
         "external_id": str(uuid4()),
         "tags": ["test", "example"],
         "labels": {"priority": "high"},
         "meta_data": {"created_by": "test"},
-        "author_id": str(user.id),
+        "source_author_id": str(source_author.id),
         "project_id": str(project.id),
     }
 
@@ -69,7 +70,7 @@ def test_create_entry(client, setup_user, setup_project):
     data = response.json()
     assert data["title"] == entry_data["title"]
     assert data["body"] == entry_data["body"]
-    assert data["author_id"] == str(user.id)
+    assert data["source_author_id"] == str(source_author.id)
     assert data["project_id"] == str(project.id)
     assert "test" in data["tags"]
     assert data["labels"]["priority"] == "high"
@@ -83,6 +84,7 @@ def test_create_entry_invalid_data(client):
     }
 
     response = client.post("/entries", json=invalid_data)
+    print(response.json())
     assert response.status_code == 422  # Validation error
 
 
@@ -167,7 +169,7 @@ def test_search_entries_by_author(client, setup_entry):
     """Test POST /entries/search by author_id."""
     entry = setup_entry
 
-    search_filters = {"author_id": str(entry.author_id)}
+    search_filters = {"source_author_id": str(entry.source_author_id)}
 
     response = client.post("/entries/search", json=search_filters)
     assert response.status_code == 200
