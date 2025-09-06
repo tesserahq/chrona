@@ -3,8 +3,10 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 
 from app.db import get_db
+from app.models.author import Author
 from app.models.invitation import Invitation
 from app.models.membership import Membership
+from app.services.author_service import AuthorService
 from app.services.invitation_service import InvitationService
 from app.services.membership_service import MembershipService
 from app.services.workspace_service import WorkspaceService
@@ -172,3 +174,25 @@ def get_comment_by_id(
     if comment is None:
         raise HTTPException(status_code=404, detail="Comment not found")
     return comment
+
+
+def get_author_by_id(
+    author_id: UUID,
+    db: Session = Depends(get_db),
+) -> Author:
+    """FastAPI dependency to get an author by ID.
+
+    Args:
+        author_id: The UUID of the author to retrieve
+        db: Database session dependency
+
+    Returns:
+        Author: The retrieved author
+
+    Raises:
+        HTTPException: If the author is not found
+    """
+    author = AuthorService(db).get_author(author_id)
+    if author is None:
+        raise HTTPException(status_code=404, detail="Author not found")
+    return author
