@@ -9,6 +9,7 @@ from app.db import Base
 from app.models.membership import Membership
 from app.models.comment import Comment
 from app.models.project_membership import ProjectMembership
+from app.models.author import Author
 
 
 class User(Base, TimestampMixin, SoftDeleteMixin):
@@ -54,8 +55,8 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
         back_populates="user",
         cascade="all, delete-orphan",
     )
-    entries = relationship("Entry", back_populates="author")
-    comments = relationship("Comment", back_populates="author")
+    import_requests = relationship("ImportRequest", back_populates="user")
+    authors = relationship("Author", back_populates="user")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

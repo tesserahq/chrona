@@ -130,13 +130,21 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
+        sa.Column("created_by_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.ForeignKeyConstraint(
             ["user_id"],
             ["users.id"],
+            name="fk_memberships_user_id_users",
         ),
         sa.ForeignKeyConstraint(
             ["workspace_id"],
             ["workspaces.id"],
+            name="fk_memberships_workspace_id_workspaces",
+        ),
+        sa.ForeignKeyConstraint(
+            ["created_by_id"],
+            ["users.id"],
+            name="fk_memberships_created_by_id_users",
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -206,10 +214,6 @@ def upgrade() -> None:
         ["inviter_id"],
     )
 
-    op.add_column(
-        "memberships",
-        sa.Column("created_by_id", postgresql.UUID(as_uuid=True), nullable=False),
-    )
     op.create_foreign_key(
         "fk_memberships_created_by_id",
         "memberships",
@@ -220,30 +224,103 @@ def upgrade() -> None:
     )
 
     op.create_table(
-        "entries",
+        "sources",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("title", sa.String(), nullable=False),
-        sa.Column("body", sa.String(), nullable=True),
-        sa.Column("source", sa.String(), nullable=False),
-        sa.Column("external_id", sa.String(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("description", sa.String(), nullable=True),
+        sa.Column("identifier", sa.String(), nullable=False),
+        sa.Column("workspace_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["workspace_id"],
+            ["workspaces.id"],
+            ondelete="CASCADE",
+        ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.ForeignKeyConstraint(
+            ["workspace_id"],
+            ["workspaces.id"],
+            ondelete="CASCADE",
+        ),
+    )
+    op.create_unique_constraint(
+        "uq_sources_identifier", "sources", ["identifier", "workspace_id"]
+    )
+
+    op.create_table(
+        "authors",
+        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("display_name", sa.String(), nullable=False),
+        sa.Column("avatar_url", sa.String(), nullable=False),
+        sa.Column("email", sa.String(), nullable=False),
         sa.Column("tags", postgresql.ARRAY(sa.String()), nullable=False),
         sa.Column("labels", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("meta_data", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=True),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(), nullable=True),
+        sa.Column("workspace_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["users.id"],
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["workspace_id"],
+            ["workspaces.id"],
+            ondelete="CASCADE",
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+
+    op.create_table(
+        "source_authors",
+        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("author_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("project_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("source_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("source_author_id", sa.String(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
+        sa.ForeignKeyConstraint(
+            ["author_id"],
+            ["authors.id"],
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["source_id"],
+            ["sources.id"],
+            ondelete="CASCADE",
+        ),
     )
-    op.create_foreign_key(
-        "fk_entries_author_id",
+
+    op.create_table(
         "entries",
-        "users",
-        ["author_id"],
-        ["id"],
-        ondelete="CASCADE",
+        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("title", sa.String(), nullable=False),
+        sa.Column("body", sa.String(), nullable=True),
+        sa.Column("source_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("external_id", sa.String(), nullable=False),
+        sa.Column("tags", postgresql.ARRAY(sa.String()), nullable=False),
+        sa.Column("labels", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("meta_data", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("source_author_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("project_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["source_author_id"],
+            ["source_authors.id"],
+            ondelete="CASCADE",
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
+
     op.create_foreign_key(
         "fk_entries_project_id",
         "entries",
@@ -259,7 +336,7 @@ def upgrade() -> None:
         sa.Column("tags", postgresql.ARRAY(sa.String()), nullable=False),
         sa.Column("labels", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("meta_data", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("author_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("source_author_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("entry_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
@@ -267,10 +344,10 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_foreign_key(
-        "fk_comments_author_id",
+        "fk_comments_source_author_id",
         "comments",
-        "users",
-        ["author_id"],
+        "source_authors",
+        ["source_author_id"],
         ["id"],
         ondelete="CASCADE",
     )
@@ -281,6 +358,68 @@ def upgrade() -> None:
         ["entry_id"],
         ["id"],
         ondelete="CASCADE",
+    )
+
+    op.create_table(
+        "import_requests",
+        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("source_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("requested_by_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("status", sa.String(), nullable=False),
+        sa.Column("project_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(), nullable=True),
+        sa.Column("received_count", sa.Integer(), nullable=False),
+        sa.Column("success_count", sa.Integer(), nullable=False),
+        sa.Column("failure_count", sa.Integer(), nullable=False),
+        sa.Column("options", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("finished_at", sa.DateTime(), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["source_id"],
+            ["sources.id"],
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["project_id"],
+            ["projects.id"],
+            ondelete="CASCADE",
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_foreign_key(
+        "fk_import_requests_requested_by",
+        "import_requests",
+        "users",
+        ["requested_by_id"],
+        ["id"],
+        ondelete="CASCADE",
+    )
+
+    op.create_table(
+        "import_request_items",
+        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("import_request_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("source_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("source_item_id", sa.String(), nullable=False),
+        sa.Column(
+            "raw_payload", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
+        sa.Column("status", sa.String(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["import_request_id"],
+            ["import_requests.id"],
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["source_id"],
+            ["sources.id"],
+            ondelete="CASCADE",
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
 
 
@@ -296,3 +435,7 @@ def downgrade() -> None:
     op.drop_column("invitations", "projects")
     op.drop_table("entries")
     op.drop_table("comments")
+    op.drop_table("import_requests")
+    op.drop_table("import_request_items")
+    op.drop_table("authors")
+    op.drop_table("sources")
