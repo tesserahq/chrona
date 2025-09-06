@@ -31,3 +31,4 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
         "ProjectMembership", back_populates="project", cascade="all, delete-orphan"
     )
     entries = relationship("Entry", back_populates="project")
+    import_requests = relationship("ImportRequest", back_populates="project")

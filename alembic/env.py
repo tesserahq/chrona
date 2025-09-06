@@ -7,6 +7,17 @@ from app.db import Base
 from app.config import Settings
 
 # Import all models so they are registered with Base.metadata
+from app.models.user import User
+from app.models.workspace import Workspace
+from app.models.membership import Membership
+from app.models.project import Project
+from app.models.project_membership import ProjectMembership
+from app.models.invitation import Invitation
+from app.models.entry import Entry
+from app.models.comment import Comment
+from app.models.app_setting import AppSetting
+from app.models.import_request import ImportRequest
+from app.models.import_request_item import ImportRequestItem
 
 # Manually create a fresh, uncached Settings instance
 settings = Settings()

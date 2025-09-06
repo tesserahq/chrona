@@ -1,17 +1,16 @@
 import pytest
 from app.models.comment import Comment
-from sqlalchemy.orm import Session
 
 
 @pytest.fixture
-def setup_comment(db: Session, setup_user, setup_entry, faker):
+def setup_comment(db, setup_source_author, setup_entry, faker):
     """Create a test comment in the database with optional overrides."""
-    user = setup_user
+    source_author = setup_source_author
     entry = setup_entry
 
     comment_data = {
         "body": faker.text(200),
-        "author_id": user.id,
+        "source_author_id": source_author.id,
         "entry_id": entry.id,
         "tags": ["feedback"],
         "labels": {"priority": "medium"},

@@ -1,23 +1,23 @@
 import pytest
 from app.models.entry import Entry
-from sqlalchemy.orm import Session
 
 
 @pytest.fixture
-def setup_entry(db: Session, setup_user, setup_project, faker):
+def setup_entry(db, setup_source_author, setup_project, setup_source, faker):
     """Create a test entry in the database with optional overrides."""
-    user = setup_user
+    source_author = setup_source_author
     project = setup_project
+    source = setup_source
 
     entry_data = {
         "title": faker.sentence(nb_words=6),
         "body": faker.text(200),
-        "source": "import",
-        "external_id": faker.uuid4(),
+        "source_id": source.id,
+        "external_id": str(faker.uuid4()),
         "tags": ["notes"],
         "labels": {"priority": "high"},
-        "meta_data": {"ingested_by": "test"},
-        "author_id": user.id,
+        "meta_data": {"created_by": "test"},
+        "source_author_id": source_author.id,
         "project_id": project.id,
     }
 
