@@ -240,3 +240,303 @@ def test_get_project_membership_not_found(client, setup_project):
     response = client.get(f"/projects/{project.id}/memberships/{fake_uuid}")
     assert response.status_code == 404
     assert response.json()["detail"] == "Project membership not found"
+
+
+def test_import_items_success(client, setup_project):
+    """Test POST /projects/{project_id}/import endpoint with valid data."""
+    project = setup_project
+
+    # Test payload from user request
+    payload = {
+        "items": [
+            {
+                "source": "github",
+                "title": "API returns 500 error on POST /users",
+                "body": "Steps to reproduce:\n1. Send POST request to /users with valid payload\n2. Server responds with 500 instead of 201",
+                "tags": ["bug", "api"],
+                "labels": {"priority": "high"},
+                "meta_data": {"repo": "org/repo"},
+                "author": {
+                    "id": "9876543210",
+                    "display_name": "Alice Smith",
+                    "avatar_url": "https://avatar.url/alice",
+                    "email": "alice.smith@example.com",
+                    "tags": ["bug", "api"],
+                    "labels": {"priority": "high"},
+                    "meta_data": {"source": "github"},
+                },
+            },
+            {
+                "source": "github",
+                "title": "UI freezes when loading dashboard",
+                "body": "The dashboard page becomes unresponsive when more than 1000 records are loaded. Needs optimization.",
+                "tags": ["bug", "frontend"],
+                "labels": {"priority": "medium"},
+                "meta_data": {"repo": "org/repo"},
+                "author": {
+                    "id": "2468013579",
+                    "display_name": "Bob Johnson",
+                    "avatar_url": "https://avatar.url/bob",
+                    "email": "bob.johnson@example.com",
+                    "tags": ["bug", "frontend"],
+                    "labels": {"priority": "medium"},
+                    "meta_data": {"source": "github"},
+                },
+            },
+            {
+                "source": "github",
+                "title": "Add dark mode support",
+                "body": "Feature request: Implement dark mode toggle in settings. Many users have asked for this.",
+                "tags": ["enhancement", "ui"],
+                "labels": {"priority": "low"},
+                "meta_data": {"repo": "org/repo"},
+                "author": {
+                    "id": "1122334455",
+                    "display_name": "Charlie Lee",
+                    "avatar_url": "https://avatar.url/charlie",
+                    "email": "charlie.lee@example.com",
+                    "tags": ["enhancement", "ui"],
+                    "labels": {"priority": "low"},
+                    "meta_data": {"source": "github"},
+                },
+            },
+        ]
+    }
+
+    response = client.post(f"/projects/{project.id}/import", json=payload)
+    assert response.status_code == 200
+
+    data = response.json()
+    assert "import_request_id" in data
+    assert "total_items" in data
+    assert "processed_items" in data
+    assert "success_count" in data
+    assert "failure_count" in data
+    assert "status" in data
+
+    # Verify response values
+    assert data["total_items"] == 3
+    assert data["processed_items"] == 3
+    assert data["success_count"] == 3
+    assert data["failure_count"] == 0
+    assert data["status"] == "completed"
+
+
+def test_import_items_empty_list(client, setup_project):
+    """Test POST /projects/{project_id}/import endpoint with empty items list."""
+    project = setup_project
+
+    payload = {"items": []}
+
+    response = client.post(f"/projects/{project.id}/import", json=payload)
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["total_items"] == 0
+    assert data["processed_items"] == 0
+    assert data["success_count"] == 0
+    assert data["failure_count"] == 0
+    assert data["status"] == "completed"
+
+
+def test_import_items_single_item(client, setup_project):
+    """Test POST /projects/{project_id}/import endpoint with single item."""
+    project = setup_project
+
+    payload = {
+        "items": [
+            {
+                "source": "github",
+                "title": "Single test item",
+                "body": "This is a test item",
+                "tags": ["test"],
+                "labels": {"priority": "low"},
+                "meta_data": {"repo": "test/repo"},
+                "author": {
+                    "id": "123456789",
+                    "display_name": "Test Author",
+                    "avatar_url": "https://example.com/avatar",
+                    "email": "test@example.com",
+                    "tags": ["test"],
+                    "labels": {"priority": "low"},
+                    "meta_data": {"source": "github"},
+                },
+            }
+        ]
+    }
+
+    response = client.post(f"/projects/{project.id}/import", json=payload)
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["total_items"] == 1
+    assert data["processed_items"] == 1
+    assert data["success_count"] == 1
+    assert data["failure_count"] == 0
+    assert data["status"] == "completed"
+
+
+def test_import_items_nonexistent_project(client):
+    """Test POST /projects/{project_id}/import endpoint with non-existent project."""
+    non_existent_id = "00000000-0000-0000-0000-000000000000"
+    payload = {
+        "items": [
+            {
+                "source": "github",
+                "title": "Test item",
+                "body": "Test body",
+                "tags": ["test"],
+                "labels": {"priority": "low"},
+                "meta_data": {"repo": "test/repo"},
+                "author": {
+                    "id": "123456789",
+                    "display_name": "Test Author",
+                    "avatar_url": "https://example.com/avatar",
+                    "email": "test@example.com",
+                    "tags": ["test"],
+                    "labels": {"priority": "low"},
+                    "meta_data": {"source": "github"},
+                },
+            }
+        ]
+    }
+
+    response = client.post(f"/projects/{non_existent_id}/import", json=payload)
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Project not found"
+
+
+def test_import_items_invalid_payload(client, setup_project):
+    """Test POST /projects/{project_id}/import endpoint with invalid payload."""
+    project = setup_project
+
+    # Missing required fields
+    invalid_payload = {
+        "items": [
+            {
+                "source": "github",
+                "title": "Test item",
+                # Missing body, tags, labels, meta_data, author
+            }
+        ]
+    }
+
+    response = client.post(f"/projects/{project.id}/import", json=invalid_payload)
+    assert response.status_code == 422  # Validation error
+
+
+def test_import_items_invalid_author_data(client, setup_project):
+    """Test POST /projects/{project_id}/import endpoint with invalid author data."""
+    project = setup_project
+
+    payload = {
+        "items": [
+            {
+                "source": "github",
+                "title": "Test item",
+                "body": "Test body",
+                "tags": ["test"],
+                "labels": {"priority": "low"},
+                "meta_data": {"repo": "test/repo"},
+                "author": {
+                    "id": "123456789",
+                    # Missing required fields: display_name, avatar_url, email
+                    "tags": ["test"],
+                    "labels": {"priority": "low"},
+                    "meta_data": {"source": "github"},
+                },
+            }
+        ]
+    }
+
+    response = client.post(f"/projects/{project.id}/import", json=payload)
+    assert response.status_code == 422  # Validation error
+
+
+def test_import_items_minimal_data(client, setup_project):
+    """Test POST /projects/{project_id}/import endpoint with minimal required data."""
+    project = setup_project
+
+    payload = {
+        "items": [
+            {
+                "source": "github",
+                "title": "Minimal item",
+                "body": "Minimal test item",
+                "tags": [],
+                "labels": {},
+                "meta_data": {},
+                "author": {
+                    "id": "555555555",
+                    "display_name": "Minimal Author",
+                    "avatar_url": "https://example.com/minimal",
+                    "email": "minimal@example.com",
+                    "tags": [],
+                    "labels": {},
+                    "meta_data": {},
+                },
+            }
+        ]
+    }
+
+    response = client.post(f"/projects/{project.id}/import", json=payload)
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["success_count"] == 1
+    assert data["failure_count"] == 0
+    assert data["status"] == "completed"
+
+
+def test_import_items_multiple_items(client, setup_project):
+    """Test POST /projects/{project_id}/import endpoint with multiple items."""
+    project = setup_project
+
+    payload = {
+        "items": [
+            {
+                "source": "github",
+                "title": "First item",
+                "body": "First test item",
+                "tags": ["test", "first"],
+                "labels": {"priority": "high"},
+                "meta_data": {"repo": "test/repo", "issue": "1"},
+                "author": {
+                    "id": "111111111",
+                    "display_name": "First Author",
+                    "avatar_url": "https://example.com/avatar1",
+                    "email": "first@example.com",
+                    "tags": ["test", "first"],
+                    "labels": {"priority": "high"},
+                    "meta_data": {"source": "github"},
+                },
+            },
+            {
+                "source": "github",
+                "title": "Second item",
+                "body": "Second test item",
+                "tags": ["test", "second"],
+                "labels": {"priority": "medium"},
+                "meta_data": {"repo": "test/repo", "issue": "2"},
+                "author": {
+                    "id": "222222222",
+                    "display_name": "Second Author",
+                    "avatar_url": "https://example.com/avatar2",
+                    "email": "second@example.com",
+                    "tags": ["test", "second"],
+                    "labels": {"priority": "medium"},
+                    "meta_data": {"source": "github"},
+                },
+            },
+        ]
+    }
+
+    response = client.post(f"/projects/{project.id}/import", json=payload)
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["total_items"] == 2
+    assert data["processed_items"] == 2
+    assert data["success_count"] == 2
+    assert data["failure_count"] == 0
+    assert data["status"] == "completed"

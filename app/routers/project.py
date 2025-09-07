@@ -30,6 +30,8 @@ from app.schemas.project_membership import (
 )
 from app.schemas.common import ListResponse
 from app.models.project_membership import ProjectMembership
+from app.schemas.project_import import ImportItemRequest, ImportItemResponse
+from app.commands.projects.import_items_command import ImportItemsCommand
 
 router = APIRouter(prefix="/projects", tags=["workspace-projects"])
 
@@ -161,3 +163,21 @@ def delete_project_membership(
     success = service.delete_project_membership(UUID(str(membership.id)))
     if not success:
         raise HTTPException(status_code=404, detail="Project membership not found")
+
+
+@router.post("/{project_id}/import", response_model=ImportItemResponse)
+def import_items(
+    import_request: ImportItemRequest,
+    project: ProjectModel = Depends(get_project_by_id),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Import data into a project.
+
+    This endpoint accepts a list of items with their associated authors and creates
+    entries, authors, and import request records in the database.
+    """
+    command = ImportItemsCommand(db)
+    result = command.execute(project, import_request, current_user.id)
+    return ImportItemResponse(**result)
