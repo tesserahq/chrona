@@ -17,7 +17,7 @@ Chrona’s data model is structured around a few key entities:
   - **Entries**: The core unit of information aggregated from external sources.
     - **Comments**: Discussion and activity attached to an entry.
 - **ImportJobs**: Represent each request to bring external data into Chrona.
-- **ImportItems**: Individual entries or comments submitted as part of an import job.
+- **ImportItemsCommand**: Individual entries or comments submitted as part of an import job.
 - **ImportErrors**: Capture validation or processing errors for failed import items.
 
 ## Entity Relationships
