@@ -46,7 +46,7 @@ class ImportItemRequest(BaseModel):
 class ImportItemResponse(BaseModel):
     """Schema for the project import response."""
 
-    import_request_id: UUID = Field(..., description="ID of the created import request")
+    id: UUID = Field(..., description="ID of the created import request")
     total_items: int = Field(..., description="Total number of items to import")
     processed_items: int = Field(..., description="Number of items processed")
     success_count: int = Field(

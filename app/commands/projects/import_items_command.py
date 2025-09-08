@@ -102,7 +102,7 @@ class ImportItemsCommand:
         )
 
         return {
-            "import_request_id": db_import_request.id,
+            "id": str(db_import_request.id),
             "total_items": len(import_request.items),
             "processed_items": success_count + failure_count,
             "success_count": success_count,

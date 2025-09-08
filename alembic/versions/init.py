@@ -1,6 +1,6 @@
-"""create users table
+"""Initialize the database
 
-Revision ID: create_users_table
+Revision ID: initialize_database
 Revises:
 Create Date: 2024-03-21
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = "create_users_table"
+revision: str = "initialize_database"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

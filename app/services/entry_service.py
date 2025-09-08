@@ -18,6 +18,17 @@ class EntryService(SoftDeleteService[Entry]):
     def get_entries(self, skip: int = 0, limit: int = 100) -> List[Entry]:
         return self.db.query(Entry).offset(skip).limit(limit).all()
 
+    def get_entries_by_project(
+        self, project_id: UUID, skip: int = 0, limit: int = 100
+    ) -> List[Entry]:
+        return (
+            self.db.query(Entry)
+            .filter(Entry.project_id == project_id)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
     def create_entry(self, entry: EntryCreate) -> Entry:
         db_entry = Entry(**entry.model_dump())
         self.db.add(db_entry)

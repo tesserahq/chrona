@@ -17,6 +17,7 @@ from .routers import (
     entry,
     comment,
     author,
+    import_request,
 )
 from .ws import status
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -81,6 +82,7 @@ def create_app(testing: bool = False, auth_middleware=None) -> FastAPI:
     app.include_router(status.router)
     app.include_router(system.router)
     app.include_router(invitation.router)
+    app.include_router(import_request.router)
 
     register_exception_handlers(app)
 

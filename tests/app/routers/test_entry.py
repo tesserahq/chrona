@@ -2,10 +2,10 @@ from uuid import uuid4
 
 
 def test_list_entries(client, setup_entry):
-    """Test GET /entries endpoint."""
+    """Test GET /projects/{project_id}/entries endpoint."""
     entry = setup_entry
 
-    response = client.get("/entries")
+    response = client.get(f"/projects/{entry.project_id}/entries")
     assert response.status_code == 200
     data = response.json()
     assert "data" in data
@@ -48,7 +48,7 @@ def test_get_entry_not_found(client):
 
 
 def test_create_entry(client, setup_project, setup_source, setup_source_author):
-    """Test POST /entries endpoint."""
+    """Test POST /projects/{project_id}/entries endpoint."""
     project = setup_project
     source = setup_source
     source_author = setup_source_author
@@ -62,10 +62,9 @@ def test_create_entry(client, setup_project, setup_source, setup_source_author):
         "labels": {"priority": "high"},
         "meta_data": {"created_by": "test"},
         "source_author_id": str(source_author.id),
-        "project_id": str(project.id),
     }
 
-    response = client.post("/entries", json=entry_data)
+    response = client.post(f"/projects/{project.id}/entries", json=entry_data)
     assert response.status_code == 201
     data = response.json()
     assert data["title"] == entry_data["title"]
@@ -76,14 +75,15 @@ def test_create_entry(client, setup_project, setup_source, setup_source_author):
     assert data["labels"]["priority"] == "high"
 
 
-def test_create_entry_invalid_data(client):
-    """Test POST /entries with invalid data."""
+def test_create_entry_invalid_data(client, setup_project):
+    """Test POST /projects/{project_id}/entries with invalid data."""
+    project = setup_project
     invalid_data = {
         "title": "",  # Empty title should fail validation
         "body": "Test body",
     }
 
-    response = client.post("/entries", json=invalid_data)
+    response = client.post(f"/projects/{project.id}/entries", json=invalid_data)
     print(response.json())
     assert response.status_code == 422  # Validation error
 
@@ -138,12 +138,14 @@ def test_delete_entry_not_found(client):
 
 
 def test_search_entries_exact_match(client, setup_entry):
-    """Test POST /entries/search with exact match."""
+    """Test POST /projects/{project_id}/entries/search with exact match."""
     entry = setup_entry
 
     search_filters = {"title": entry.title}
 
-    response = client.post("/entries/search", json=search_filters)
+    response = client.post(
+        f"/projects/{entry.project_id}/entries/search", json=search_filters
+    )
     assert response.status_code == 200
     data = response.json()
     assert "data" in data
@@ -152,13 +154,15 @@ def test_search_entries_exact_match(client, setup_entry):
 
 
 def test_search_entries_partial_match(client, setup_entry):
-    """Test POST /entries/search with partial match using ilike."""
+    """Test POST /projects/{project_id}/entries/search with partial match using ilike."""
     entry = setup_entry
     partial_title = entry.title[: max(1, len(entry.title) // 2)]
 
     search_filters = {"title": {"operator": "ilike", "value": f"%{partial_title}%"}}
 
-    response = client.post("/entries/search", json=search_filters)
+    response = client.post(
+        f"/projects/{entry.project_id}/entries/search", json=search_filters
+    )
     assert response.status_code == 200
     data = response.json()
     assert "data" in data
@@ -166,12 +170,14 @@ def test_search_entries_partial_match(client, setup_entry):
 
 
 def test_search_entries_by_author(client, setup_entry):
-    """Test POST /entries/search by author_id."""
+    """Test POST /projects/{project_id}/entries/search by author_id."""
     entry = setup_entry
 
     search_filters = {"source_author_id": str(entry.source_author_id)}
 
-    response = client.post("/entries/search", json=search_filters)
+    response = client.post(
+        f"/projects/{entry.project_id}/entries/search", json=search_filters
+    )
     assert response.status_code == 200
     data = response.json()
     assert "data" in data
@@ -179,23 +185,28 @@ def test_search_entries_by_author(client, setup_entry):
 
 
 def test_search_entries_by_project(client, setup_entry):
-    """Test POST /entries/search by project_id."""
+    """Test POST /projects/{project_id}/entries/search by project_id."""
     entry = setup_entry
 
     search_filters = {"project_id": str(entry.project_id)}
 
-    response = client.post("/entries/search", json=search_filters)
+    response = client.post(
+        f"/projects/{entry.project_id}/entries/search", json=search_filters
+    )
     assert response.status_code == 200
     data = response.json()
     assert "data" in data
     assert len(data["data"]) >= 1
 
 
-def test_search_entries_no_results(client):
-    """Test POST /entries/search with filters that return no results."""
+def test_search_entries_no_results(client, setup_project):
+    """Test POST /projects/{project_id}/entries/search with filters that return no results."""
+    project = setup_project
     search_filters = {"external_id": str(uuid4())}
 
-    response = client.post("/entries/search", json=search_filters)
+    response = client.post(
+        f"/projects/{project.id}/entries/search", json=search_filters
+    )
     assert response.status_code == 200
     data = response.json()
     assert "data" in data
@@ -203,11 +214,11 @@ def test_search_entries_no_results(client):
 
 
 def test_list_entries_pagination(client, setup_entry):
-    """Test GET /entries with pagination parameters."""
+    """Test GET /projects/{project_id}/entries with pagination parameters."""
     entry = setup_entry
 
     # Test with skip and limit
-    response = client.get("/entries?skip=0&limit=1")
+    response = client.get(f"/projects/{entry.project_id}/entries?skip=0&limit=1")
     assert response.status_code == 200
     data = response.json()
     assert "data" in data
@@ -215,8 +226,50 @@ def test_list_entries_pagination(client, setup_entry):
     assert len(data["data"]) <= 1
 
     # Test with different pagination
-    response = client.get("/entries?skip=10&limit=5")
+    response = client.get(f"/projects/{entry.project_id}/entries?skip=10&limit=5")
     assert response.status_code == 200
     data = response.json()
     assert "data" in data
     assert isinstance(data["data"], list)
+
+
+def test_list_entries_invalid_project(client):
+    """Test GET /projects/{project_id}/entries with non-existent project."""
+    fake_project_id = uuid4()
+    response = client.get(f"/projects/{fake_project_id}/entries")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Project not found"
+
+
+def test_create_entry_invalid_project(client, setup_source, setup_source_author):
+    """Test POST /projects/{project_id}/entries with non-existent project."""
+    fake_project_id = uuid4()
+    source = setup_source
+    source_author = setup_source_author
+
+    entry_data = {
+        "title": "Test Entry",
+        "body": "This is a test entry body",
+        "source_id": str(source.id),
+        "external_id": str(uuid4()),
+        "tags": ["test", "example"],
+        "labels": {"priority": "high"},
+        "meta_data": {"created_by": "test"},
+        "source_author_id": str(source_author.id),
+    }
+
+    response = client.post(f"/projects/{fake_project_id}/entries", json=entry_data)
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Project not found"
+
+
+def test_search_entries_invalid_project(client):
+    """Test POST /projects/{project_id}/entries/search with non-existent project."""
+    fake_project_id = uuid4()
+    search_filters = {"title": "test"}
+
+    response = client.post(
+        f"/projects/{fake_project_id}/entries/search", json=search_filters
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Project not found"

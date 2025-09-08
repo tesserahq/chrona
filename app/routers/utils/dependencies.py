@@ -19,6 +19,8 @@ from app.services.entry_service import EntryService
 from app.models.entry import Entry
 from app.services.comment_service import CommentService
 from app.models.comment import Comment
+from app.services.import_request_service import ImportRequestService
+from app.models.import_request import ImportRequest
 
 
 def get_workspace_by_id(
@@ -196,3 +198,25 @@ def get_author_by_id(
     if author is None:
         raise HTTPException(status_code=404, detail="Author not found")
     return author
+
+
+def get_import_request_by_id(
+    import_request_id: UUID,
+    db: Session = Depends(get_db),
+) -> ImportRequest:
+    """FastAPI dependency to get an import request by ID.
+
+    Args:
+        import_request_id: The UUID of the import request to retrieve
+        db: Database session dependency
+
+    Returns:
+        ImportRequest: The retrieved import request
+
+    Raises:
+        HTTPException: If the import request is not found
+    """
+    import_request = ImportRequestService(db).get_import_request(import_request_id)
+    if import_request is None:
+        raise HTTPException(status_code=404, detail="Import request not found")
+    return import_request

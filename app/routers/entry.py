@@ -19,20 +19,23 @@ from app.schemas.entry import (
 )
 from app.services.entry_service import EntryService
 from app.models.entry import Entry as EntryModel
-from app.routers.utils.dependencies import get_entry_by_id
+from app.models.project import Project as ProjectModel
+from app.routers.utils.dependencies import get_entry_by_id, get_project_by_id
 from app.schemas.common import ListResponse
 
-router = APIRouter(prefix="/entries", tags=["entries"])
+router = APIRouter(prefix="/projects", tags=["project-entries"])
 
 
-@router.post("/search", response_model=EntrySearchResponse)
+@router.post("/{project_id}/entries/search", response_model=EntrySearchResponse)
 def search_entries(
+    project_id: UUID,
     filters: EntrySearchFilters,
+    project: ProjectModel = Depends(get_project_by_id),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     """
-    Search entries based on provided filters.
+    Search entries within a specific project based on provided filters.
 
     Each filter field can be either:
     - A direct value (e.g., "title": "My Entry")
@@ -47,35 +50,48 @@ def search_entries(
     }
     """
     service = EntryService(db)
-    results = service.search(filters.model_dump(exclude_none=True))
+    # Add project_id to filters to scope the search
+    search_filters = filters.model_dump(exclude_none=True)
+    search_filters["project_id"] = str(project_id)
+    results = service.search(search_filters)
     return EntrySearchResponse(data=results)
 
 
-@router.get("", response_model=ListResponse[Entry])
+@router.get("/{project_id}/entries", response_model=ListResponse[Entry])
 def list_entries(
+    project_id: UUID,
+    project: ProjectModel = Depends(get_project_by_id),
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """List all entries with pagination."""
+    """List all entries within a specific project with pagination."""
     service = EntryService(db)
-    entries = service.get_entries(skip, limit)
+    entries = service.get_entries_by_project(project_id, skip, limit)
     return ListResponse(data=entries)
 
 
-@router.post("", response_model=Entry, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{project_id}/entries", response_model=Entry, status_code=status.HTTP_201_CREATED
+)
 def create_entry(
+    project_id: UUID,
     entry: EntryCreate,
+    project: ProjectModel = Depends(get_project_by_id),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Create a new entry."""
+    """Create a new entry within a specific project."""
     service = EntryService(db)
-    return service.create_entry(entry)
+    # Ensure the entry is created for the specified project
+    entry_data = entry.model_dump()
+    entry_data["project_id"] = project_id
+    return service.create_entry(EntryCreate(**entry_data))
 
 
-@router.get("/{entry_id}", response_model=Entry)
+# Individual entry endpoints (not project-scoped)
+@router.get("/entries/{entry_id}", response_model=Entry)
 def get_entry(
     entry: EntryModel = Depends(get_entry_by_id),
     current_user=Depends(get_current_user),
@@ -84,7 +100,7 @@ def get_entry(
     return entry
 
 
-@router.put("/{entry_id}", response_model=Entry)
+@router.put("/entries/{entry_id}", response_model=Entry)
 def update_entry(
     entry_update: EntryUpdate,
     entry: EntryModel = Depends(get_entry_by_id),
@@ -99,7 +115,7 @@ def update_entry(
     return updated
 
 
-@router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/entries/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_entry(
     entry: EntryModel = Depends(get_entry_by_id),
     db: Session = Depends(get_db),
