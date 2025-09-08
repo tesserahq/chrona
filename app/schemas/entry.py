@@ -1,8 +1,17 @@
-from typing import Optional, Dict, Any, List, Union
+from typing import Optional, Dict, Any, List, Union, TYPE_CHECKING
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Literal
+
+if TYPE_CHECKING:
+    from app.schemas.source import Source
+    from app.schemas.source_author import SourceAuthor
+    from app.schemas.author import Author
+else:
+    from app.schemas.source import Source
+    from app.schemas.source_author import SourceAuthor
+    from app.schemas.author import Author
 
 
 class EntryBase(BaseModel):
@@ -55,6 +64,49 @@ class Entry(EntryInDB):
     pass
 
 
+class SourceAuthorWithAuthor(SourceAuthor):
+    """SourceAuthor schema with author information included."""
+
+    author: Optional[Author] = None
+
+    @field_validator("author", mode="before")
+    @classmethod
+    def get_author_from_model(cls, v, info):
+        """Get author object from the model's author relationship."""
+        if hasattr(info.data, "author") and info.data.author:
+            return info.data.author
+        return v
+
+    class Config:
+        from_attributes = True
+
+
+class EntryResponse(EntryInDB):
+    """Entry response schema with source and source_author information included."""
+
+    source: Optional[Source] = None
+    source_author: Optional[SourceAuthorWithAuthor] = None
+
+    @field_validator("source", mode="before")
+    @classmethod
+    def get_source_from_model(cls, v, info):
+        """Get source object from the model's source relationship."""
+        if hasattr(info.data, "source") and info.data.source:
+            return info.data.source
+        return v
+
+    @field_validator("source_author", mode="before")
+    @classmethod
+    def get_source_author_from_model(cls, v, info):
+        """Get source_author object from the model's source_author relationship."""
+        if hasattr(info.data, "source_author") and info.data.source_author:
+            return info.data.source_author
+        return v
+
+    class Config:
+        from_attributes = True
+
+
 class SearchOperator(BaseModel):
     operator: Literal["=", "!=", ">", "<", ">=", "<=", "ilike", "in", "not in"]
     value: Any
@@ -69,4 +121,4 @@ class EntrySearchFilters(BaseModel):
 
 
 class EntrySearchResponse(BaseModel):
-    data: List[Entry]
+    data: List[EntryResponse]

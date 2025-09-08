@@ -21,6 +21,29 @@ def test_list_entries(client, setup_entry):
             assert item["body"] == entry.body
             assert item["source_author_id"] == str(entry.source_author_id)
             assert item["project_id"] == str(entry.project_id)
+            # Check that source information is included
+            assert "source" in item
+            assert item["source"] is not None
+            assert item["source"]["id"] == str(entry.source.id)
+            assert item["source"]["name"] == entry.source.name
+            # Check that source_author and author information is included
+            assert "source_author" in item
+            assert item["source_author"] is not None
+            assert item["source_author"]["id"] == str(entry.source_author.id)
+            assert (
+                item["source_author"]["source_author_id"]
+                == entry.source_author.source_author_id
+            )
+            # Check that author information is included within source_author
+            assert "author" in item["source_author"]
+            assert item["source_author"]["author"] is not None
+            assert item["source_author"]["author"]["id"] == str(
+                entry.source_author.author.id
+            )
+            assert (
+                item["source_author"]["author"]["display_name"]
+                == entry.source_author.author.display_name
+            )
             break
     assert entry_found
 
@@ -37,6 +60,27 @@ def test_get_entry(client, setup_entry):
     assert data["body"] == entry.body
     assert data["source_author_id"] == str(entry.source_author_id)
     assert data["project_id"] == str(entry.project_id)
+    # Check that source information is included
+    assert "source" in data
+    assert data["source"] is not None
+    assert data["source"]["id"] == str(entry.source.id)
+    assert data["source"]["name"] == entry.source.name
+    # Check that source_author and author information is included
+    assert "source_author" in data
+    assert data["source_author"] is not None
+    assert data["source_author"]["id"] == str(entry.source_author.id)
+    assert (
+        data["source_author"]["source_author_id"]
+        == entry.source_author.source_author_id
+    )
+    # Check that author information is included within source_author
+    assert "author" in data["source_author"]
+    assert data["source_author"]["author"] is not None
+    assert data["source_author"]["author"]["id"] == str(entry.source_author.author.id)
+    assert (
+        data["source_author"]["author"]["display_name"]
+        == entry.source_author.author.display_name
+    )
 
 
 def test_get_entry_not_found(client):
@@ -73,6 +117,23 @@ def test_create_entry(client, setup_project, setup_source, setup_source_author):
     assert data["project_id"] == str(project.id)
     assert "test" in data["tags"]
     assert data["labels"]["priority"] == "high"
+    # Check that source information is included
+    assert "source" in data
+    assert data["source"] is not None
+    assert data["source"]["id"] == str(source.id)
+    assert data["source"]["name"] == source.name
+    # Check that source_author and author information is included
+    assert "source_author" in data
+    assert data["source_author"] is not None
+    assert data["source_author"]["source_author_id"] == source_author.source_author_id
+    # Check that author information is included within source_author
+    assert "author" in data["source_author"]
+    assert data["source_author"]["author"] is not None
+    assert data["source_author"]["author"]["id"] == str(source_author.author.id)
+    assert (
+        data["source_author"]["author"]["display_name"]
+        == source_author.author.display_name
+    )
 
 
 def test_create_entry_invalid_data(client, setup_project):
@@ -105,6 +166,27 @@ def test_update_entry(client, setup_entry):
     assert data["title"] == update_data["title"]
     assert data["body"] == update_data["body"]
     assert "updated" in data["tags"]
+    # Check that source information is still included after update
+    assert "source" in data
+    assert data["source"] is not None
+    assert data["source"]["id"] == str(entry.source.id)
+    assert data["source"]["name"] == entry.source.name
+    # Check that source_author and author information is still included after update
+    assert "source_author" in data
+    assert data["source_author"] is not None
+    assert data["source_author"]["id"] == str(entry.source_author.id)
+    assert (
+        data["source_author"]["source_author_id"]
+        == entry.source_author.source_author_id
+    )
+    # Check that author information is still included within source_author after update
+    assert "author" in data["source_author"]
+    assert data["source_author"]["author"] is not None
+    assert data["source_author"]["author"]["id"] == str(entry.source_author.author.id)
+    assert (
+        data["source_author"]["author"]["display_name"]
+        == entry.source_author.author.display_name
+    )
 
 
 def test_update_entry_not_found(client):
@@ -151,6 +233,29 @@ def test_search_entries_exact_match(client, setup_entry):
     assert "data" in data
     assert len(data["data"]) >= 1
     assert data["data"][0]["id"] == str(entry.id)
+    # Check that source information is included in search results
+    assert "source" in data["data"][0]
+    assert data["data"][0]["source"] is not None
+    assert data["data"][0]["source"]["id"] == str(entry.source.id)
+    assert data["data"][0]["source"]["name"] == entry.source.name
+    # Check that source_author and author information is included in search results
+    assert "source_author" in data["data"][0]
+    assert data["data"][0]["source_author"] is not None
+    assert data["data"][0]["source_author"]["id"] == str(entry.source_author.id)
+    assert (
+        data["data"][0]["source_author"]["source_author_id"]
+        == entry.source_author.source_author_id
+    )
+    # Check that author information is included within source_author in search results
+    assert "author" in data["data"][0]["source_author"]
+    assert data["data"][0]["source_author"]["author"] is not None
+    assert data["data"][0]["source_author"]["author"]["id"] == str(
+        entry.source_author.author.id
+    )
+    assert (
+        data["data"][0]["source_author"]["author"]["display_name"]
+        == entry.source_author.author.display_name
+    )
 
 
 def test_search_entries_partial_match(client, setup_entry):

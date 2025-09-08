@@ -14,6 +14,7 @@ from app.schemas.entry import (
     EntryCreate,
     EntryUpdate,
     Entry,
+    EntryResponse,
     EntrySearchFilters,
     EntrySearchResponse,
 )
@@ -63,7 +64,9 @@ def search_entries(
     return EntrySearchResponse(data=results)
 
 
-@project_entries_router.get("/{project_id}/entries", response_model=ListResponse[Entry])
+@project_entries_router.get(
+    "/{project_id}/entries", response_model=ListResponse[EntryResponse]
+)
 def list_entries(
     project_id: UUID,
     project: ProjectModel = Depends(get_project_by_id),
@@ -79,7 +82,9 @@ def list_entries(
 
 
 @project_entries_router.post(
-    "/{project_id}/entries", response_model=Entry, status_code=status.HTTP_201_CREATED
+    "/{project_id}/entries",
+    response_model=EntryResponse,
+    status_code=status.HTTP_201_CREATED,
 )
 def create_entry(
     project_id: UUID,
@@ -97,7 +102,7 @@ def create_entry(
 
 
 # Individual entry endpoints
-@entries_router.get("/{entry_id}", response_model=Entry)
+@entries_router.get("/{entry_id}", response_model=EntryResponse)
 def get_entry(
     entry: EntryModel = Depends(get_entry_by_id),
     current_user=Depends(get_current_user),
@@ -106,7 +111,7 @@ def get_entry(
     return entry
 
 
-@entries_router.put("/{entry_id}", response_model=Entry)
+@entries_router.put("/{entry_id}", response_model=EntryResponse)
 def update_entry(
     entry_update: EntryUpdate,
     entry: EntryModel = Depends(get_entry_by_id),
