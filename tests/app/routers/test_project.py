@@ -307,7 +307,7 @@ def test_import_items_success(client, setup_project):
     assert response.status_code == 200
 
     data = response.json()
-    assert "import_request_id" in data
+    assert "id" in data
     assert "total_items" in data
     assert "processed_items" in data
     assert "success_count" in data

@@ -23,10 +23,16 @@ from app.models.project import Project as ProjectModel
 from app.routers.utils.dependencies import get_entry_by_id, get_project_by_id
 from app.schemas.common import ListResponse
 
-router = APIRouter(prefix="/projects", tags=["project-entries"])
+# Project-scoped entries router
+project_entries_router = APIRouter(prefix="/projects", tags=["project-entries"])
+
+# Individual entries router
+entries_router = APIRouter(prefix="/entries", tags=["entries"])
 
 
-@router.post("/{project_id}/entries/search", response_model=EntrySearchResponse)
+@project_entries_router.post(
+    "/{project_id}/entries/search", response_model=EntrySearchResponse
+)
 def search_entries(
     project_id: UUID,
     filters: EntrySearchFilters,
@@ -57,7 +63,7 @@ def search_entries(
     return EntrySearchResponse(data=results)
 
 
-@router.get("/{project_id}/entries", response_model=ListResponse[Entry])
+@project_entries_router.get("/{project_id}/entries", response_model=ListResponse[Entry])
 def list_entries(
     project_id: UUID,
     project: ProjectModel = Depends(get_project_by_id),
@@ -72,7 +78,7 @@ def list_entries(
     return ListResponse(data=entries)
 
 
-@router.post(
+@project_entries_router.post(
     "/{project_id}/entries", response_model=Entry, status_code=status.HTTP_201_CREATED
 )
 def create_entry(
@@ -90,8 +96,8 @@ def create_entry(
     return service.create_entry(EntryCreate(**entry_data))
 
 
-# Individual entry endpoints (not project-scoped)
-@router.get("/entries/{entry_id}", response_model=Entry)
+# Individual entry endpoints
+@entries_router.get("/{entry_id}", response_model=Entry)
 def get_entry(
     entry: EntryModel = Depends(get_entry_by_id),
     current_user=Depends(get_current_user),
@@ -100,7 +106,7 @@ def get_entry(
     return entry
 
 
-@router.put("/entries/{entry_id}", response_model=Entry)
+@entries_router.put("/{entry_id}", response_model=Entry)
 def update_entry(
     entry_update: EntryUpdate,
     entry: EntryModel = Depends(get_entry_by_id),
@@ -115,7 +121,7 @@ def update_entry(
     return updated
 
 
-@router.delete("/entries/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
+@entries_router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_entry(
     entry: EntryModel = Depends(get_entry_by_id),
     db: Session = Depends(get_db),

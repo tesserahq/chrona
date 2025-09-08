@@ -87,7 +87,7 @@ class TestImportItemsCommand:
 
         # Assert result structure
         assert result is not None
-        assert "import_request_id" in result
+        assert "id" in result
         assert "total_items" in result
         assert "processed_items" in result
         assert "success_count" in result
@@ -102,11 +102,9 @@ class TestImportItemsCommand:
         assert result["status"] == ImportRequestStatuses.COMPLETED
 
         # Assert import request was created
-        import_request_id = result["import_request_id"]
+        id = result["id"]
         db_import_request = (
-            db.query(ImportRequest)
-            .filter(ImportRequest.id == import_request_id)
-            .first()
+            db.query(ImportRequest).filter(ImportRequest.id == id).first()
         )
         assert db_import_request is not None
         assert db_import_request.project_id == project.id
@@ -127,7 +125,7 @@ class TestImportItemsCommand:
         # Assert import request items were created
         items = (
             db.query(ImportRequestItem)
-            .filter(ImportRequestItem.import_request_id == import_request_id)
+            .filter(ImportRequestItem.import_request_id == id)
             .all()
         )
         assert len(items) == 3
@@ -172,11 +170,9 @@ class TestImportItemsCommand:
         assert result["status"] == ImportRequestStatuses.COMPLETED
 
         # Assert import request was created
-        import_request_id = result["import_request_id"]
+        id = result["id"]
         db_import_request = (
-            db.query(ImportRequest)
-            .filter(ImportRequest.id == import_request_id)
-            .first()
+            db.query(ImportRequest).filter(ImportRequest.id == id).first()
         )
         assert db_import_request is not None
         assert db_import_request.status == ImportRequestStatuses.COMPLETED
@@ -223,10 +219,10 @@ class TestImportItemsCommand:
         assert result["status"] == ImportRequestStatuses.COMPLETED
 
         # Assert single item was created
-        import_request_id = result["import_request_id"]
+        id = result["id"]
         items = (
             db.query(ImportRequestItem)
-            .filter(ImportRequestItem.import_request_id == import_request_id)
+            .filter(ImportRequestItem.import_request_id == id)
             .all()
         )
         assert len(items) == 1
@@ -307,14 +303,10 @@ class TestImportItemsCommand:
 
         # Assert both import requests use the same source
         import_request1 = (
-            db.query(ImportRequest)
-            .filter(ImportRequest.id == result1["import_request_id"])
-            .first()
+            db.query(ImportRequest).filter(ImportRequest.id == result1["id"]).first()
         )
         import_request2 = (
-            db.query(ImportRequest)
-            .filter(ImportRequest.id == result2["import_request_id"])
-            .first()
+            db.query(ImportRequest).filter(ImportRequest.id == result2["id"]).first()
         )
 
         assert import_request1.source_id == source.id
@@ -416,11 +408,9 @@ class TestImportItemsCommand:
         result = command.execute(project, ImportItemRequest(**payload), user.id)
 
         # Assert import request exists in database
-        import_request_id = result["import_request_id"]
+        id = result["id"]
         db_import_request = (
-            db.query(ImportRequest)
-            .filter(ImportRequest.id == import_request_id)
-            .first()
+            db.query(ImportRequest).filter(ImportRequest.id == id).first()
         )
         assert db_import_request is not None
         assert db_import_request.project_id == project.id
@@ -429,7 +419,7 @@ class TestImportItemsCommand:
         # Assert import request item exists in database
         db_item = (
             db.query(ImportRequestItem)
-            .filter(ImportRequestItem.import_request_id == import_request_id)
+            .filter(ImportRequestItem.import_request_id == id)
             .first()
         )
         assert db_item is not None
@@ -476,10 +466,10 @@ class TestImportItemsCommand:
         assert result["status"] == ImportRequestStatuses.COMPLETED
 
         # Assert item was created with minimal data
-        import_request_id = result["import_request_id"]
+        id = result["id"]
         db_item = (
             db.query(ImportRequestItem)
-            .filter(ImportRequestItem.import_request_id == import_request_id)
+            .filter(ImportRequestItem.import_request_id == id)
             .first()
         )
         assert db_item is not None
