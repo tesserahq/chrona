@@ -73,6 +73,22 @@ class CommentService(SoftDeleteService[Comment]):
     def delete_comment(self, comment_id: UUID) -> bool:
         return self.delete_record(comment_id)
 
+    def get_comment_by_external_id(
+        self, source_id: UUID, external_id: str
+    ) -> Optional[Comment]:
+        """Get a comment by source ID and external ID."""
+        return (
+            self.db.query(Comment)
+            .options(
+                joinedload(Comment.source_author).selectinload(SourceAuthor.author),
+            )
+            .filter(
+                Comment.source_id == source_id,
+                Comment.external_id == external_id,
+            )
+            .first()
+        )
+
     def search(self, filters: Dict[str, Any]) -> List[CommentSchema]:
         query = self.db.query(Comment).options(
             joinedload(Comment.source_author).selectinload(SourceAuthor.author),

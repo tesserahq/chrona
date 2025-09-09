@@ -95,6 +95,24 @@ class EntryService(SoftDeleteService[Entry]):
     def delete_entry(self, entry_id: UUID) -> bool:
         return self.delete_record(entry_id)
 
+    def get_entry_by_external_id(
+        self, source_id: UUID, external_id: str
+    ) -> Optional[Entry]:
+        """Get an entry by source ID and external ID."""
+        return (
+            self.db.query(Entry)
+            .options(
+                joinedload(Entry.source),
+                joinedload(Entry.source_author).selectinload(SourceAuthor.author),
+                selectinload(Entry.comments),
+            )
+            .filter(
+                Entry.source_id == source_id,
+                Entry.external_id == external_id,
+            )
+            .first()
+        )
+
     def search(self, filters: Dict[str, Any]) -> List[Entry]:
         query = self.db.query(Entry).options(
             joinedload(Entry.source),

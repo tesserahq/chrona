@@ -31,9 +31,17 @@ def upgrade() -> None:
         ["id"],
         ondelete="CASCADE",
     )
+    op.create_unique_constraint(
+        "uq_comments_external_id", "comments", ["source_id", "external_id"]
+    )
+
+    op.create_unique_constraint(
+        "uq_comments_external_id_entries", "entries", ["source_id", "external_id"]
+    )
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_column("comments", "external_id")
     op.drop_column("comments", "source_id")
+    op.drop_constraint("uq_comments_external_id", "comments")

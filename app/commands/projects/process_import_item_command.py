@@ -143,7 +143,26 @@ class ProcessImportItemCommand:
         project_id: UUID,
         external_id: str,
     ):
-        """Create an entry from the item data."""
+        """Create an entry from the item data, or update existing one if it already exists."""
+        # Check if entry already exists
+        existing_entry = self.entry_service.get_entry_by_external_id(
+            source_id, external_id
+        )
+
+        if existing_entry:
+            # Update existing entry with new data
+            from app.schemas.entry import EntryUpdate
+
+            entry_update = EntryUpdate(
+                title=item_data.title,
+                body=item_data.body,
+                tags=item_data.tags,
+                labels=item_data.labels,
+                meta_data=item_data.meta_data,
+            )
+            return self.entry_service.update_entry(existing_entry.id, entry_update)
+
+        # Create new entry
         entry_create = EntryCreate(
             title=item_data.title,
             body=item_data.body,
@@ -165,38 +184,81 @@ class ProcessImportItemCommand:
         workspace_id: UUID,
         source_id: UUID,
     ):
-        """Create comments from the item data comments field."""
+        """Create comments from the item data comments field, or update existing ones if they already exist."""
         comments = []
 
-        # Only create comments if the comments field is present and not empty
-        if item_data.comments:
-            for comment_data in item_data.comments:
-                # Create or get the comment author
-                comment_author = self._create_or_get_author(
-                    comment_data.author, workspace_id
-                )
+        if not item_data.comments:
+            return comments
 
-                # Create or get the source author relationship for the comment author
-                source_author = self._create_or_get_source_author(
-                    comment_author.id, source_id, comment_data.author.id
-                )
-
-                comment_create = CommentCreate(
-                    body=comment_data.body,
-                    source_author_id=source_author.id,
-                    entry_id=entry_id,
-                    tags=comment_data.tags,
-                    labels=comment_data.labels,
-                    meta_data=(
-                        comment_data.meta_data
-                        if hasattr(comment_data, "meta_data")
-                        else {}
-                    ),
-                    external_id=comment_data.id,
-                    source_id=source_id,
-                )
-
-                comment = self.comment_service.create_comment(comment_create)
-                comments.append(comment)
+        for comment_data in item_data.comments:
+            comment = self._process_single_comment(
+                comment_data, entry_id, workspace_id, source_id
+            )
+            comments.append(comment)
 
         return comments
+
+    def _process_single_comment(
+        self,
+        comment_data,
+        entry_id: UUID,
+        workspace_id: UUID,
+        source_id: UUID,
+    ):
+        """Process a single comment - either update existing or create new."""
+        existing_comment = self.comment_service.get_comment_by_external_id(
+            source_id, comment_data.id
+        )
+
+        if existing_comment:
+            return self._update_existing_comment(existing_comment, comment_data)
+        else:
+            return self._create_new_comment(
+                comment_data, entry_id, workspace_id, source_id
+            )
+
+    def _update_existing_comment(self, existing_comment, comment_data):
+        """Update an existing comment with new data."""
+        from app.schemas.comment import CommentUpdate
+
+        comment_update = CommentUpdate(
+            body=comment_data.body,
+            tags=comment_data.tags,
+            labels=comment_data.labels,
+            meta_data=self._extract_comment_meta_data(comment_data),
+        )
+
+        return self.comment_service.update_comment(existing_comment.id, comment_update)
+
+    def _create_new_comment(
+        self,
+        comment_data,
+        entry_id: UUID,
+        workspace_id: UUID,
+        source_id: UUID,
+    ):
+        """Create a new comment with author and source author relationships."""
+        # Create or get the comment author
+        comment_author = self._create_or_get_author(comment_data.author, workspace_id)
+
+        # Create or get the source author relationship for the comment author
+        source_author = self._create_or_get_source_author(
+            comment_author.id, source_id, comment_data.author.id
+        )
+
+        comment_create = CommentCreate(
+            body=comment_data.body,
+            source_author_id=source_author.id,
+            entry_id=entry_id,
+            tags=comment_data.tags,
+            labels=comment_data.labels,
+            meta_data=self._extract_comment_meta_data(comment_data),
+            external_id=comment_data.id,
+            source_id=source_id,
+        )
+
+        return self.comment_service.create_comment(comment_create)
+
+    def _extract_comment_meta_data(self, comment_data):
+        """Extract meta_data from comment_data, handling missing attribute gracefully."""
+        return comment_data.meta_data if hasattr(comment_data, "meta_data") else {}

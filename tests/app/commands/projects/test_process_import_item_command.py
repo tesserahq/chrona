@@ -564,3 +564,86 @@ class TestProcessImportItemCommand:
         assert "source_author_id" in result
         # Should have 2 comments created
         assert len(result["comment_ids"]) == 2
+
+    def test_deduplication_prevents_duplicate_entries_and_comments(
+        self,
+        process_command,
+        setup_project,
+        sample_import_item_data_with_comments,
+        test_user,
+    ):
+        """Test that running import twice with same data updates existing entries/comments instead of creating duplicates."""
+        from app.models.import_request_item import ImportRequestItem
+        from app.models.import_request import ImportRequest
+        from app.models.source import Source
+        from app.constants.import_constants import ImportItemStatuses
+
+        # Create source first
+        source = Source(
+            name="Test Source",
+            identifier="github",
+            workspace_id=setup_project.workspace_id,
+        )
+        process_command.db.add(source)
+        process_command.db.commit()
+        process_command.db.refresh(source)
+
+        # Create import request
+        import_request = ImportRequest(
+            source_id=source.id,
+            requested_by_id=test_user.id,
+            status="pending",
+            received_count=1,
+            success_count=0,
+            failure_count=0,
+            project_id=setup_project.id,
+        )
+        process_command.db.add(import_request)
+        process_command.db.commit()
+        process_command.db.refresh(import_request)
+
+        # Create import request item with proper payload
+        import_request_item = ImportRequestItem(
+            import_request_id=import_request.id,
+            source_id=source.id,
+            source_item_id="item_123",
+            raw_payload=sample_import_item_data_with_comments.model_dump(),
+            status=ImportItemStatuses.FAILED,
+        )
+        process_command.db.add(import_request_item)
+        process_command.db.commit()
+        process_command.db.refresh(import_request_item)
+
+        # Execute the command first time
+        result1 = process_command.execute(import_request_item, setup_project)
+        assert result1["success"] is True
+        first_entry_id = result1["entry_id"]
+        first_comment_ids = result1["comment_ids"]
+
+        # Execute the command second time with same data
+        result2 = process_command.execute(import_request_item, setup_project)
+        assert result2["success"] is True
+        second_entry_id = result2["entry_id"]
+        second_comment_ids = result2["comment_ids"]
+
+        # Should return the same entry and comment IDs (updated, not duplicated)
+        assert first_entry_id == second_entry_id
+        assert first_comment_ids == second_comment_ids
+
+        # Verify only one entry exists in database
+        from app.services.entry_service import EntryService
+
+        entry_service = EntryService(process_command.db)
+        entries = entry_service.get_entries_by_project(setup_project.id)
+        entry_count = len([e for e in entries if e.external_id == "item_123"])
+        assert entry_count == 1
+
+        # Verify only expected number of comments exist in database
+        from app.services.comment_service import CommentService
+
+        comment_service = CommentService(process_command.db)
+        comments = comment_service.get_comments()
+        comment_count = len(
+            [c for c in comments if c.external_id in ["1234567890", "1122334455"]]
+        )
+        assert comment_count == 2
