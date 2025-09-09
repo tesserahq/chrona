@@ -8,10 +8,12 @@ if TYPE_CHECKING:
     from app.schemas.source import Source
     from app.schemas.source_author import SourceAuthor
     from app.schemas.author import Author
+    from app.schemas.comment import CommentResponse
 else:
     from app.schemas.source import Source
     from app.schemas.source_author import SourceAuthor
     from app.schemas.author import Author
+    from app.schemas.comment import CommentResponse
 
 
 class EntryBase(BaseModel):
@@ -82,10 +84,11 @@ class SourceAuthorWithAuthor(SourceAuthor):
 
 
 class EntryResponse(EntryInDB):
-    """Entry response schema with source and source_author information included."""
+    """Entry response schema with source, source_author, and comments information included."""
 
     source: Optional[Source] = None
     source_author: Optional[SourceAuthorWithAuthor] = None
+    comments: Optional[List[CommentResponse]] = None
 
     @field_validator("source", mode="before")
     @classmethod
@@ -101,6 +104,14 @@ class EntryResponse(EntryInDB):
         """Get source_author object from the model's source_author relationship."""
         if hasattr(info.data, "source_author") and info.data.source_author:
             return info.data.source_author
+        return v
+
+    @field_validator("comments", mode="before")
+    @classmethod
+    def get_comments_from_model(cls, v, info):
+        """Get comments list from the model's comments relationship."""
+        if hasattr(info.data, "comments") and info.data.comments:
+            return info.data.comments
         return v
 
     class Config:

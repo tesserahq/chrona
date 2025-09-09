@@ -1,7 +1,14 @@
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, TYPE_CHECKING
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+if TYPE_CHECKING:
+    from app.schemas.source_author import SourceAuthor
+    from app.schemas.author import Author
+else:
+    from app.schemas.source_author import SourceAuthor
+    from app.schemas.author import Author
 
 
 class CommentBase(BaseModel):
@@ -61,3 +68,37 @@ class CommentInDB(CommentBase):
 
 class Comment(CommentInDB):
     pass
+
+
+class SourceAuthorWithAuthor(SourceAuthor):
+    """SourceAuthor schema with author information included."""
+
+    author: Optional[Author] = None
+
+    @field_validator("author", mode="before")
+    @classmethod
+    def get_author_from_model(cls, v, info):
+        """Get author object from the model's author relationship."""
+        if hasattr(info.data, "author") and info.data.author:
+            return info.data.author
+        return v
+
+    class Config:
+        from_attributes = True
+
+
+class CommentResponse(CommentInDB):
+    """Comment response schema with source_author and author information included."""
+
+    source_author: Optional[SourceAuthorWithAuthor] = None
+
+    @field_validator("source_author", mode="before")
+    @classmethod
+    def get_source_author_from_model(cls, v, info):
+        """Get source_author object from the model's source_author relationship."""
+        if hasattr(info.data, "source_author") and info.data.source_author:
+            return info.data.source_author
+        return v
+
+    class Config:
+        from_attributes = True
