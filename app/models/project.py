@@ -35,3 +35,4 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
     digest_generation_configs = relationship(
         "DigestGenerationConfig", back_populates="project", cascade="all, delete-orphan"
     )
+    digests = relationship("Digest", back_populates="project")

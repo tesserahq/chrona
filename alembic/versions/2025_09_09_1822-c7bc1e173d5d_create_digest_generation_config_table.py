@@ -46,7 +46,45 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
 
+    op.create_table(
+        "digests",
+        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("title", sa.String(), nullable=False),
+        sa.Column("body", sa.String(), nullable=True),
+        sa.Column(
+            "entries_ids",
+            postgresql.ARRAY(postgresql.UUID(as_uuid=True)),
+            nullable=False,
+        ),
+        sa.Column("tags", postgresql.ARRAY(sa.String()), nullable=False),
+        sa.Column("labels", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column(
+            "comments_ids",
+            postgresql.ARRAY(postgresql.UUID(as_uuid=True)),
+            nullable=False,
+        ),
+        sa.Column("from_date", sa.DateTime(), nullable=True),
+        sa.Column("to_date", sa.DateTime(), nullable=True),
+        sa.Column(
+            "digest_generation_config_id", postgresql.UUID(as_uuid=True), nullable=False
+        ),
+        sa.Column("project_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["digest_generation_config_id"],
+            ["digest_generation_configs.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["project_id"],
+            ["projects.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+
 
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_table("digest_generation_configs")
+    op.drop_table("digests")

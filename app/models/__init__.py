@@ -13,6 +13,7 @@ from app.models.import_request import ImportRequest
 from app.models.import_request_item import ImportRequestItem
 from app.models.author import Author
 from app.models.digest_generation_config import DigestGenerationConfig
+from app.models.digest import Digest
 
 
 __all__ = [
@@ -31,4 +32,5 @@ __all__ = [
     "ImportRequestItem",
     "Author",
     "DigestGenerationConfig",
+    "Digest",
 ]
