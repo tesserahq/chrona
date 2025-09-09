@@ -55,7 +55,11 @@ class ProcessImportItemCommand:
 
             # Create the entry
             entry = self._create_entry(
-                item_data, source_author.id, import_request_item.source_id, project.id, import_request_item.source_item_id
+                item_data,
+                source_author.id,
+                import_request_item.source_id,
+                project.id,
+                import_request_item.source_item_id,
             )
 
             # Create comments if any
