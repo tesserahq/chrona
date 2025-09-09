@@ -21,6 +21,8 @@ from app.services.comment_service import CommentService
 from app.models.comment import Comment
 from app.services.import_request_service import ImportRequestService
 from app.models.import_request import ImportRequest
+from app.services.digest_generation_config_service import DigestGenerationConfigService
+from app.models.digest_generation_config import DigestGenerationConfig
 
 
 def get_workspace_by_id(
@@ -220,3 +222,29 @@ def get_import_request_by_id(
     if import_request is None:
         raise HTTPException(status_code=404, detail="Import request not found")
     return import_request
+
+
+def get_digest_generation_config_by_id(
+    digest_generation_config_id: UUID,
+    db: Session = Depends(get_db),
+) -> DigestGenerationConfig:
+    """FastAPI dependency to get a digest generation config by ID.
+
+    Args:
+        digest_generation_config_id: The UUID of the digest generation config to retrieve
+        db: Database session dependency
+
+    Returns:
+        DigestGenerationConfig: The retrieved digest generation config
+
+    Raises:
+        HTTPException: If the digest generation config is not found
+    """
+    digest_generation_config = DigestGenerationConfigService(
+        db
+    ).get_digest_generation_config(digest_generation_config_id)
+    if digest_generation_config is None:
+        raise HTTPException(
+            status_code=404, detail="Digest generation config not found"
+        )
+    return digest_generation_config
