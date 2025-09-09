@@ -55,11 +55,13 @@ class ProcessImportItemCommand:
 
             # Create the entry
             entry = self._create_entry(
-                item_data, source_author.id, import_request_item.source_id, project.id
+                item_data, source_author.id, import_request_item.source_id, project.id, import_request_item.source_item_id
             )
 
-            # Create comments if any (for now, we'll create a single comment from the body)
-            comments = self._create_comments(item_data, source_author.id, entry.id)
+            # Create comments if any
+            comments = self._create_comments(
+                item_data, entry.id, project.workspace_id, import_request_item.source_id
+            )
 
             # Update the import request item status
             update_data = ImportRequestItemUpdate(
@@ -135,13 +137,14 @@ class ProcessImportItemCommand:
         source_author_id: UUID,
         source_id: UUID,
         project_id: UUID,
+        external_id: str,
     ):
         """Create an entry from the item data."""
         entry_create = EntryCreate(
             title=item_data.title,
             body=item_data.body,
             source_id=source_id,
-            external_id=item_data.author.id,  # Use author ID as external ID for now
+            external_id=external_id,
             tags=item_data.tags,
             labels=item_data.labels,
             meta_data=item_data.meta_data,
@@ -152,24 +155,44 @@ class ProcessImportItemCommand:
         return self.entry_service.create_entry(entry_create)
 
     def _create_comments(
-        self, item_data: ImportItemData, source_author_id: UUID, entry_id: UUID
+        self,
+        item_data: ImportItemData,
+        entry_id: UUID,
+        workspace_id: UUID,
+        source_id: UUID,
     ):
-        """Create comments from the item data."""
+        """Create comments from the item data comments field."""
         comments = []
 
-        # For now, we'll create a single comment from the body if it's substantial
-        # In a real implementation, you might parse the body for multiple comments
-        if item_data.body and len(item_data.body.strip()) > 0:
-            comment_create = CommentCreate(
-                body=item_data.body,
-                source_author_id=source_author_id,
-                entry_id=entry_id,
-                tags=item_data.tags,
-                labels=item_data.labels,
-                meta_data=item_data.meta_data,
-            )
+        # Only create comments if the comments field is present and not empty
+        if item_data.comments:
+            for comment_data in item_data.comments:
+                # Create or get the comment author
+                comment_author = self._create_or_get_author(
+                    comment_data.author, workspace_id
+                )
 
-            comment = self.comment_service.create_comment(comment_create)
-            comments.append(comment)
+                # Create or get the source author relationship for the comment author
+                source_author = self._create_or_get_source_author(
+                    comment_author.id, source_id, comment_data.author.id
+                )
+
+                comment_create = CommentCreate(
+                    body=comment_data.body,
+                    source_author_id=source_author.id,
+                    entry_id=entry_id,
+                    tags=comment_data.tags,
+                    labels=comment_data.labels,
+                    meta_data=(
+                        comment_data.meta_data
+                        if hasattr(comment_data, "meta_data")
+                        else {}
+                    ),
+                    external_id=comment_data.id,
+                    source_id=source_id,
+                )
+
+                comment = self.comment_service.create_comment(comment_create)
+                comments.append(comment)
 
         return comments

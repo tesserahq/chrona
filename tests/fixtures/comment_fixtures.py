@@ -3,10 +3,11 @@ from app.models.comment import Comment
 
 
 @pytest.fixture
-def setup_comment(db, setup_source_author, setup_entry, faker):
+def setup_comment(db, setup_source_author, setup_entry, setup_source, faker):
     """Create a test comment in the database with optional overrides."""
     source_author = setup_source_author
     entry = setup_entry
+    source = setup_source
 
     comment_data = {
         "body": faker.text(200),
@@ -15,6 +16,8 @@ def setup_comment(db, setup_source_author, setup_entry, faker):
         "tags": ["feedback"],
         "labels": {"priority": "medium"},
         "meta_data": {"source": "test"},
+        "external_id": faker.uuid4(),
+        "source_id": source.id,
     }
 
     comment = Comment(**comment_data)

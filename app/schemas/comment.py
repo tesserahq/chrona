@@ -28,6 +28,12 @@ class CommentBase(BaseModel):
     meta_data: Optional[Dict[str, Any]] = Field(
         None, description="Optional metadata dictionary for the comment."
     )
+    external_id: Optional[str] = Field(
+        None, description="External ID of the comment from the source system."
+    )
+    source_id: Optional[UUID] = Field(
+        None, description="UUID of the source this comment belongs to."
+    )
 
 
 class CommentCreate(CommentBase):
@@ -47,6 +53,12 @@ class CommentCreate(CommentBase):
     meta_data: Optional[Dict[str, Any]] = Field(
         None, description="Optional metadata dictionary for the comment."
     )
+    external_id: str = Field(
+        ..., description="External ID of the comment from the source system."
+    )
+    source_id: UUID = Field(
+        ..., description="UUID of the source this comment belongs to."
+    )
 
 
 class CommentUpdate(BaseModel):
@@ -54,6 +66,12 @@ class CommentUpdate(BaseModel):
     tags: Optional[List[str]] = None
     labels: Optional[Dict[str, Any]] = None
     meta_data: Optional[Dict[str, Any]] = None
+    external_id: Optional[str] = Field(
+        None, description="External ID of the comment from the source system."
+    )
+    source_id: Optional[UUID] = Field(
+        None, description="UUID of the source this comment belongs to."
+    )
 
 
 class CommentInDB(CommentBase):

@@ -30,3 +30,4 @@ class Source(Base, TimestampMixin, SoftDeleteMixin):
     import_requests = relationship("ImportRequest", back_populates="source")
     import_request_items = relationship("ImportRequestItem", back_populates="source")
     source_authors = relationship("SourceAuthor", back_populates="source")
+    comments = relationship("Comment", back_populates="source")

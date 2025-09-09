@@ -4,10 +4,11 @@ from app.schemas.comment import CommentCreate, CommentUpdate
 from app.services.comment_service import CommentService
 
 
-def test_create_comment(db, setup_source_author, setup_entry):
+def test_create_comment(db, setup_source_author, setup_entry, setup_source):
     service = CommentService(db)
     source_author = setup_source_author
     entry = setup_entry
+    source = setup_source
 
     comment = CommentCreate(
         body="This is a test comment",
@@ -16,6 +17,8 @@ def test_create_comment(db, setup_source_author, setup_entry):
         tags=["feedback"],
         labels={"priority": "medium"},
         meta_data={"source": "test"},
+        external_id="test_external_id_123",
+        source_id=str(source.id),
     )
 
     comment = service.create_comment(comment)

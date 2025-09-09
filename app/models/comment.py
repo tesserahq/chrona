@@ -25,7 +25,10 @@ class Comment(Base, TimestampMixin, SoftDeleteMixin):
     tags = Column(ARRAY(String), default=list, nullable=False)
     labels = Column(JSONB, default=dict, nullable=False)  # Dictionary of labels
     meta_data = Column(JSONB, default=dict, nullable=False)  # Dictionary of metadata
+    external_id = Column(String, nullable=False)
+    source_id = Column(UUID(as_uuid=True), ForeignKey("sources.id"), nullable=False)
 
     # Relationships
     source_author = relationship("SourceAuthor", back_populates="comments")
     entry = relationship("Entry", back_populates="comments")
+    source = relationship("Source", back_populates="comments")

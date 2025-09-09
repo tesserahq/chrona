@@ -21,6 +21,23 @@ class ImportAuthorData(BaseModel):
     )
 
 
+class ImportCommentData(BaseModel):
+    """Schema for comment data in import payload."""
+
+    id: str = Field(..., description="External comment ID")
+    body: str = Field(..., description="Body content of the comment")
+    created_at: str = Field(..., description="Creation timestamp of the comment")
+    author: ImportAuthorData = Field(
+        ..., description="Author information for the comment"
+    )
+    tags: List[str] = Field(
+        default_factory=list, description="Tags associated with the comment"
+    )
+    labels: Dict[str, Any] = Field(
+        default_factory=dict, description="Labels for the comment"
+    )
+
+
 class ImportItemData(BaseModel):
     """Schema for individual item data in import payload."""
 
@@ -35,6 +52,9 @@ class ImportItemData(BaseModel):
         default_factory=dict, description="Metadata for the item"
     )
     author: ImportAuthorData = Field(..., description="Author information for the item")
+    comments: List[ImportCommentData] = Field(
+        default_factory=list, description="Comments associated with the item"
+    )
 
 
 class ImportItemRequest(BaseModel):

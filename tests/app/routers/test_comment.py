@@ -68,6 +68,7 @@ def test_create_comment(client, setup_source_author, setup_entry):
         "labels": {"priority": "medium"},
         "meta_data": {"source": "test"},
         "entry_id": str(entry.id),
+        "external_id": "test_external_id_123",
     }
 
     response = client.post(f"/entries/{entry.id}/comments", json=comment_data)
@@ -187,6 +188,7 @@ def test_create_comment_auto_sets_entry_id(client, setup_source_author, setup_en
         "source_author_id": str(source_author.id),
         "source_id": str(entry.source_id),
         "entry_id": str(entry.id),
+        "external_id": "test_external_id_456",
         # Note: not providing entry_id in the request body
     }
 
