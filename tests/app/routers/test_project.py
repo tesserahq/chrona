@@ -540,3 +540,31 @@ def test_import_items_multiple_items(client, setup_project):
     assert data["success_count"] == 2
     assert data["failure_count"] == 0
     assert data["status"] == "completed"
+
+
+def test_list_project_digests(client, setup_project):
+    """Test GET /projects/{project_id}/digests endpoint."""
+    project = setup_project
+    response = client.get(f"/projects/{project.id}/digests")
+    assert response.status_code == 200
+    data = response.json()
+    assert "data" in data
+    assert isinstance(data["data"], list)
+
+
+def test_list_project_digests_nonexistent_project(client):
+    """Test GET /projects/{project_id}/digests endpoint with non-existent project."""
+    non_existent_id = "00000000-0000-0000-0000-000000000000"
+    response = client.get(f"/projects/{non_existent_id}/digests")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Project not found"
+
+
+def test_list_project_digests_pagination(client, setup_project):
+    """Test GET /projects/{project_id}/digests endpoint with pagination parameters."""
+    project = setup_project
+    response = client.get(f"/projects/{project.id}/digests?skip=0&limit=10")
+    assert response.status_code == 200
+    data = response.json()
+    assert "data" in data
+    assert isinstance(data["data"], list)

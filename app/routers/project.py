@@ -32,6 +32,10 @@ from app.schemas.common import ListResponse
 from app.models.project_membership import ProjectMembership
 from app.schemas.project_import import ImportItemRequest, ImportItemResponse
 from app.commands.projects.import_items_command import ImportItemsCommand
+from app.schemas.system import FeedProjectRequest, FeedProjectResponse
+from app.services.feed_project_service import FeedProjectService
+from app.services.digest_service import DigestService
+from app.schemas.digest import Digest
 
 router = APIRouter(prefix="/projects", tags=["workspace-projects"])
 
@@ -75,6 +79,20 @@ def list_project_memberships(
     service = ProjectMembershipService(db)
     memberships = service.get_memberships_by_project(UUID(str(project.id)), skip, limit)
     return ListResponse(data=memberships)
+
+
+@router.get("/{project_id}/digests", response_model=ListResponse[Digest])
+def list_project_digests(
+    project: ProjectModel = Depends(get_project_by_id),
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """List all digests for a specific project with pagination."""
+    service = DigestService(db)
+    digests = service.get_digests_by_project(UUID(str(project.id)), skip, limit)
+    return ListResponse(data=digests)
 
 
 @router.get("/{project_id}", response_model=Project)
@@ -181,3 +199,50 @@ def import_items(
     command = ImportItemsCommand(db)
     result = command.execute(project, import_request, current_user.id)
     return ImportItemResponse(**result)
+
+
+@router.post("/{project_id}/feed", response_model=FeedProjectResponse)
+def feed_project(
+    project_id: UUID,
+    request: FeedProjectRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Feed a project with fake GitHub data and generate digests.
+
+    This endpoint generates:
+    - At least 50 entries (issues, PRs, commits) with comments
+    - At least 20 different digests based on those entries
+
+    Args:
+        project_id: The ID of the project to feed
+        request: Configuration for the feed operation
+    """
+    # Verify project exists
+    project_service = ProjectService(db)
+    project = project_service.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    # Feed the project
+    feed_service = FeedProjectService(db)
+    try:
+        result = feed_service.feed_project(
+            project=project,
+            num_entries=request.num_entries,
+            num_digests=request.num_digests,
+        )
+
+        return FeedProjectResponse(
+            success=True,
+            message=f"Successfully fed project with {result['entries_created']} entries and {result['digests_created']} digests",
+            source_created=str(result["source_created"]),
+            authors_created=result["authors_created"],
+            entries_created=result["entries_created"],
+            comments_created=result["comments_created"],
+            digest_configs_created=result["digest_configs_created"],
+            digests_created=result["digests_created"],
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to feed project: {str(e)}")

@@ -67,3 +67,23 @@ class SystemSettingsGrouped(BaseModel):
     telemetry: TelemetryGroup
     redis: RedisGroup
     services: ExternalServicesGroup
+
+
+class FeedProjectRequest(BaseModel):
+    """Request model for feeding a project with fake data."""
+
+    num_entries: int = 50
+    num_digests: int = 20
+
+
+class FeedProjectResponse(BaseModel):
+    """Response model for feeding a project with fake data."""
+
+    success: bool
+    message: str
+    source_created: str
+    authors_created: int
+    entries_created: int
+    comments_created: int
+    digest_configs_created: int
+    digests_created: int
