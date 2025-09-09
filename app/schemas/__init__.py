@@ -8,3 +8,5 @@ from app.schemas.entry import *
 from app.schemas.comment import *
 from app.schemas.import_request import *
 from app.schemas.import_request_item import *
+from app.schemas.digest_generation_config import *
+from app.schemas.digest import *

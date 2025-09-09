@@ -32,3 +32,7 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
     )
     entries = relationship("Entry", back_populates="project")
     import_requests = relationship("ImportRequest", back_populates="project")
+    digest_generation_configs = relationship(
+        "DigestGenerationConfig", back_populates="project", cascade="all, delete-orphan"
+    )
+    digests = relationship("Digest", back_populates="project")

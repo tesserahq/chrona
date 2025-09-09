@@ -30,8 +30,7 @@ class ProjectMembershipInDB(ProjectMembershipBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class ProjectMembershipResponse(ProjectMembershipBase):
@@ -57,5 +56,4 @@ class ProjectMembershipResponse(ProjectMembershipBase):
             return info.data.created_by
         return v
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
