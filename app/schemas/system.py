@@ -33,7 +33,6 @@ class AppGroup(BaseModel):
 
 
 class GeneralGroup(BaseModel):
-    default_data_dir: str
     is_production: bool
 
 

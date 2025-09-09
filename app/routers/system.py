@@ -55,7 +55,6 @@ def get_system_settings(
     )
 
     general_group = GeneralGroup(
-        default_data_dir=s.default_data_dir,
         is_production=s.is_production,
     )
 
