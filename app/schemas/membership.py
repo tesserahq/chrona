@@ -77,10 +77,7 @@ class MembershipInDB(MembershipBase):
     updated_at: datetime
     """Timestamp when the membership was last updated."""
 
-    class Config:
-        """Pydantic model configuration."""
-
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class MembershipResponse(MembershipBase):
@@ -106,5 +103,4 @@ class MembershipResponse(MembershipBase):
             return info.data.created_by
         return v
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

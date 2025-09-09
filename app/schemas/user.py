@@ -91,10 +91,7 @@ class UserInDB(UserBase):
     updated_at: datetime
     """Timestamp when the user record was last updated."""
 
-    class Config:
-        """Pydantic model configuration."""
-
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class User(UserInDB):
@@ -130,7 +127,4 @@ class UserDetails(BaseModel):
     verified_at: Optional[datetime] = None
     """Timestamp when the user's account was verified."""
 
-    class Config:
-        """Pydantic model configuration."""
-
-        from_attributes = True
+    model_config = {"from_attributes": True}

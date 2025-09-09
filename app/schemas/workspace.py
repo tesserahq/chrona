@@ -65,10 +65,7 @@ class WorkspaceInDB(WorkspaceBase):
     updated_at: datetime
     """Timestamp when the workspace was last updated."""
 
-    class Config:
-        """Pydantic model configuration."""
-
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class Workspace(WorkspaceInDB):
@@ -103,8 +100,7 @@ class ProjectSummary(BaseModel):
     description: Optional[str] = None
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class PromptStats(BaseModel):
@@ -126,8 +122,7 @@ class PromptSummary(BaseModel):
     type: str
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class PluginStats(BaseModel):

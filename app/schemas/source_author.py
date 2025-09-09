@@ -36,9 +36,7 @@ class SourceAuthorInDB(SourceAuthorBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
-        populate_by_name = True
+    model_config = {"from_attributes": True}
 
 
 class SourceAuthor(SourceAuthorInDB):

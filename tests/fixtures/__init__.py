@@ -1,13 +1,2 @@
-from tests.fixtures.author_fixtures import *
-from tests.fixtures.comment_fixtures import *
-from tests.fixtures.digest_fixtures import *
-from tests.fixtures.entry_fixtures import *
-from tests.fixtures.import_request_fixtures import *
-from tests.fixtures.invitation_fixtures import *
-from tests.fixtures.membership_fixtures import *
-from tests.fixtures.project_fixtures import *
-from tests.fixtures.project_membership_fixtures import *
-from tests.fixtures.source_author_fixtures import *
-from tests.fixtures.source_fixtures import *
-from tests.fixtures.user_fixtures import *
-from tests.fixtures.workspace_fixtures import *
+# Fixtures are loaded via conftest.py pytest_plugins
+# No need to import them here to avoid PytestAssertRewriteWarning
