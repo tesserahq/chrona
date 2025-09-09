@@ -14,6 +14,8 @@ from app.schemas.digest_generation_config import (
     DigestGenerationConfigCreate,
     DigestGenerationConfigUpdate,
     DigestGenerationConfig,
+    DigestGenerationConfigSearchFilters,
+    DigestGenerationConfigSearchResponse,
 )
 from app.services.digest_generation_config_service import DigestGenerationConfigService
 from app.models.digest_generation_config import (
@@ -54,6 +56,37 @@ def list_digest_generation_configs(
         project.id, skip, limit
     )
     return ListResponse(data=digest_generation_configs)
+
+
+@project_router.post("/search", response_model=DigestGenerationConfigSearchResponse)
+def search_digest_generation_configs(
+    project_id: UUID,
+    filters: DigestGenerationConfigSearchFilters,
+    project: ProjectModel = Depends(get_project_by_id),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Search digest generation configs within a specific project based on provided filters.
+
+    Each filter field can be either:
+    - A direct value (e.g., "title": "My Config")
+    - A search operator object with:
+        - operator: One of "=", "!=", ">", "<", ">=", "<=", "ilike", "in", "not in"
+        - value: The value to compare against
+
+    Example:
+    {
+        "title": {"operator": "ilike", "value": "%daily%"},
+        "project_id": "123e4567-e89b-12d3-a456-426614174000"
+    }
+    """
+    service = DigestGenerationConfigService(db)
+    # Add project_id to filters to scope the search
+    search_filters = filters.model_dump(exclude_none=True)
+    search_filters["project_id"] = str(project_id)
+    results = service.search_digest_generation_configs(search_filters)
+    return DigestGenerationConfigSearchResponse(data=results)
 
 
 @project_router.post(

@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union, Literal
 from uuid import UUID
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -82,3 +82,49 @@ class DigestGenerationConfig(DigestGenerationConfigBase):
     deleted_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+
+class SearchOperator(BaseModel):
+    """Schema for search operators in filters."""
+
+    operator: Literal["=", "!=", ">", "<", ">=", "<=", "ilike", "in", "not in"] = Field(
+        ...,
+        description="The comparison operator to use in the search filter. Supports equality, inequality, comparison, pattern matching, and list operations.",
+    )
+    value: Any = Field(
+        ..., description="The value to compare against using the specified operator."
+    )
+
+
+class DigestGenerationConfigSearchFilters(BaseModel):
+    """Schema for digest generation config search filters."""
+
+    title: Optional[Union[str, SearchOperator]] = Field(
+        None,
+        description="Filter by digest generation config title. Can be a direct string match or a SearchOperator for more complex comparisons.",
+    )
+    project_id: Optional[Union[UUID, SearchOperator]] = Field(
+        None,
+        description="Filter by project UUID. Can be a direct UUID match or a SearchOperator for more complex comparisons.",
+    )
+    timezone: Optional[Union[str, SearchOperator]] = Field(
+        None,
+        description="Filter by timezone. Can be a direct string match or a SearchOperator for more complex comparisons.",
+    )
+    generate_empty_digest: Optional[Union[bool, SearchOperator]] = Field(
+        None,
+        description="Filter by generate_empty_digest flag. Can be a direct boolean match or a SearchOperator for more complex comparisons.",
+    )
+    cron_expression: Optional[Union[str, SearchOperator]] = Field(
+        None,
+        description="Filter by cron expression. Can be a direct string match or a SearchOperator for more complex comparisons.",
+    )
+
+
+class DigestGenerationConfigSearchResponse(BaseModel):
+    """Schema for digest generation config search response."""
+
+    data: List[DigestGenerationConfig] = Field(
+        ...,
+        description="List of digest generation configs matching the search criteria.",
+    )
