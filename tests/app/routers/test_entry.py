@@ -8,13 +8,13 @@ def test_list_entries(client, setup_entry):
     response = client.get(f"/projects/{entry.project_id}/entries")
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
-    assert len(data["data"]) >= 1
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
 
     # Find our entry in the response
     entry_found = False
-    for item in data["data"]:
+    for item in data["items"]:
         if item["id"] == str(entry.id):
             entry_found = True
             assert item["title"] == entry.title
@@ -230,30 +230,30 @@ def test_search_entries_exact_match(client, setup_entry):
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert len(data["data"]) >= 1
-    assert data["data"][0]["id"] == str(entry.id)
+    assert "items" in data
+    assert len(data["items"]) >= 1
+    assert data["items"][0]["id"] == str(entry.id)
     # Check that source information is included in search results
-    assert "source" in data["data"][0]
-    assert data["data"][0]["source"] is not None
-    assert data["data"][0]["source"]["id"] == str(entry.source.id)
-    assert data["data"][0]["source"]["name"] == entry.source.name
+    assert "source" in data["items"][0]
+    assert data["items"][0]["source"] is not None
+    assert data["items"][0]["source"]["id"] == str(entry.source.id)
+    assert data["items"][0]["source"]["name"] == entry.source.name
     # Check that source_author and author information is included in search results
-    assert "source_author" in data["data"][0]
-    assert data["data"][0]["source_author"] is not None
-    assert data["data"][0]["source_author"]["id"] == str(entry.source_author.id)
+    assert "source_author" in data["items"][0]
+    assert data["items"][0]["source_author"] is not None
+    assert data["items"][0]["source_author"]["id"] == str(entry.source_author.id)
     assert (
-        data["data"][0]["source_author"]["source_author_id"]
+        data["items"][0]["source_author"]["source_author_id"]
         == entry.source_author.source_author_id
     )
     # Check that author information is included within source_author in search results
-    assert "author" in data["data"][0]["source_author"]
-    assert data["data"][0]["source_author"]["author"] is not None
-    assert data["data"][0]["source_author"]["author"]["id"] == str(
+    assert "author" in data["items"][0]["source_author"]
+    assert data["items"][0]["source_author"]["author"] is not None
+    assert data["items"][0]["source_author"]["author"]["id"] == str(
         entry.source_author.author.id
     )
     assert (
-        data["data"][0]["source_author"]["author"]["display_name"]
+        data["items"][0]["source_author"]["author"]["display_name"]
         == entry.source_author.author.display_name
     )
 
@@ -270,8 +270,8 @@ def test_search_entries_partial_match(client, setup_entry):
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert len(data["data"]) >= 1
+    assert "items" in data
+    assert len(data["items"]) >= 1
 
 
 def test_search_entries_by_author(client, setup_entry):
@@ -285,8 +285,8 @@ def test_search_entries_by_author(client, setup_entry):
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert len(data["data"]) >= 1
+    assert "items" in data
+    assert len(data["items"]) >= 1
 
 
 def test_search_entries_by_project(client, setup_entry):
@@ -300,8 +300,8 @@ def test_search_entries_by_project(client, setup_entry):
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert len(data["data"]) >= 1
+    assert "items" in data
+    assert len(data["items"]) >= 1
 
 
 def test_search_entries_no_results(client, setup_project):
@@ -314,28 +314,36 @@ def test_search_entries_no_results(client, setup_project):
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert len(data["data"]) == 0
+    assert "items" in data
+    assert len(data["items"]) == 0
 
 
 def test_list_entries_pagination(client, setup_entry):
     """Test GET /projects/{project_id}/entries with pagination parameters."""
     entry = setup_entry
 
-    # Test with skip and limit
-    response = client.get(f"/projects/{entry.project_id}/entries?skip=0&limit=1")
+    # Test with page and size (fastapi-pagination format)
+    response = client.get(f"/projects/{entry.project_id}/entries?page=1&size=1")
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
-    assert len(data["data"]) <= 1
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) <= 1
+    assert "page" in data
+    assert "size" in data
+    assert "total" in data
+    assert "pages" in data
 
     # Test with different pagination
-    response = client.get(f"/projects/{entry.project_id}/entries?skip=10&limit=5")
+    response = client.get(f"/projects/{entry.project_id}/entries?page=2&size=5")
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert "page" in data
+    assert "size" in data
+    assert "total" in data
+    assert "pages" in data
 
 
 def test_list_entries_invalid_project(client):

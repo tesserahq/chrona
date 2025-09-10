@@ -8,13 +8,13 @@ def test_list_digest_generation_configs(client, setup_digest_generation_config):
     response = client.get(f"/projects/{config.project_id}/digest-generation-configs")
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
-    assert len(data["data"]) >= 1
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
 
     # Find our config in the response
     config_found = False
-    for item in data["data"]:
+    for item in data["items"]:
         if item["id"] == str(config.id):
             config_found = True
             assert item["title"] == config.title
@@ -149,13 +149,13 @@ def test_search_digest_generation_configs_exact_match(
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
-    assert len(data["data"]) >= 1
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
 
     # Find our config in the response
     config_found = False
-    for item in data["data"]:
+    for item in data["items"]:
         if item["id"] == str(config.id):
             config_found = True
             assert item["title"] == config.title
@@ -181,13 +181,13 @@ def test_search_digest_generation_configs_partial_match(
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
-    assert len(data["data"]) >= 1
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
 
     # Find our config in the response
     config_found = False
-    for item in data["data"]:
+    for item in data["items"]:
         if item["id"] == str(config.id):
             config_found = True
             assert partial_title.lower() in item["title"].lower()
@@ -211,13 +211,13 @@ def test_search_digest_generation_configs_by_timezone(
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
-    assert len(data["data"]) >= 1
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
 
     # Find our config in the response
     config_found = False
-    for item in data["data"]:
+    for item in data["items"]:
         if item["id"] == str(config.id):
             config_found = True
             assert item["timezone"] == config.timezone
@@ -241,13 +241,13 @@ def test_search_digest_generation_configs_by_generate_empty_digest(
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
-    assert len(data["data"]) >= 1
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
 
     # Find our config in the response
     config_found = False
-    for item in data["data"]:
+    for item in data["items"]:
         if item["id"] == str(config.id):
             config_found = True
             assert item["generate_empty_digest"] == config.generate_empty_digest
@@ -271,13 +271,13 @@ def test_search_digest_generation_configs_by_cron_expression(
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
-    assert len(data["data"]) >= 1
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
 
     # Find our config in the response
     config_found = False
-    for item in data["data"]:
+    for item in data["items"]:
         if item["id"] == str(config.id):
             config_found = True
             assert item["cron_expression"] == config.cron_expression
@@ -296,9 +296,9 @@ def test_search_digest_generation_configs_no_results(client, setup_project):
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
-    assert len(data["data"]) == 0
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) == 0
 
 
 def test_search_digest_generation_configs_multiple_conditions(
@@ -319,13 +319,13 @@ def test_search_digest_generation_configs_multiple_conditions(
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
-    assert len(data["data"]) >= 1
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
 
     # Find our config in the response
     config_found = False
-    for item in data["data"]:
+    for item in data["items"]:
         if item["id"] == str(config.id):
             config_found = True
             assert config.title.lower() in item["title"].lower()
@@ -372,6 +372,6 @@ def test_search_digest_generation_configs_empty_filters(client, setup_project):
     )
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
+    assert "items" in data
+    assert isinstance(data["items"], list)
     # Should return all configs for the project (if any exist)

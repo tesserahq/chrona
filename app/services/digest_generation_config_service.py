@@ -47,6 +47,12 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
             .all()
         )
 
+    def get_digest_generation_configs_by_project_query(self, project_id: UUID):
+        """Get a query object for digest generation configs by project for use with fastapi-pagination."""
+        return self.db.query(DigestGenerationConfig).filter(
+            DigestGenerationConfig.project_id == project_id
+        )
+
     def create_digest_generation_config(
         self, digest_generation_config: DigestGenerationConfigCreate, project_id: UUID
     ) -> DigestGenerationConfig:
@@ -101,3 +107,9 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
         query = self.db.query(DigestGenerationConfig)
         filtered_query = apply_filters(query, DigestGenerationConfig, filters)
         return filtered_query.all()
+
+    def search_digest_generation_configs_query(self, filters: Dict[str, Any]):
+        """Get a query object for digest generation config search for use with fastapi-pagination."""
+        query = self.db.query(DigestGenerationConfig)
+        filtered_query = apply_filters(query, DigestGenerationConfig, filters)
+        return filtered_query

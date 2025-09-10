@@ -127,5 +127,4 @@ class EntrySearchFilters(BaseModel):
     project_id: Optional[Union[UUID, SearchOperator]] = None
 
 
-class EntrySearchResponse(BaseModel):
-    data: List[EntryResponse]
+# EntrySearchResponse is no longer needed as we use Page[EntryResponse] from fastapi-pagination

@@ -9,13 +9,13 @@ def test_list_authors(client, setup_author):
     response = client.get(f"/workspaces/{workspace_id}/authors")
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
-    assert len(data["data"]) >= 1
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
 
     # Find our author in the response
     author_found = False
-    for item in data["data"]:
+    for item in data["items"]:
         if item["id"] == str(author.id):
             author_found = True
             assert item["display_name"] == author.display_name
@@ -159,20 +159,28 @@ def test_list_authors_pagination(client, setup_author):
     author = setup_author
     workspace_id = author.workspace_id
 
-    # Test with skip and limit
-    response = client.get(f"/workspaces/{workspace_id}/authors?skip=0&limit=1")
+    # Test with page and size (fastapi-pagination format)
+    response = client.get(f"/workspaces/{workspace_id}/authors?page=1&size=1")
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
-    assert len(data["data"]) <= 1
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) <= 1
+    assert "page" in data
+    assert "size" in data
+    assert "total" in data
+    assert "pages" in data
 
     # Test with different pagination
-    response = client.get(f"/workspaces/{workspace_id}/authors?skip=10&limit=5")
+    response = client.get(f"/workspaces/{workspace_id}/authors?page=2&size=5")
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert "page" in data
+    assert "size" in data
+    assert "total" in data
+    assert "pages" in data
 
 
 def test_create_author_with_user_id(client, setup_workspace, setup_user):

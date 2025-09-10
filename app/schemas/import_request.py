@@ -68,8 +68,7 @@ class ImportRequestSearchFilters(BaseModel):
     failure_count: Optional[Union[int, SearchOperator]] = None
 
 
-class ImportRequestSearchResponse(BaseModel):
-    data: List[ImportRequest]
+# ImportRequestSearchResponse is no longer needed as we use Page[ImportRequest] from fastapi-pagination
 
 
 class ProcessedItemResult(BaseModel):

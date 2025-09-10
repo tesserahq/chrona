@@ -9,6 +9,9 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import List
 
+from fastapi_pagination import Page, Params
+from fastapi_pagination.ext.sqlalchemy import paginate
+
 from app.db import get_db
 from app.schemas.entry import (
     EntryCreate,
@@ -16,7 +19,6 @@ from app.schemas.entry import (
     Entry,
     EntryResponse,
     EntrySearchFilters,
-    EntrySearchResponse,
 )
 from app.services.entry_service import EntryService
 from app.models.entry import Entry as EntryModel
@@ -32,12 +34,13 @@ entries_router = APIRouter(prefix="/entries", tags=["entries"])
 
 
 @project_entries_router.post(
-    "/{project_id}/entries/search", response_model=EntrySearchResponse
+    "/{project_id}/entries/search", response_model=Page[EntryResponse]
 )
 def search_entries(
     project_id: UUID,
     filters: EntrySearchFilters,
     project: ProjectModel = Depends(get_project_by_id),
+    params: Params = Depends(),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
@@ -60,25 +63,22 @@ def search_entries(
     # Add project_id to filters to scope the search
     search_filters = filters.model_dump(exclude_none=True)
     search_filters["project_id"] = str(project_id)
-    results = service.search(search_filters)
-    return EntrySearchResponse(data=results)
+    query = service.search_query(search_filters)
+    return paginate(query, params)
 
 
-@project_entries_router.get(
-    "/{project_id}/entries", response_model=ListResponse[EntryResponse]
-)
+@project_entries_router.get("/{project_id}/entries", response_model=Page[EntryResponse])
 def list_entries(
     project_id: UUID,
     project: ProjectModel = Depends(get_project_by_id),
-    skip: int = 0,
-    limit: int = 100,
+    params: Params = Depends(),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     """List all entries within a specific project with pagination."""
     service = EntryService(db)
-    entries = service.get_entries_by_project(project_id, skip, limit)
-    return ListResponse(data=entries)
+    query = service.get_entries_by_project_query(project_id)
+    return paginate(query, params)
 
 
 @project_entries_router.post(

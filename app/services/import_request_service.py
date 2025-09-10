@@ -51,6 +51,12 @@ class ImportRequestService(SoftDeleteService[ImportRequest]):
             .all()
         )
 
+    def get_import_requests_by_project_query(self, project_id: UUID):
+        """Get a query object for import requests by project for use with fastapi-pagination."""
+        return self.db.query(ImportRequest).filter(
+            ImportRequest.project_id == project_id
+        )
+
     def get_import_requests_by_user(
         self, user_id: UUID, skip: int = 0, limit: int = 100
     ) -> List[ImportRequest]:
@@ -116,6 +122,12 @@ class ImportRequestService(SoftDeleteService[ImportRequest]):
         query = self.db.query(ImportRequest)
         query = apply_filters(query, ImportRequest, filters)
         return query.all()
+
+    def search_query(self, filters: Dict[str, Any]):
+        """Get a query object for import request search for use with fastapi-pagination."""
+        query = self.db.query(ImportRequest)
+        query = apply_filters(query, ImportRequest, filters)
+        return query
 
     def get_import_request_items(
         self, import_request_id: UUID, skip: int = 0, limit: int = 100

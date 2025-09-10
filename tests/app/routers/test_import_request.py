@@ -310,3 +310,91 @@ def test_process_import_request_integration(client, setup_import_request_with_it
     assert "success" in data
     assert "import_request_id" in data
     assert data["import_request_id"] == str(import_request.id)
+
+
+def test_list_import_requests(client, setup_import_request):
+    """Test GET /import-requests/projects/{project_id}/import-requests endpoint."""
+    import_request = setup_import_request
+
+    response = client.get(
+        f"/import-requests/projects/{import_request.project_id}/import-requests"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
+
+    # Find our import request in the response
+    import_request_found = False
+    for item in data["items"]:
+        if item["id"] == str(import_request.id):
+            import_request_found = True
+            assert item["status"] == import_request.status
+            assert item["project_id"] == str(import_request.project_id)
+            assert item["requested_by_id"] == str(import_request.requested_by_id)
+            break
+    assert import_request_found
+
+
+def test_list_import_requests_pagination(client, setup_import_request):
+    """Test GET /import-requests/projects/{project_id}/import-requests with pagination parameters."""
+    import_request = setup_import_request
+
+    # Test with page and size (fastapi-pagination format)
+    response = client.get(
+        f"/import-requests/projects/{import_request.project_id}/import-requests?page=1&size=1"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) <= 1
+    assert "page" in data
+    assert "size" in data
+    assert "total" in data
+    assert "pages" in data
+
+
+def test_search_import_requests_exact_match(client, setup_import_request):
+    """Test POST /import-requests/projects/{project_id}/import-requests/search with exact match."""
+    import_request = setup_import_request
+    search_filters = {
+        "status": import_request.status,
+        "project_id": str(import_request.project_id),
+    }
+
+    response = client.post(
+        f"/import-requests/projects/{import_request.project_id}/import-requests/search",
+        json=search_filters,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
+
+    # Find our import request in the response
+    import_request_found = False
+    for item in data["items"]:
+        if item["id"] == str(import_request.id):
+            import_request_found = True
+            assert item["status"] == import_request.status
+            break
+    assert import_request_found
+
+
+def test_search_import_requests_no_results(client, setup_project):
+    """Test POST /import-requests/projects/{project_id}/import-requests/search with filters that return no results."""
+    project = setup_project
+    search_filters = {"status": "NonExistentStatus123"}
+
+    response = client.post(
+        f"/import-requests/projects/{project.id}/import-requests/search",
+        json=search_filters,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) == 0

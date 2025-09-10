@@ -6,6 +6,7 @@ from app.config import get_settings
 import rollbar
 from rollbar.logger import RollbarHandler
 from rollbar.contrib.fastapi import ReporterMiddleware as RollbarMiddleware
+from fastapi_pagination import add_pagination
 
 from .routers import (
     workspace,
@@ -89,6 +90,9 @@ def create_app(testing: bool = False, auth_middleware=None) -> FastAPI:
     app.include_router(import_request.router)
 
     register_exception_handlers(app)
+
+    # Add pagination support
+    add_pagination(app)
 
     return app
 

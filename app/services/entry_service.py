@@ -54,6 +54,18 @@ class EntryService(SoftDeleteService[Entry]):
             .all()
         )
 
+    def get_entries_by_project_query(self, project_id: UUID):
+        """Get a query object for entries by project for use with fastapi-pagination."""
+        return (
+            self.db.query(Entry)
+            .options(
+                joinedload(Entry.source),
+                joinedload(Entry.source_author).selectinload(SourceAuthor.author),
+                selectinload(Entry.comments),
+            )
+            .filter(Entry.project_id == project_id)
+        )
+
     def create_entry(self, entry: EntryCreate) -> Entry:
         db_entry = Entry(**entry.model_dump())
         self.db.add(db_entry)
@@ -121,3 +133,13 @@ class EntryService(SoftDeleteService[Entry]):
         )
         query = apply_filters(query, Entry, filters)
         return query.all()
+
+    def search_query(self, filters: Dict[str, Any]):
+        """Get a query object for entry search for use with fastapi-pagination."""
+        query = self.db.query(Entry).options(
+            joinedload(Entry.source),
+            joinedload(Entry.source_author).joinedload(SourceAuthor.author),
+            selectinload(Entry.comments),
+        )
+        query = apply_filters(query, Entry, filters)
+        return query

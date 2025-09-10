@@ -121,10 +121,4 @@ class DigestGenerationConfigSearchFilters(BaseModel):
     )
 
 
-class DigestGenerationConfigSearchResponse(BaseModel):
-    """Schema for digest generation config search response."""
-
-    data: List[DigestGenerationConfig] = Field(
-        ...,
-        description="List of digest generation configs matching the search criteria.",
-    )
+# DigestGenerationConfigSearchResponse is no longer needed as we use Page[DigestGenerationConfig] from fastapi-pagination

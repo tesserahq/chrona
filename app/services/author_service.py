@@ -34,6 +34,10 @@ class AuthorService(SoftDeleteService[Author]):
             .all()
         )
 
+    def get_authors_by_workspace_query(self, workspace_id: UUID):
+        """Get a query object for authors by workspace for use with fastapi-pagination."""
+        return self.db.query(Author).filter(Author.workspace_id == workspace_id)
+
     def create_author(self, author: AuthorCreate, workspace_id: UUID) -> Author:
         """Create a new author."""
         author_data = author.model_dump()

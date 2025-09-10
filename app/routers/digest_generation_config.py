@@ -9,13 +9,15 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import List
 
+from fastapi_pagination import Page, Params
+from fastapi_pagination.ext.sqlalchemy import paginate
+
 from app.db import get_db
 from app.schemas.digest_generation_config import (
     DigestGenerationConfigCreate,
     DigestGenerationConfigUpdate,
     DigestGenerationConfig,
     DigestGenerationConfigSearchFilters,
-    DigestGenerationConfigSearchResponse,
 )
 from app.services.digest_generation_config_service import DigestGenerationConfigService
 from app.models.digest_generation_config import (
@@ -42,27 +44,25 @@ router = APIRouter(
 
 
 # Project-scoped endpoints
-@project_router.get("", response_model=ListResponse[DigestGenerationConfig])
+@project_router.get("", response_model=Page[DigestGenerationConfig])
 def list_digest_generation_configs(
     project: ProjectModel = Depends(get_project_by_id),
-    skip: int = 0,
-    limit: int = 100,
+    params: Params = Depends(),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     """List all digest generation configs in a project with pagination."""
     service = DigestGenerationConfigService(db)
-    digest_generation_configs = service.get_digest_generation_configs_by_project(
-        project.id, skip, limit
-    )
-    return ListResponse(data=digest_generation_configs)
+    query = service.get_digest_generation_configs_by_project_query(project.id)
+    return paginate(query, params)
 
 
-@project_router.post("/search", response_model=DigestGenerationConfigSearchResponse)
+@project_router.post("/search", response_model=Page[DigestGenerationConfig])
 def search_digest_generation_configs(
     project_id: UUID,
     filters: DigestGenerationConfigSearchFilters,
     project: ProjectModel = Depends(get_project_by_id),
+    params: Params = Depends(),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
@@ -85,8 +85,8 @@ def search_digest_generation_configs(
     # Add project_id to filters to scope the search
     search_filters = filters.model_dump(exclude_none=True)
     search_filters["project_id"] = str(project_id)
-    results = service.search_digest_generation_configs(search_filters)
-    return DigestGenerationConfigSearchResponse(data=results)
+    query = service.search_digest_generation_configs_query(search_filters)
+    return paginate(query, params)
 
 
 @project_router.post(

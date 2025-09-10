@@ -10,6 +10,9 @@ from pydantic import BaseModel
 from uuid import UUID
 from typing import List
 
+from fastapi_pagination import Page, Params
+from fastapi_pagination.ext.sqlalchemy import paginate
+
 from app.db import get_db
 from app.schemas.author import (
     AuthorCreate,
@@ -32,11 +35,10 @@ router = APIRouter(prefix="/authors", tags=["authors"])
 
 
 # Workspace-scoped endpoints
-@workspace_router.get("", response_model=ListResponse[Author])
+@workspace_router.get("", response_model=Page[Author])
 def list_authors(
     workspace: Workspace = Depends(get_workspace_by_id),
-    skip: int = 0,
-    limit: int = 100,
+    params: Params = Depends(),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
@@ -44,8 +46,8 @@ def list_authors(
     # Validate workspace access
 
     service = AuthorService(db)
-    authors = service.get_authors_by_workspace(workspace.id, skip, limit)
-    return ListResponse(data=authors)
+    query = service.get_authors_by_workspace_query(workspace.id)
+    return paginate(query, params)
 
 
 @workspace_router.post("", response_model=Author, status_code=status.HTTP_201_CREATED)
