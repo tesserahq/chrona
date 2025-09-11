@@ -4,7 +4,7 @@ from app.commands.projects.process_import_item_command import ProcessImportItemC
 from app.schemas.project_import import (
     ImportItemData,
     ImportAuthorData,
-    ImportCommentData,
+    ImportEntryUpdateData,
 )
 from app.constants.import_constants import ImportItemStatuses
 
@@ -37,13 +37,13 @@ def sample_import_item_data():
             labels={"role": "maintainer"},
             meta_data={"github_username": "testauthor"},
         ),
-        comments=[],  # Empty comments by default
+        entry_updates=[],  # Empty entry updates by default
     )
 
 
 @pytest.fixture
 def sample_import_item_data_with_comments():
-    """Create sample import item data with comments for testing."""
+    """Create sample import item data with entry updates for testing."""
     return ImportItemData(
         source="github",
         title="API returns 500 error on POST /users",
@@ -60,8 +60,8 @@ def sample_import_item_data_with_comments():
             labels={"priority": "high"},
             meta_data={"source": "github"},
         ),
-        comments=[
-            ImportCommentData(
+        entry_updates=[
+            ImportEntryUpdateData(
                 id="1234567890",
                 body="I am also experiencing this issue.",
                 created_at="2024-10-01T12:34:56Z",
@@ -77,7 +77,7 @@ def sample_import_item_data_with_comments():
                 tags=["bug", "api"],
                 labels={"priority": "high"},
             ),
-            ImportCommentData(
+            ImportEntryUpdateData(
                 id="1122334455",
                 body="I can reproduce this issue.",
                 created_at="2024-10-01T12:34:56Z",
@@ -152,7 +152,7 @@ class TestProcessImportItemCommand:
         assert result["success"] is True
         assert "author_id" in result
         assert "entry_id" in result
-        assert "comment_ids" in result
+        assert "entry_update_ids" in result
         assert "source_author_id" in result
 
     def test_execute_with_existing_author(
@@ -220,7 +220,7 @@ class TestProcessImportItemCommand:
         assert result["success"] is True
         assert result["author_id"] == existing_author.id
         assert "entry_id" in result
-        assert "comment_ids" in result
+        assert "entry_update_ids" in result
         assert "source_author_id" in result
 
     def test_execute_with_validation_error(
@@ -378,10 +378,10 @@ class TestProcessImportItemCommand:
         assert result.source_author_id == source_author.id
         assert result.project_id == setup_project.id
 
-    def test_create_comments_with_comments_field(
+    def test_create_entry_updates_with_comments_field(
         self, process_command, sample_import_item_data_with_comments, setup_project
     ):
-        """Test creating comments when comments field is present."""
+        """Test creating entry updates when entry_updates field is present."""
         # First create required dependencies
         from app.services.author_service import AuthorService
         from app.services.source_service import SourceService
@@ -425,32 +425,32 @@ class TestProcessImportItemCommand:
             )
         )
 
-        result = process_command._create_comments(
+        result = process_command._create_entry_updates(
             sample_import_item_data_with_comments,
             entry.id,
             setup_project.workspace_id,
             source.id,
         )
 
-        # Should create 2 comments from the comments field
+        # Should create 2 entry updates from the entry_updates field
         assert len(result) == 2
 
-        # Check first comment
+        # Check first entry update
         assert result[0].body == "I am also experiencing this issue."
         assert result[0].entry_id == entry.id
         assert result[0].tags == ["bug", "api"]
         assert result[0].labels == {"priority": "high"}
 
-        # Check second comment
+        # Check second entry update
         assert result[1].body == "I can reproduce this issue."
         assert result[1].entry_id == entry.id
         assert result[1].tags == ["bug", "api"]
         assert result[1].labels == {"priority": "high"}
 
-    def test_create_comments_without_comments_field(
+    def test_create_entry_updates_without_comments_field(
         self, process_command, sample_import_item_data, setup_project
     ):
-        """Test creating comments when comments field is empty."""
+        """Test creating entry updates when entry_updates field is empty."""
         # First create required dependencies
         from app.services.author_service import AuthorService
         from app.services.source_service import SourceService
@@ -493,11 +493,11 @@ class TestProcessImportItemCommand:
             )
         )
 
-        result = process_command._create_comments(
+        result = process_command._create_entry_updates(
             sample_import_item_data, entry.id, setup_project.workspace_id, source.id
         )
 
-        # Should create no comments since comments field is empty
+        # Should create no entry updates since entry_updates field is empty
         assert len(result) == 0
 
     def test_execute_with_comments_success(
@@ -507,7 +507,7 @@ class TestProcessImportItemCommand:
         sample_import_item_data_with_comments,
         test_user,
     ):
-        """Test successful processing of an import item with comments."""
+        """Test successful processing of an import item with entry updates."""
         # Create a proper import request item with the correct payload
         from app.models.import_request_item import ImportRequestItem
         from app.models.import_request import ImportRequest
@@ -556,19 +556,19 @@ class TestProcessImportItemCommand:
         assert result["success"] is True
         assert "author_id" in result
         assert "entry_id" in result
-        assert "comment_ids" in result
+        assert "entry_update_ids" in result
         assert "source_author_id" in result
-        # Should have 2 comments created
-        assert len(result["comment_ids"]) == 2
+        # Should have 2 entry updates created
+        assert len(result["entry_update_ids"]) == 2
 
-    def test_deduplication_prevents_duplicate_entries_and_comments(
+    def test_deduplication_prevents_duplicate_entries_and_entry_updates(
         self,
         process_command,
         setup_project,
         sample_import_item_data_with_comments,
         test_user,
     ):
-        """Test that running import twice with same data updates existing entries/comments instead of creating duplicates."""
+        """Test that running import twice with same data updates existing entries/entry updates instead of creating duplicates."""
         from app.models.import_request_item import ImportRequestItem
         from app.models.import_request import ImportRequest
         from app.models.source import Source
@@ -613,17 +613,17 @@ class TestProcessImportItemCommand:
         result1 = process_command.execute(import_request_item, setup_project)
         assert result1["success"] is True
         first_entry_id = result1["entry_id"]
-        first_comment_ids = result1["comment_ids"]
+        first_entry_update_ids = result1["entry_update_ids"]
 
         # Execute the command second time with same data
         result2 = process_command.execute(import_request_item, setup_project)
         assert result2["success"] is True
         second_entry_id = result2["entry_id"]
-        second_comment_ids = result2["comment_ids"]
+        second_entry_update_ids = result2["entry_update_ids"]
 
-        # Should return the same entry and comment IDs (updated, not duplicated)
+        # Should return the same entry and entry update IDs (updated, not duplicated)
         assert first_entry_id == second_entry_id
-        assert first_comment_ids == second_comment_ids
+        assert first_entry_update_ids == second_entry_update_ids
 
         # Verify only one entry exists in database
         from app.services.entry_service import EntryService
@@ -633,12 +633,12 @@ class TestProcessImportItemCommand:
         entry_count = len([e for e in entries if e.external_id == "item_123"])
         assert entry_count == 1
 
-        # Verify only expected number of comments exist in database
-        from app.services.comment_service import CommentService
+        # Verify only expected number of entry updates exist in database
+        from app.services.entry_update_service import EntryUpdateService
 
-        comment_service = CommentService(process_command.db)
-        comments = comment_service.get_comments()
-        comment_count = len(
-            [c for c in comments if c.external_id in ["1234567890", "1122334455"]]
+        entry_update_service = EntryUpdateService(process_command.db)
+        entry_updates = entry_update_service.get_entry_updates()
+        entry_update_count = len(
+            [eu for eu in entry_updates if eu.external_id in ["1234567890", "1122334455"]]
         )
-        assert comment_count == 2
+        assert entry_update_count == 2

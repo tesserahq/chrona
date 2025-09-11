@@ -90,7 +90,7 @@ def process_import_request(
     Process an import request.
 
     This endpoint processes all items in the specified import request,
-    creating entries, authors, and comments in the associated project.
+    creating entries, authors, and entry_updates in the associated project.
     """
 
     # Get the project associated with this import request

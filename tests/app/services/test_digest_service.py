@@ -108,7 +108,7 @@ class TestDigestService:
         assert result.entries_ids == digest_data["entries_ids"]
         assert result.tags == digest_data["tags"]
         assert result.labels == digest_data["labels"]
-        assert result.comments_ids == digest_data["comments_ids"]
+        assert result.entry_updates_ids == digest_data["entry_updates_ids"]
 
     def test_create_digest_project_not_found(
         self, digest_service, setup_digest_generation_config, sample_digest_data

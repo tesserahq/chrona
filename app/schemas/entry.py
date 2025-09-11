@@ -8,12 +8,12 @@ if TYPE_CHECKING:
     from app.schemas.source import Source
     from app.schemas.source_author import SourceAuthor
     from app.schemas.author import Author
-    from app.schemas.comment import CommentResponse
+    from app.schemas.entry_update import EntryUpdateResponse
 else:
     from app.schemas.source import Source
     from app.schemas.source_author import SourceAuthor
     from app.schemas.author import Author
-    from app.schemas.comment import CommentResponse
+    from app.schemas.entry_update import EntryUpdateResponse
 
 
 class EntryBase(BaseModel):
@@ -81,11 +81,11 @@ class SourceAuthorWithAuthor(SourceAuthor):
 
 
 class EntryResponse(EntryInDB):
-    """Entry response schema with source, source_author, and comments information included."""
+    """Entry response schema with source, source_author, and entry updates information included."""
 
     source: Optional[Source] = None
     source_author: Optional[SourceAuthorWithAuthor] = None
-    comments: Optional[List[CommentResponse]] = None
+    entry_updates: Optional[List[EntryUpdateResponse]] = None
 
     @field_validator("source", mode="before")
     @classmethod
@@ -103,12 +103,12 @@ class EntryResponse(EntryInDB):
             return info.data.source_author
         return v
 
-    @field_validator("comments", mode="before")
+    @field_validator("entry_updates", mode="before")
     @classmethod
-    def get_comments_from_model(cls, v, info):
-        """Get comments list from the model's comments relationship."""
-        if hasattr(info.data, "comments") and info.data.comments:
-            return info.data.comments
+    def get_entry_updates_from_model(cls, v, info):
+        """Get entry updates list from the model's entry_updates relationship."""
+        if hasattr(info.data, "entry_updates") and info.data.entry_updates:
+            return info.data.entry_updates
         return v
 
     model_config = {"from_attributes": True}

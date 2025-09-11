@@ -8,7 +8,7 @@ from app.models.project_membership import ProjectMembership
 from app.models.source import Source
 from app.models.source_author import SourceAuthor
 from app.models.entry import Entry
-from app.models.comment import Comment
+from app.models.entry_update import EntryUpdate
 from app.models.import_request import ImportRequest
 from app.models.import_request_item import ImportRequestItem
 from app.models.author import Author
@@ -27,7 +27,7 @@ __all__ = [
     "Source",
     "SourceAuthor",
     "Entry",
-    "Comment",
+    "EntryUpdate",
     "ImportRequest",
     "ImportRequestItem",
     "Author",

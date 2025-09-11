@@ -78,12 +78,12 @@ standalone_router = APIRouter(prefix="/{model_plural}", tags=["{Model}"])
 # DELETE /{id}                         - delete item
 ```
 
-**Example:** Comments under entries
-- `GET /entries/{entry_id}/comments` - list comments for entry
-- `POST /entries/{entry_id}/comments` - create comment for entry
-- `GET /comments/{comment_id}` - get specific comment
-- `PUT /comments/{comment_id}` - update comment
-- `DELETE /comments/{comment_id}` - delete comment
+**Example:** Entry Updates under entries
+- `GET /entries/{entry_id}/entry-updates` - list entry updates for entry
+- `POST /entries/{entry_id}/entry-updates` - create entry update for entry
+- `GET /entry-updates/{entry_update_id}` - get specific entry update
+- `PUT /entry-updates/{entry_update_id}` - update entry update
+- `DELETE /entry-updates/{entry_update_id}` - delete entry update
 
 ## Implementation Guidelines
 
@@ -280,6 +280,6 @@ def test_get_{model}_not_found(client):
 
 - **Standard Pattern**: Use for top-level resources (users, workspaces, entries)
 - **Nested Pattern**: Use for resources that are always scoped to a parent (workspace projects)
-- **Mixed Pattern**: Use for child resources where individual operations are commonly accessed directly (comments, attachments)
+- **Mixed Pattern**: Use for child resources where individual operations are commonly accessed directly (entry_updates, attachments)
 
 This pattern ensures consistency across the API while providing flexibility for different resource relationships.

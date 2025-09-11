@@ -5,7 +5,7 @@ on:
   workflow_dispatch: # Allow manual trigger as well
 
 permissions:
-  pull-requests: write # Permit creating/comments on PRs
+  pull-requests: write # Permit creating/entry_updates on PRs
   contents: write # Permit reading/writing repo contents
 
 jobs:

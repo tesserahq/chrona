@@ -19,7 +19,7 @@ class EntryService(SoftDeleteService[Entry]):
             .options(
                 joinedload(Entry.source),
                 joinedload(Entry.source_author).selectinload(SourceAuthor.author),
-                selectinload(Entry.comments),
+                selectinload(Entry.entry_updates),
             )
             .filter(Entry.id == entry_id)
             .first()
@@ -31,7 +31,7 @@ class EntryService(SoftDeleteService[Entry]):
             .options(
                 joinedload(Entry.source),
                 joinedload(Entry.source_author).selectinload(SourceAuthor.author),
-                selectinload(Entry.comments),
+                selectinload(Entry.entry_updates),
             )
             .offset(skip)
             .limit(limit)
@@ -46,7 +46,7 @@ class EntryService(SoftDeleteService[Entry]):
             .options(
                 joinedload(Entry.source),
                 joinedload(Entry.source_author).selectinload(SourceAuthor.author),
-                selectinload(Entry.comments),
+                selectinload(Entry.entry_updates),
             )
             .filter(Entry.project_id == project_id)
             .offset(skip)
@@ -61,7 +61,7 @@ class EntryService(SoftDeleteService[Entry]):
             .options(
                 joinedload(Entry.source),
                 joinedload(Entry.source_author).selectinload(SourceAuthor.author),
-                selectinload(Entry.comments),
+                selectinload(Entry.entry_updates),
             )
             .filter(Entry.project_id == project_id)
         )
@@ -71,13 +71,13 @@ class EntryService(SoftDeleteService[Entry]):
         self.db.add(db_entry)
         self.db.commit()
         self.db.refresh(db_entry)
-        # Reload with source, source_author, and comments relationships
+        # Reload with source, source_author, and entry_updates relationships
         return (
             self.db.query(Entry)
             .options(
                 joinedload(Entry.source),
                 joinedload(Entry.source_author).selectinload(SourceAuthor.author),
-                selectinload(Entry.comments),
+                selectinload(Entry.entry_updates),
             )
             .filter(Entry.id == db_entry.id)
             .first()
@@ -91,13 +91,13 @@ class EntryService(SoftDeleteService[Entry]):
                 setattr(db_entry, key, value)
             self.db.commit()
             self.db.refresh(db_entry)
-            # Reload with source, source_author, and comments relationships
+            # Reload with source, source_author, and entry_updates relationships
             return (
                 self.db.query(Entry)
                 .options(
                     joinedload(Entry.source),
                     joinedload(Entry.source_author).selectinload(SourceAuthor.author),
-                    selectinload(Entry.comments),
+                    selectinload(Entry.entry_updates),
                 )
                 .filter(Entry.id == entry_id)
                 .first()
@@ -116,7 +116,7 @@ class EntryService(SoftDeleteService[Entry]):
             .options(
                 joinedload(Entry.source),
                 joinedload(Entry.source_author).selectinload(SourceAuthor.author),
-                selectinload(Entry.comments),
+                selectinload(Entry.entry_updates),
             )
             .filter(
                 Entry.source_id == source_id,
@@ -129,7 +129,7 @@ class EntryService(SoftDeleteService[Entry]):
         query = self.db.query(Entry).options(
             joinedload(Entry.source),
             joinedload(Entry.source_author).joinedload(SourceAuthor.author),
-            selectinload(Entry.comments),
+            selectinload(Entry.entry_updates),
         )
         query = apply_filters(query, Entry, filters)
         return query.all()
@@ -139,7 +139,7 @@ class EntryService(SoftDeleteService[Entry]):
         query = self.db.query(Entry).options(
             joinedload(Entry.source),
             joinedload(Entry.source_author).joinedload(SourceAuthor.author),
-            selectinload(Entry.comments),
+            selectinload(Entry.entry_updates),
         )
         query = apply_filters(query, Entry, filters)
         return query

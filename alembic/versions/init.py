@@ -106,7 +106,7 @@ def upgrade() -> None:
             primary_key=True,
             server_default=sa.text("gen_random_uuid()"),
         ),
-        sa.Column("name", sa.String(length=50), nullable=False),
+        sa.Column("name", sa.String(length=100), nullable=False),
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("logo", sa.String(), nullable=True),
         sa.Column("workspace_id", sa.UUID(), nullable=False),
@@ -330,7 +330,7 @@ def upgrade() -> None:
         ondelete="CASCADE",
     )
     op.create_table(
-        "comments",
+        "entry_updates",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("body", sa.String(), nullable=False),
         sa.Column("tags", postgresql.ARRAY(sa.String()), nullable=False),
@@ -344,16 +344,16 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_foreign_key(
-        "fk_comments_source_author_id",
-        "comments",
+        "fk_entry_updates_source_author_id",
+        "entry_updates",
         "source_authors",
         ["source_author_id"],
         ["id"],
         ondelete="CASCADE",
     )
     op.create_foreign_key(
-        "fk_comments_entry_id",
-        "comments",
+        "fk_entry_updates_entry_id",
+        "entry_updates",
         "entries",
         ["entry_id"],
         ["id"],
@@ -434,7 +434,7 @@ def downgrade() -> None:
     op.drop_table("project_memberships")
     op.drop_column("invitations", "projects")
     op.drop_table("entries")
-    op.drop_table("comments")
+    op.drop_table("entry_updates")
     op.drop_table("import_requests")
     op.drop_table("import_request_items")
     op.drop_table("authors")

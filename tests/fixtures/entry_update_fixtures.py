@@ -1,15 +1,15 @@
 import pytest
-from app.models.comment import Comment
+from app.models.entry_update import EntryUpdate
 
 
 @pytest.fixture
-def setup_comment(db, setup_source_author, setup_entry, setup_source, faker):
-    """Create a test comment in the database with optional overrides."""
+def setup_entry_update(db, setup_source_author, setup_entry, setup_source, faker):
+    """Create a test entry update in the database with optional overrides."""
     source_author = setup_source_author
     entry = setup_entry
     source = setup_source
 
-    comment_data = {
+    entry_update_data = {
         "body": faker.text(200),
         "source_author_id": source_author.id,
         "entry_id": entry.id,
@@ -20,8 +20,8 @@ def setup_comment(db, setup_source_author, setup_entry, setup_source, faker):
         "source_id": source.id,
     }
 
-    comment = Comment(**comment_data)
-    db.add(comment)
+    entry_update = EntryUpdate(**entry_update_data)
+    db.add(entry_update)
     db.commit()
-    db.refresh(comment)
-    return comment
+    db.refresh(entry_update)
+    return entry_update

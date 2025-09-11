@@ -211,7 +211,7 @@ def feed_project(
     Feed a project with fake GitHub data and generate digests.
 
     This endpoint generates:
-    - At least 50 entries (issues, PRs, commits) with comments
+    - At least 50 entries (issues, PRs, commits) with entry_updates
     - At least 20 different digests based on those entries
 
     Args:

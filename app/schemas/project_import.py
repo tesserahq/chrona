@@ -21,20 +21,20 @@ class ImportAuthorData(BaseModel):
     )
 
 
-class ImportCommentData(BaseModel):
-    """Schema for comment data in import payload."""
+class ImportEntryUpdateData(BaseModel):
+    """Schema for entry update data in import payload."""
 
-    id: str = Field(..., description="External comment ID")
-    body: str = Field(..., description="Body content of the comment")
-    created_at: str = Field(..., description="Creation timestamp of the comment")
+    id: str = Field(..., description="External entry update ID")
+    body: str = Field(..., description="Body content of the entry update")
+    created_at: str = Field(..., description="Creation timestamp of the entry update")
     author: ImportAuthorData = Field(
-        ..., description="Author information for the comment"
+        ..., description="Author information for the entry update"
     )
     tags: List[str] = Field(
-        default_factory=list, description="Tags associated with the comment"
+        default_factory=list, description="Tags associated with the entry update"
     )
     labels: Dict[str, Any] = Field(
-        default_factory=dict, description="Labels for the comment"
+        default_factory=dict, description="Labels for the entry update"
     )
 
 
@@ -52,8 +52,8 @@ class ImportItemData(BaseModel):
         default_factory=dict, description="Metadata for the item"
     )
     author: ImportAuthorData = Field(..., description="Author information for the item")
-    comments: List[ImportCommentData] = Field(
-        default_factory=list, description="Comments associated with the item"
+    entry_updates: List[ImportEntryUpdateData] = Field(
+        default_factory=list, description="Entry updates associated with the item"
     )
 
 

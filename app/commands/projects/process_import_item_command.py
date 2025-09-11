@@ -7,11 +7,11 @@ from app.models.import_request_item import ImportRequestItem
 from app.schemas.project_import import ImportItemData
 from app.schemas.author import AuthorCreate
 from app.schemas.entry import EntryCreate
-from app.schemas.comment import CommentCreate
+from app.schemas.entry_update import EntryUpdateCreate
 from app.schemas.import_request_item import ImportRequestItemUpdate
 from app.services.author_service import AuthorService
 from app.services.entry_service import EntryService
-from app.services.comment_service import CommentService
+from app.services.entry_update_service import EntryUpdateService
 from app.services.source_author_service import SourceAuthorService
 from app.services.import_request_service import ImportRequestService
 from app.constants.import_constants import ImportItemStatuses
@@ -24,7 +24,7 @@ class ProcessImportItemCommand:
         self.db = db
         self.author_service = AuthorService(db)
         self.entry_service = EntryService(db)
-        self.comment_service = CommentService(db)
+        self.entry_update_service = EntryUpdateService(db)
         self.source_author_service = SourceAuthorService(db)
         self.import_request_service = ImportRequestService(db)
 
@@ -34,7 +34,7 @@ class ProcessImportItemCommand:
         project: Project,
     ) -> Dict[str, Any]:
         """
-        Process a single import item and create authors, entries, comments, etc.
+        Process a single import item and create authors, entries, entry_updates, etc.
 
         :param import_request_item: The import request item to process
         :param project: The project to create entities in
@@ -61,8 +61,8 @@ class ProcessImportItemCommand:
                 import_request_item.source_item_id,
             )
 
-            # Create comments if any
-            comments = self._create_comments(
+            # Create entry updates if any
+            entry_updates = self._create_entry_updates(
                 item_data, entry.id, project.workspace_id, import_request_item.source_id
             )
 
@@ -73,7 +73,7 @@ class ProcessImportItemCommand:
                     **import_request_item.raw_payload,
                     "created_author_id": str(author.id),
                     "created_entry_id": str(entry.id),
-                    "created_comment_ids": [str(comment.id) for comment in comments],
+                    "created_entry_update_ids": [str(entry_update.id) for entry_update in entry_updates],
                 },
             )
             self.import_request_service.update_import_request_item(
@@ -84,7 +84,7 @@ class ProcessImportItemCommand:
                 "success": True,
                 "author_id": author.id,
                 "entry_id": entry.id,
-                "comment_ids": [comment.id for comment in comments],
+                "entry_update_ids": [entry_update.id for entry_update in entry_updates],
                 "source_author_id": source_author.id,
             }
 
@@ -176,88 +176,88 @@ class ProcessImportItemCommand:
 
         return self.entry_service.create_entry(entry_create)
 
-    def _create_comments(
+    def _create_entry_updates(
         self,
         item_data: ImportItemData,
         entry_id: UUID,
         workspace_id: UUID,
         source_id: UUID,
     ):
-        """Create comments from the item data comments field, or update existing ones if they already exist."""
-        comments = []
+        """Create entry updates from the item data entry_updates field, or update existing ones if they already exist."""
+        entry_updates = []
 
-        if not item_data.comments:
-            return comments
+        if not item_data.entry_updates:
+            return entry_updates
 
-        for comment_data in item_data.comments:
-            comment = self._process_single_comment(
-                comment_data, entry_id, workspace_id, source_id
+        for updates in item_data.entry_updates:
+            entry_update = self._process_single_entry_update(
+                updates, entry_id, workspace_id, source_id
             )
-            comments.append(comment)
+            entry_updates.append(entry_update)
 
-        return comments
+        return entry_updates
 
-    def _process_single_comment(
+    def _process_single_entry_update(
         self,
-        comment_data,
+        updates,
         entry_id: UUID,
         workspace_id: UUID,
         source_id: UUID,
     ):
-        """Process a single comment - either update existing or create new."""
-        existing_comment = self.comment_service.get_comment_by_external_id(
-            source_id, comment_data.id
+        """Process a single entry update - either update existing or create new."""
+        existing_entry_update = self.entry_update_service.get_entry_update_by_external_id(
+            source_id, updates.id
         )
 
-        if existing_comment:
-            return self._update_existing_comment(existing_comment, comment_data)
+        if existing_entry_update:
+            return self._update_existing_entry_update(existing_entry_update, updates)
         else:
-            return self._create_new_comment(
-                comment_data, entry_id, workspace_id, source_id
+            return self._create_new_entry_update(
+                updates, entry_id, workspace_id, source_id
             )
 
-    def _update_existing_comment(self, existing_comment, comment_data):
-        """Update an existing comment with new data."""
-        from app.schemas.comment import CommentUpdate
+    def _update_existing_entry_update(self, existing_entry_update, updates):
+        """Update an existing entry update with new data."""
+        from app.schemas.entry_update import EntryUpdateUpdate
 
-        comment_update = CommentUpdate(
-            body=comment_data.body,
-            tags=comment_data.tags,
-            labels=comment_data.labels,
-            meta_data=self._extract_comment_meta_data(comment_data),
+        entry_update_update = EntryUpdateUpdate(
+            body=updates.body,
+            tags=updates.tags,
+            labels=updates.labels,
+            meta_data=self._extract_update_meta_data(updates),
         )
 
-        return self.comment_service.update_comment(existing_comment.id, comment_update)
+        return self.entry_update_service.update_entry_update(existing_entry_update.id, entry_update_update)
 
-    def _create_new_comment(
+    def _create_new_entry_update(
         self,
-        comment_data,
+        updates,
         entry_id: UUID,
         workspace_id: UUID,
         source_id: UUID,
     ):
-        """Create a new comment with author and source author relationships."""
-        # Create or get the comment author
-        comment_author = self._create_or_get_author(comment_data.author, workspace_id)
+        """Create a new entry update with author and source author relationships."""
+        # Create or get the entry update author
+        entry_update_author = self._create_or_get_author(updates.author, workspace_id)
 
-        # Create or get the source author relationship for the comment author
+        # Create or get the source author relationship for the entry update author
         source_author = self._create_or_get_source_author(
-            comment_author.id, source_id, comment_data.author.id
+            entry_update_author.id, source_id, updates.author.id
         )
 
-        comment_create = CommentCreate(
-            body=comment_data.body,
+        entry_update_create = EntryUpdateCreate(
+            body=updates.body,
             source_author_id=source_author.id,
             entry_id=entry_id,
-            tags=comment_data.tags,
-            labels=comment_data.labels,
-            meta_data=self._extract_comment_meta_data(comment_data),
-            external_id=comment_data.id,
+            tags=updates.tags,
+            labels=updates.labels,
+            meta_data=self._extract_update_meta_data(updates),
+            external_id=updates.id,
             source_id=source_id,
         )
 
-        return self.comment_service.create_comment(comment_create)
+        return self.entry_update_service.create_entry_update(entry_update_create)
 
-    def _extract_comment_meta_data(self, comment_data):
-        """Extract meta_data from comment_data, handling missing attribute gracefully."""
-        return comment_data.meta_data if hasattr(comment_data, "meta_data") else {}
+    def _extract_update_meta_data(self, updates):
+        """Extract meta_data from updates, handling missing attribute gracefully."""
+        return updates.meta_data if hasattr(updates, "meta_data") else {}

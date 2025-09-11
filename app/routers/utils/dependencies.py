@@ -17,8 +17,8 @@ from app.models.project_membership import ProjectMembership
 from app.services.project_membership_service import ProjectMembershipService
 from app.services.entry_service import EntryService
 from app.models.entry import Entry
-from app.services.comment_service import CommentService
-from app.models.comment import Comment
+from app.services.entry_update_service import EntryUpdateService
+from app.models.entry_update import EntryUpdate
 from app.services.import_request_service import ImportRequestService
 from app.models.import_request import ImportRequest
 from app.services.digest_generation_config_service import DigestGenerationConfigService
@@ -158,26 +158,26 @@ def get_entry_by_id(
     return entry
 
 
-def get_comment_by_id(
-    comment_id: UUID,
+def get_entry_update_by_id(
+    entry_update_id: UUID,
     db: Session = Depends(get_db),
-) -> Comment:
-    """FastAPI dependency to get a comment by ID.
+) -> EntryUpdate:
+    """FastAPI dependency to get an entry update by ID.
 
     Args:
-        comment_id: The UUID of the comment to retrieve
+        entry_update_id: The UUID of the entry update to retrieve
         db: Database session dependency
 
     Returns:
-        Comment: The retrieved comment
+        EntryUpdate: The retrieved entry update
 
     Raises:
-        HTTPException: If the comment is not found
+        HTTPException: If the entry update is not found
     """
-    comment = CommentService(db).get_comment(comment_id)
-    if comment is None:
-        raise HTTPException(status_code=404, detail="Comment not found")
-    return comment
+    entry_update = EntryUpdateService(db).get_entry_update(entry_update_id)
+    if entry_update is None:
+        raise HTTPException(status_code=404, detail="Entry update not found")
+    return entry_update
 
 
 def get_author_by_id(

@@ -16,7 +16,7 @@ from .routers import (
     system,
     invitation,
     entry,
-    comment,
+    entry_update,
     author,
     import_request,
     digest_generation_config,
@@ -78,8 +78,8 @@ def create_app(testing: bool = False, auth_middleware=None) -> FastAPI:
     app.include_router(project.router)
     app.include_router(entry.project_entries_router)
     app.include_router(entry.entries_router)
-    app.include_router(comment.router)
-    app.include_router(comment.standalone_router)
+    app.include_router(entry_update.router)
+    app.include_router(entry_update.standalone_router)
     app.include_router(author.workspace_router)
     app.include_router(author.router)
     app.include_router(digest_generation_config.project_router)

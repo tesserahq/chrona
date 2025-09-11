@@ -80,8 +80,8 @@ class ProcessedItemResult(BaseModel):
     )
     author_id: Optional[UUID] = Field(None, description="ID of the created author")
     entry_id: Optional[UUID] = Field(None, description="ID of the created entry")
-    comment_ids: List[UUID] = Field(
-        default_factory=list, description="IDs of created comments"
+    entry_update_ids: List[UUID] = Field(
+        default_factory=list, description="IDs of created entry_updates"
     )
     source_author_id: Optional[UUID] = Field(
         None, description="ID of the created source author"

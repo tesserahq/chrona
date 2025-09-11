@@ -20,6 +20,6 @@ class SourceAuthor(Base, TimestampMixin, SoftDeleteMixin):
 
     # Relationships
     author = relationship("Author", back_populates="source_authors")
-    comments = relationship("Comment", back_populates="source_author")
+    entry_updates = relationship("EntryUpdate", back_populates="source_author")
     entries = relationship("Entry", back_populates="source_author")
     source = relationship("Source", back_populates="source_authors")
