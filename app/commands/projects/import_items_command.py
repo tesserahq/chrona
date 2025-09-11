@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import Dict, Any
 from uuid import UUID
 from sqlalchemy.orm import Session
 

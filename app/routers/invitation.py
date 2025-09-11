@@ -1,5 +1,4 @@
 from typing import List
-from uuid import UUID
 from app.utils.auth import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session

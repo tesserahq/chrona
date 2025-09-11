@@ -6,8 +6,6 @@ from fastapi import (
     status,
 )
 from sqlalchemy.orm import Session
-from uuid import UUID
-from typing import List
 
 from app.db import get_db
 from app.schemas.comment import (

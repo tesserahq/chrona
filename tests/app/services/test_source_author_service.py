@@ -2,7 +2,6 @@ import pytest
 from uuid import uuid4
 
 from app.services.source_author_service import SourceAuthorService
-from app.models.source_author import SourceAuthor
 from app.schemas.source_author import SourceAuthorCreate, SourceAuthorUpdate
 
 

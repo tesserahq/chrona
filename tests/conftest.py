@@ -6,10 +6,9 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials
-from app.db import Base, get_db
+from app.db import get_db
 from app.main import create_app
 from starlette.middleware.base import BaseHTTPMiddleware
-from cryptography.fernet import Fernet
 from alembic import command
 from alembic.config import Config
 from faker import Faker

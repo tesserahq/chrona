@@ -8,9 +8,7 @@ import faker
 from app.models.project import Project
 from app.models.source import Source
 from app.models.author import Author
-from app.models.source_author import SourceAuthor
 from app.models.entry import Entry
-from app.models.comment import Comment
 from app.models.digest import Digest
 from app.models.digest_generation_config import DigestGenerationConfig
 from app.services.source_service import SourceService
@@ -20,7 +18,6 @@ from app.services.entry_service import EntryService
 from app.services.comment_service import CommentService
 from app.services.digest_service import DigestService
 from app.services.digest_generation_config_service import DigestGenerationConfigService
-from app.schemas.source import SourceCreate
 from app.schemas.author import AuthorCreate
 from app.schemas.entry import EntryCreate
 from app.schemas.comment import CommentCreate
@@ -464,7 +461,7 @@ class FeedProjectService:
     ) -> str:
         """Generate digest content based on entries and configuration."""
         content = f"# {config.title}\n\n"
-        content += f"*Auto-generated digest based on project entries*\n\n"
+        content += "*Auto-generated digest based on project entries*\n\n"
 
         # Group entries by type
         issues = [e for e in entries if e.labels.get("type") == "issue"]

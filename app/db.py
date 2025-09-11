@@ -3,7 +3,6 @@ from sqlalchemy.orm import (
     sessionmaker,
     declarative_base,
     with_loader_criteria,
-    registry,
     Session,
 )
 from app.config import get_settings

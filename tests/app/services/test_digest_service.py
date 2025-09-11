@@ -1,6 +1,5 @@
 import pytest
 from uuid import uuid4
-from datetime import datetime, timezone
 from app.services.digest_service import DigestService
 from app.schemas.digest import DigestCreate, DigestUpdate
 from app.exceptions.resource_not_found_error import ResourceNotFoundError

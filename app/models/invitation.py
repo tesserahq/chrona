@@ -7,7 +7,6 @@ from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 
 from app.db import Base
 from sqlalchemy.dialects.postgresql import JSONB
-from app.constants.membership import MembershipRoles
 from app.models.mixins import SoftDeleteMixin, TimestampMixin
 
 

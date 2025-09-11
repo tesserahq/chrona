@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models.entry import Entry
 from app.models.source_author import SourceAuthor
-from app.schemas.entry import EntryCreate, EntryUpdate, Entry as EntrySchema
+from app.schemas.entry import EntryCreate, EntryUpdate
 from app.services.soft_delete_service import SoftDeleteService
 from app.utils.db.filtering import apply_filters
 

@@ -8,8 +8,6 @@ from uuid import UUID
 
 from app.db import get_db
 from app.schemas.membership import (
-    MembershipCreate,
-    MembershipCreateRequest,
     MembershipInDB,
     MembershipResponse,
     MembershipUpdate,

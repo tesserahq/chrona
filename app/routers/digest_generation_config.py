@@ -7,7 +7,6 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 from uuid import UUID
-from typing import List
 
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -24,7 +23,6 @@ from app.models.digest_generation_config import (
     DigestGenerationConfig as DigestGenerationConfigModel,
 )
 from app.models.project import Project as ProjectModel
-from app.schemas.common import ListResponse
 from app.routers.utils.dependencies import (
     get_project_by_id,
     get_digest_generation_config_by_id,

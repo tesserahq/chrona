@@ -1,7 +1,6 @@
 from app.commands.workspaces.create_workspace_command import CreateWorkspaceCommand
+from app.commands.projects.create_project_command import CreateProjectCommand
 from app.schemas.project import ProjectCreate, Project
-from app.models.project import Project as ProjectModel
-from app.services.project_service import ProjectService
 from app.utils.auth import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -120,8 +119,8 @@ def create_project(
     current_user=Depends(get_current_user),
 ):
     """Create a new project in a workspace."""
-    service = ProjectService(db)
-
     # Override the workspace_id in the payload for safety
     project.workspace_id = workspace.id
-    return service.create_project(project)
+
+    command = CreateProjectCommand(db)
+    return command.execute(project, current_user.id)

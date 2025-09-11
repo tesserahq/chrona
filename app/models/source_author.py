@@ -1,10 +1,7 @@
 from app.models.mixins import TimestampMixin, SoftDeleteMixin
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
-from sqlalchemy_json import mutable_json_type  # type: ignore
-from sqlalchemy.dialects.postgresql import JSONB
-from app.config import get_settings
+from sqlalchemy.dialects.postgresql import UUID
 
 import uuid
 

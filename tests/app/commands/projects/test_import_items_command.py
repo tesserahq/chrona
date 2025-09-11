@@ -1,14 +1,9 @@
-import pytest
-from uuid import uuid4
-
 from app.commands.projects.import_items_command import ImportItemsCommand
 from app.models.import_request import ImportRequest
 from app.models.import_request_item import ImportRequestItem
 from app.models.source import Source
 from app.schemas.project_import import (
     ImportItemRequest,
-    ImportItemData,
-    ImportAuthorData,
 )
 from app.constants.import_constants import ImportRequestStatuses, ImportItemStatuses
 

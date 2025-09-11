@@ -3,10 +3,9 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
-from app.models.import_request import ImportRequest
 from app.commands.projects.process_import_item_command import ProcessImportItemCommand
 from app.services.import_request_service import ImportRequestService
-from app.constants.import_constants import ImportRequestStatuses, ImportItemStatuses
+from app.constants.import_constants import ImportRequestStatuses
 
 
 class ProcessImportRequestCommand:

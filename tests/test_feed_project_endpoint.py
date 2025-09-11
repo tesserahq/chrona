@@ -1,12 +1,7 @@
-import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
 from uuid import uuid4
 
-from app.main import app
 from app.models.project import Project
-from app.schemas.project import ProjectCreate
-from app.services.project_service import ProjectService
 
 
 def test_feed_project_endpoint_success(client: TestClient, setup_project: Project):

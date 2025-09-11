@@ -1,11 +1,14 @@
-from app.models import workspace
+import uuid
+from app.config import get_settings
+from app.ext.quore_service import QuoreService
 from app.schemas.membership import MembershipCreate
-from app.schemas.workspace import Workspace, WorkspaceCreate
+from app.schemas.workspace import Workspace, WorkspaceCreate, WorkspaceUpdate
 from app.services.membership_service import MembershipService
 from app.services.workspace_service import WorkspaceService
 from sqlalchemy.orm import Session
 from uuid import UUID
 from app.constants.membership import OWNER_ROLE
+from app.utils.m2m_token import M2MTokenClient
 
 
 class CreateWorkspaceCommand:

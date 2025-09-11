@@ -50,6 +50,19 @@ class Settings(BaseSettings):
     redis_namespace: str = Field(
         default="llama_index", json_schema_extra={"env": "REDIS_NAMESPACE"}
     )
+    service_account_client_id: str = Field(
+        default="", json_schema_extra={"env": "SERVICE_ACCOUNT_CLIENT_ID"}
+    )
+    service_account_client_secret: str = Field(
+        default="", json_schema_extra={"env": "SERVICE_ACCOUNT_CLIENT_SECRET"}
+    )
+    quore_enabled: bool = Field(
+        default=False, json_schema_extra={"env": "QUORE_ENABLED"}
+    )
+    quore_api_url: str = Field(
+        default="https://quore-api.meetchrona.com",
+        json_schema_extra={"env": "QUORE_API_URL"},
+    )
 
     @model_validator(mode="before")
     def set_database_url(cls, values):

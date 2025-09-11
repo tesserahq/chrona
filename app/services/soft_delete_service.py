@@ -2,7 +2,6 @@ from typing import List, Optional, TypeVar, Generic, Type
 from uuid import UUID
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from sqlalchemy import Column
 from app.db import Base
 
 # Generic type for SQLAlchemy models that have id and deleted_at fields

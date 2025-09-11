@@ -7,9 +7,7 @@ import uuid
 
 from app.db import Base
 from app.models.membership import Membership
-from app.models.comment import Comment
 from app.models.project_membership import ProjectMembership
-from app.models.author import Author
 
 
 class User(Base, TimestampMixin, SoftDeleteMixin):

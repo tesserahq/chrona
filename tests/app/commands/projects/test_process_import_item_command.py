@@ -1,5 +1,4 @@
 import pytest
-from uuid import uuid4
 
 from app.commands.projects.process_import_item_command import ProcessImportItemCommand
 from app.schemas.project_import import (
@@ -109,7 +108,6 @@ class TestProcessImportItemCommand:
         from app.models.import_request_item import ImportRequestItem
         from app.models.import_request import ImportRequest
         from app.models.source import Source
-        from app.constants.import_constants import ImportItemStatuses
 
         # Create source first
         source = Source(
@@ -165,7 +163,6 @@ class TestProcessImportItemCommand:
         from app.models.import_request_item import ImportRequestItem
         from app.models.import_request import ImportRequest
         from app.models.source import Source
-        from app.constants.import_constants import ImportItemStatuses
         from app.services.author_service import AuthorService
         from app.schemas.author import AuthorCreate
 
@@ -515,7 +512,6 @@ class TestProcessImportItemCommand:
         from app.models.import_request_item import ImportRequestItem
         from app.models.import_request import ImportRequest
         from app.models.source import Source
-        from app.constants.import_constants import ImportItemStatuses
 
         # Create source first
         source = Source(
@@ -576,7 +572,6 @@ class TestProcessImportItemCommand:
         from app.models.import_request_item import ImportRequestItem
         from app.models.import_request import ImportRequest
         from app.models.source import Source
-        from app.constants.import_constants import ImportItemStatuses
 
         # Create source first
         source = Source(

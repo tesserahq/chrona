@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Any
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.models.digest import Digest
-from app.schemas.digest import DigestCreate, DigestUpdate, Digest as DigestSchema
+from app.schemas.digest import DigestCreate, DigestUpdate
 from app.services.soft_delete_service import SoftDeleteService
 from app.services.project_service import ProjectService
 from app.exceptions.resource_not_found_error import ResourceNotFoundError

@@ -7,7 +7,6 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 from uuid import UUID
-from typing import List
 
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -16,7 +15,6 @@ from app.db import get_db
 from app.schemas.entry import (
     EntryCreate,
     EntryUpdate,
-    Entry,
     EntryResponse,
     EntrySearchFilters,
 )
@@ -24,7 +22,6 @@ from app.services.entry_service import EntryService
 from app.models.entry import Entry as EntryModel
 from app.models.project import Project as ProjectModel
 from app.routers.utils.dependencies import get_entry_by_id, get_project_by_id
-from app.schemas.common import ListResponse
 
 # Project-scoped entries router
 project_entries_router = APIRouter(prefix="/projects", tags=["project-entries"])

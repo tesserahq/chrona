@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from uuid import UUID
 from sqlalchemy.orm import Session
 
@@ -8,7 +8,6 @@ from app.schemas.project_import import ImportItemData
 from app.schemas.author import AuthorCreate
 from app.schemas.entry import EntryCreate
 from app.schemas.comment import CommentCreate
-from app.schemas.source_author import SourceAuthorCreate
 from app.schemas.import_request_item import ImportRequestItemUpdate
 from app.services.author_service import AuthorService
 from app.services.entry_service import EntryService

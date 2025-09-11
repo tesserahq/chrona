@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional, TYPE_CHECKING, List
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, field_validator
+from pydantic import field_validator
 
 if TYPE_CHECKING:
     from app.schemas.user import User

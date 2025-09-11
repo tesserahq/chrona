@@ -6,8 +6,6 @@ from app.commands.projects.process_import_request_command import (
 )
 from app.models.import_request import ImportRequest
 from app.models.import_request_item import ImportRequestItem
-from app.models.project import Project
-from app.models.source import Source
 from app.constants.import_constants import ImportRequestStatuses, ImportItemStatuses
 
 

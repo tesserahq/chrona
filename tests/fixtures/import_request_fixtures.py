@@ -1,5 +1,4 @@
 import pytest
-from uuid import uuid4
 from app.models.import_request import ImportRequest
 from app.models.import_request_item import ImportRequestItem
 

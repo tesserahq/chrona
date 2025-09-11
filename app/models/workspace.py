@@ -19,6 +19,7 @@ class Workspace(Base, TimestampMixin, SoftDeleteMixin):
     identifier = Column(String(100), nullable=True, unique=True)
     created_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     locked = Column(Boolean, default=False, nullable=False)
+    quore_workspace_id = Column(String, nullable=True)
 
     # Relationships
     created_by = relationship("User", back_populates="workspaces")

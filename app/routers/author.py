@@ -6,9 +6,6 @@ from fastapi import (
     status,
 )
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from uuid import UUID
-from typing import List
 
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -22,7 +19,6 @@ from app.schemas.author import (
 from app.schemas.workspace import Workspace
 from app.services.author_service import AuthorService
 from app.models.author import Author as AuthorModel
-from app.schemas.common import ListResponse
 from app.routers.utils.dependencies import get_author_by_id, get_workspace_by_id
 
 # Workspace-scoped router for list and create operations

@@ -12,7 +12,6 @@ from app.schemas.project_membership import ProjectMembershipCreate
 from app.exceptions.invitation_exceptions import (
     InvitationException,
     InvitationNotFoundError,
-    InvitationExpiredError,
     InvitationUnauthorizedError,
     UserNotFoundError,
 )

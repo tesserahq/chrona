@@ -1,5 +1,4 @@
 import pytest
-from uuid import uuid4
 from app.models.digest_generation_config import DigestGenerationConfig
 
 

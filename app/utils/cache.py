@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Optional, Any, Union
+from typing import Optional, Any
 from redis import Redis, ConnectionError
 from app.config import get_settings
 

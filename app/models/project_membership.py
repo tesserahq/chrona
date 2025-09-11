@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from app.constants.membership import (
-    ProjectMembershipRoles,
     ADMIN_ROLE,
     COLLABORATOR_ROLE,
 )

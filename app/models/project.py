@@ -1,10 +1,8 @@
 from app.models.mixins import TimestampMixin, SoftDeleteMixin
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy_json import mutable_json_type  # type: ignore
 from sqlalchemy.dialects.postgresql import JSONB
-from app.config import get_settings
 
 import uuid
 
@@ -24,6 +22,7 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
     workspace_id = Column(
         UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=False
     )
+    quore_project_id = Column(String, nullable=True)
 
     # Relationships
     workspace = relationship("Workspace", back_populates="projects")

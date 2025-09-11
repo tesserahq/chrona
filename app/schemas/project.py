@@ -1,9 +1,8 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, cast, List, Union
+from typing import Optional, Dict, Any, List, Union
 from uuid import UUID
 from datetime import datetime
 from typing import Literal
-from app.config import get_settings
 
 
 class ProjectBase(BaseModel):
@@ -26,7 +25,7 @@ class ProjectBase(BaseModel):
 
 
 class ProjectCreate(ProjectBase):
-    pass
+    labels: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
 class ProjectUpdate(BaseModel):

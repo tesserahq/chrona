@@ -11,8 +11,6 @@ from app.services.invitation_service import InvitationService
 from app.exceptions.invitation_exceptions import (
     InvitationExpiredError,
     InvitationNotFoundError,
-    InvitationUnauthorizedError,
-    UserNotFoundError,
 )
 
 

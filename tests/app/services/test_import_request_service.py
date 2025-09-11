@@ -1,4 +1,3 @@
-import pytest
 from uuid import uuid4
 from app.services.import_request_service import ImportRequestService
 from app.schemas.import_request import (

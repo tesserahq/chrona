@@ -1,4 +1,3 @@
-import uuid
 import pytest
 from unittest.mock import Mock, patch
 import jwt

@@ -7,7 +7,6 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 from uuid import UUID
-from typing import List
 
 from app.db import get_db
 from app.schemas.project import (

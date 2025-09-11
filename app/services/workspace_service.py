@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Any, cast
 from datetime import datetime
 from uuid import UUID
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, case
+from sqlalchemy import func, desc
 from app.models.membership import Membership
 from app.models.workspace import Workspace
 from app.models.project import Project

@@ -3,7 +3,6 @@ from uuid import UUID
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_
 
-from app.constants.membership import ProjectMembershipRoles
 from app.models.project_membership import ProjectMembership
 from app.schemas.project_membership import (
     ProjectMembershipCreate,

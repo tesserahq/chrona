@@ -1,4 +1,3 @@
-import pytest
 from app.constants.membership import (
     COLLABORATOR_ROLE,
     OWNER_ROLE,

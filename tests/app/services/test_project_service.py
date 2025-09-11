@@ -1,7 +1,6 @@
 from app.config import get_settings
 from uuid import uuid4
 from sqlalchemy.orm import Session
-from sqlalchemy import inspect
 
 from app.services.project_service import ProjectService
 from app.schemas.project import ProjectCreate, ProjectUpdate
