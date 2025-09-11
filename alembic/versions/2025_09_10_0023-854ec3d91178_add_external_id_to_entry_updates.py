@@ -21,7 +21,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.add_column("entry_updates", sa.Column("external_id", sa.String(), nullable=False))
+    op.add_column(
+        "entry_updates", sa.Column("external_id", sa.String(), nullable=False)
+    )
     op.add_column("entry_updates", sa.Column("source_id", sa.UUID(), nullable=False))
     op.create_foreign_key(
         "fk_entry_updates_source_id",

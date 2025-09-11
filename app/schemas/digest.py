@@ -19,7 +19,8 @@ class DigestBase(BaseModel):
         default_factory=dict, description="Labels for this digest"
     )
     entry_updates_ids: List[UUID] = Field(
-        default_factory=list, description="List of entry_update IDs included in this digest"
+        default_factory=list,
+        description="List of entry_update IDs included in this digest",
     )
     from_date: Optional[datetime] = Field(
         None, description="Start date for the digest period"

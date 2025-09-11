@@ -4,7 +4,11 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.entry_update import EntryUpdate
 from app.models.source_author import SourceAuthor
-from app.schemas.entry_update import EntryUpdateCreate, EntryUpdateUpdate, EntryUpdate as EntryUpdateSchema
+from app.schemas.entry_update import (
+    EntryUpdateCreate,
+    EntryUpdateUpdate,
+    EntryUpdate as EntryUpdateSchema,
+)
 from app.services.soft_delete_service import SoftDeleteService
 from app.utils.db.filtering import apply_filters
 
@@ -52,7 +56,9 @@ class EntryUpdateService(SoftDeleteService[EntryUpdate]):
     def update_entry_update(
         self, entry_update_id: UUID, entry_update: EntryUpdateUpdate
     ) -> Optional[EntryUpdate]:
-        db_entry_update = self.db.query(EntryUpdate).filter(EntryUpdate.id == entry_update_id).first()
+        db_entry_update = (
+            self.db.query(EntryUpdate).filter(EntryUpdate.id == entry_update_id).first()
+        )
         if db_entry_update:
             update_data = entry_update.model_dump(exclude_unset=True)
             for key, value in update_data.items():
@@ -63,7 +69,9 @@ class EntryUpdateService(SoftDeleteService[EntryUpdate]):
             return (
                 self.db.query(EntryUpdate)
                 .options(
-                    joinedload(EntryUpdate.source_author).selectinload(SourceAuthor.author),
+                    joinedload(EntryUpdate.source_author).selectinload(
+                        SourceAuthor.author
+                    ),
                 )
                 .filter(EntryUpdate.id == entry_update_id)
                 .first()
@@ -94,4 +102,7 @@ class EntryUpdateService(SoftDeleteService[EntryUpdate]):
             joinedload(EntryUpdate.source_author).selectinload(SourceAuthor.author),
         )
         query = apply_filters(query, EntryUpdate, filters)
-        return [EntryUpdateSchema.model_validate(entry_update) for entry_update in query.all()]
+        return [
+            EntryUpdateSchema.model_validate(entry_update)
+            for entry_update in query.all()
+        ]

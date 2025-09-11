@@ -1,7 +1,6 @@
 from app.commands.projects.create_project_command import CreateProjectCommand
 from app.models.project import Project
 from app.models.project_membership import ProjectMembership
-from app.models.workspace import Workspace
 from app.schemas.project import ProjectCreate
 from app.constants.membership import PROJECT_MEMBER_ROLE
 

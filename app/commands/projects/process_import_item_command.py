@@ -73,7 +73,9 @@ class ProcessImportItemCommand:
                     **import_request_item.raw_payload,
                     "created_author_id": str(author.id),
                     "created_entry_id": str(entry.id),
-                    "created_entry_update_ids": [str(entry_update.id) for entry_update in entry_updates],
+                    "created_entry_update_ids": [
+                        str(entry_update.id) for entry_update in entry_updates
+                    ],
                 },
             )
             self.import_request_service.update_import_request_item(
@@ -205,8 +207,10 @@ class ProcessImportItemCommand:
         source_id: UUID,
     ):
         """Process a single entry update - either update existing or create new."""
-        existing_entry_update = self.entry_update_service.get_entry_update_by_external_id(
-            source_id, updates.id
+        existing_entry_update = (
+            self.entry_update_service.get_entry_update_by_external_id(
+                source_id, updates.id
+            )
         )
 
         if existing_entry_update:
@@ -227,7 +231,9 @@ class ProcessImportItemCommand:
             meta_data=self._extract_update_meta_data(updates),
         )
 
-        return self.entry_update_service.update_entry_update(existing_entry_update.id, entry_update_update)
+        return self.entry_update_service.update_entry_update(
+            existing_entry_update.id, entry_update_update
+        )
 
     def _create_new_entry_update(
         self,

@@ -23,7 +23,8 @@ class EntryUpdateBase(BaseModel):
         None, description="Optional list of tags associated with the entry update."
     )
     labels: Optional[Dict[str, Any]] = Field(
-        None, description="Optional dictionary of labels associated with the entry update."
+        None,
+        description="Optional dictionary of labels associated with the entry update.",
     )
     meta_data: Optional[Dict[str, Any]] = Field(
         None, description="Optional metadata dictionary for the entry update."
@@ -48,7 +49,8 @@ class EntryUpdateCreate(EntryUpdateBase):
         None, description="Optional list of tags associated with the entry update."
     )
     labels: Optional[Dict[str, Any]] = Field(
-        None, description="Optional dictionary of labels associated with the entry update."
+        None,
+        description="Optional dictionary of labels associated with the entry update.",
     )
     meta_data: Optional[Dict[str, Any]] = Field(
         None, description="Optional metadata dictionary for the entry update."

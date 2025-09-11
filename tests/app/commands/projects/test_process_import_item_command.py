@@ -639,6 +639,10 @@ class TestProcessImportItemCommand:
         entry_update_service = EntryUpdateService(process_command.db)
         entry_updates = entry_update_service.get_entry_updates()
         entry_update_count = len(
-            [eu for eu in entry_updates if eu.external_id in ["1234567890", "1122334455"]]
+            [
+                eu
+                for eu in entry_updates
+                if eu.external_id in ["1234567890", "1122334455"]
+            ]
         )
         assert entry_update_count == 2

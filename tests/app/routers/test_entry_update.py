@@ -91,7 +91,9 @@ def test_create_entry_update_entry_not_found(client, setup_source_author):
         "source_author_id": str(source_author.id),
     }
 
-    response = client.post(f"/entries/{fake_entry_id}/entry-updates", json=entry_update_data)
+    response = client.post(
+        f"/entries/{fake_entry_id}/entry-updates", json=entry_update_data
+    )
     assert response.status_code == 404
     assert response.json()["detail"] == "Entry not found"
 
@@ -178,7 +180,9 @@ def test_list_entry_updates_pagination(client, setup_entry_update):
     assert isinstance(data["data"], list)
 
 
-def test_create_entry_update_auto_sets_entry_id(client, setup_source_author, setup_entry):
+def test_create_entry_update_auto_sets_entry_id(
+    client, setup_source_author, setup_entry
+):
     """Test that creating an entry update automatically sets the entry_id from the URL."""
     entry = setup_entry
     source_author = setup_source_author

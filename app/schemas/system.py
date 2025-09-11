@@ -84,6 +84,6 @@ class FeedProjectResponse(BaseModel):
     source_created: str
     authors_created: int
     entries_created: int
-    comments_created: int
+    entry_updates_created: int
     digest_configs_created: int
     digests_created: int

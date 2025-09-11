@@ -19,7 +19,7 @@ def test_feed_project_endpoint_success(client: TestClient, setup_project: Projec
     assert data["entries_created"] == 5
     assert data["digests_created"] == 3
     assert data["authors_created"] > 0
-    assert data["comments_created"] > 0
+    assert data["entry_updates_created"] > 0
     assert data["digest_configs_created"] == 3
 
 

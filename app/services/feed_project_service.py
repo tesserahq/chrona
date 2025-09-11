@@ -427,7 +427,9 @@ class FeedProjectService:
             # Get entry updates for selected entries
             entry_update_ids = []
             for entry in selected_entries:
-                entry_update_ids.extend([entry_update.id for entry_update in entry.entry_updates])
+                entry_update_ids.extend(
+                    [entry_update.id for entry_update in entry.entry_updates]
+                )
 
             # Generate digest content
             digest_title = f"{config.title} - {self.fake.date_between(start_date='-1m', end_date='now').strftime('%B %Y')}"
