@@ -211,7 +211,7 @@ def feed_project(
     Feed a project with fake GitHub data and generate digests.
 
     This endpoint generates:
-    - At least 50 entries (issues, PRs, commits) with comments
+    - At least 50 entries (issues, PRs, commits) with entry_updates
     - At least 20 different digests based on those entries
 
     Args:
@@ -239,7 +239,7 @@ def feed_project(
             source_created=str(result["source_created"]),
             authors_created=result["authors_created"],
             entries_created=result["entries_created"],
-            comments_created=result["comments_created"],
+            entry_updates_created=result["entry_updates_created"],
             digest_configs_created=result["digest_configs_created"],
             digests_created=result["digests_created"],
         )

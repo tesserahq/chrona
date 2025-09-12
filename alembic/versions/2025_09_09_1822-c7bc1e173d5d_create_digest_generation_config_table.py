@@ -59,7 +59,7 @@ def upgrade() -> None:
         sa.Column("tags", postgresql.ARRAY(sa.String()), nullable=False),
         sa.Column("labels", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column(
-            "comments_ids",
+            "entry_updates_ids",
             postgresql.ARRAY(postgresql.UUID(as_uuid=True)),
             nullable=False,
         ),

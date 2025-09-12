@@ -15,9 +15,9 @@ Chrona’s data model is structured around a few key entities:
 - **Workspaces**: The top-level organizational unit.
   - **Projects**: Groupings of related work inside a workspace.
   - **Entries**: The core unit of information aggregated from external sources.
-    - **Comments**: Discussion and activity attached to an entry.
+    - **Entry Updates**: Discussion and activity attached to an entry.
 - **ImportJobs**: Represent each request to bring external data into Chrona.
-- **ImportItemsCommand**: Individual entries or comments submitted as part of an import job.
+- **ImportItemsCommand**: Individual entries or entry_updates submitted as part of an import job.
 - **ImportErrors**: Capture validation or processing errors for failed import items.
 
 ## Entity Relationships
@@ -139,13 +139,13 @@ Entries represent data coming from external systems like Jira tickets, GitHub is
 
 In addition to these shared fields, entries can include an `extra_fields` or `metadata` column. This allows the system to store source-specific information while maintaining a unified structure across all entries.
 
-### Comments
+### Entry Updates
 
-Comments capture conversations and activity attached to an entry. Like entries, they contain common attributes (id, body, author, timestamps) along with a `metadata` field for source-specific details.
+Entry Updates capture conversations and activity attached to an entry. Like entries, they contain common attributes (id, body, author, timestamps) along with a `metadata` field for source-specific details.
 
 ### Idempotency
 
-Imports are idempotent by `(source, external_id)`. When `options.upsert=true`, existing entries and comments are updated in place; otherwise duplicates are skipped and reported as failed with `code=duplicate`.
+Imports are idempotent by `(source, external_id)`. When `options.upsert=true`, existing entries and entry updates are updated in place; otherwise duplicates are skipped and reported as failed with `code=duplicate`.
 
 ## Purpose
 
@@ -159,7 +159,7 @@ Chrona accepts external data through a queued import flow. This avoids blocking 
 
 `POST /imports`
 
-Body accepts either a single entry or a collection with comments.
+Body accepts either a single entry or a collection with entry_updates.
 
 ```json
 {
@@ -175,7 +175,7 @@ Body accepts either a single entry or a collection with comments.
       "labels": ["priority:high"],
       "created_at": "2025-09-01T10:00:00Z",
       "updated_at": "2025-09-02T12:00:00Z",
-      "comments": [
+      "entry_updates": [
         {"external_id": "c1", "body": "Repro attached", "author": "qa", "created_at": "2025-09-01T11:00:00Z"}
       ],
       "metadata": {"repo": "org/repo"}
@@ -218,7 +218,7 @@ Body accepts either a single entry or a collection with comments.
 We persist import jobs and each submitted item to provide traceability and retries.
 
 - **ImportJob**: one per request to `/imports`.
-- **ImportItem**: one per entry (and optionally per comment) inside a job.
+- **ImportItem**: one per entry (and optionally per entry_update) inside a job.
 - **ImportError**: optional error rows for failed items.
 
 ### States
@@ -232,4 +232,4 @@ We persist import jobs and each submitted item to provide traceability and retri
 
 Retries are idempotent. Upserts are controlled by `options.upsert` and `external_id + source`.
 
-By unifying updates from multiple tools into entries and comments, Chrona makes it easier to see progress, discussions, and context in one place. This enables project summaries and updates to be shared across the organization without requiring deep knowledge of each individual system.
+By unifying updates from multiple tools into entries and entry_updates, Chrona makes it easier to see progress, discussions, and context in one place. This enables project summaries and updates to be shared across the organization without requiring deep knowledge of each individual system.

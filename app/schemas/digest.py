@@ -18,8 +18,9 @@ class DigestBase(BaseModel):
     labels: Dict[str, Any] = Field(
         default_factory=dict, description="Labels for this digest"
     )
-    comments_ids: List[UUID] = Field(
-        default_factory=list, description="List of comment IDs included in this digest"
+    entry_updates_ids: List[UUID] = Field(
+        default_factory=list,
+        description="List of entry_update IDs included in this digest",
     )
     from_date: Optional[datetime] = Field(
         None, description="Start date for the digest period"
@@ -54,8 +55,8 @@ class DigestUpdate(BaseModel):
         None, description="Tags associated with this digest"
     )
     labels: Optional[Dict[str, Any]] = Field(None, description="Labels for this digest")
-    comments_ids: Optional[List[UUID]] = Field(
-        None, description="List of comment IDs included in this digest"
+    entry_updates_ids: Optional[List[UUID]] = Field(
+        None, description="List of entry_update IDs included in this digest"
     )
     from_date: Optional[datetime] = Field(
         None, description="Start date for the digest period"

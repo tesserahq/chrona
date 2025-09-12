@@ -22,7 +22,7 @@ def test_process_import_request_success(client, setup_import_request_with_items)
                 "success": True,
                 "author_id": uuid4(),
                 "entry_id": uuid4(),
-                "comment_ids": [uuid4()],
+                "entry_update_ids": [uuid4()],
                 "source_author_id": uuid4(),
                 "error": None,
             },
@@ -31,7 +31,7 @@ def test_process_import_request_success(client, setup_import_request_with_items)
                 "success": True,
                 "author_id": uuid4(),
                 "entry_id": uuid4(),
-                "comment_ids": [],
+                "entry_update_ids": [],
                 "source_author_id": uuid4(),
                 "error": None,
             },
@@ -40,7 +40,7 @@ def test_process_import_request_success(client, setup_import_request_with_items)
                 "success": False,
                 "author_id": None,
                 "entry_id": None,
-                "comment_ids": [],
+                "entry_update_ids": [],
                 "source_author_id": None,
                 "error": "Processing failed",
             },
@@ -77,7 +77,7 @@ def test_process_import_request_success(client, setup_import_request_with_items)
         assert processed_item["success"] is True
         assert processed_item["author_id"] is not None
         assert processed_item["entry_id"] is not None
-        assert len(processed_item["comment_ids"]) == 1
+        assert len(processed_item["entry_update_ids"]) == 1
 
         # Verify the command was called with correct parameters
         mock_command.execute.assert_called_once_with(
@@ -155,7 +155,7 @@ def test_process_import_request_response_schema(
                 "success": True,
                 "author_id": uuid4(),
                 "entry_id": uuid4(),
-                "comment_ids": [],
+                "entry_update_ids": [],
                 "source_author_id": uuid4(),
                 "error": None,
             }
@@ -199,7 +199,7 @@ def test_process_import_request_response_schema(
                 "success",
                 "author_id",
                 "entry_id",
-                "comment_ids",
+                "entry_update_ids",
                 "source_author_id",
                 "error",
             ]

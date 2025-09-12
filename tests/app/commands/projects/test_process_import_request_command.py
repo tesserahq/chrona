@@ -387,7 +387,7 @@ class TestProcessImportRequestCommand:
             assert "error" in item
             assert item.get("author_id") is None  # No author_id for failed items
             assert item.get("entry_id") is None  # No entry_id for failed items
-            assert item.get("comment_ids") == []  # Empty list for failed items
+            assert item.get("entry_update_ids") == []  # Empty list for failed items
             assert (
                 item.get("source_author_id") is None
             )  # No source_author_id for failed items

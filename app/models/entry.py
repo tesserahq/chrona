@@ -31,4 +31,4 @@ class Entry(Base, TimestampMixin, SoftDeleteMixin):
     source_author = relationship("SourceAuthor", back_populates="entries")
     project = relationship("Project", back_populates="entries")
     source = relationship("Source", back_populates="entries")
-    comments = relationship("Comment", back_populates="entry")
+    entry_updates = relationship("EntryUpdate", back_populates="entry")

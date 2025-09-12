@@ -15,12 +15,12 @@ from app.services.source_service import SourceService
 from app.services.author_service import AuthorService
 from app.services.source_author_service import SourceAuthorService
 from app.services.entry_service import EntryService
-from app.services.comment_service import CommentService
+from app.services.entry_update_service import EntryUpdateService
 from app.services.digest_service import DigestService
 from app.services.digest_generation_config_service import DigestGenerationConfigService
 from app.schemas.author import AuthorCreate
 from app.schemas.entry import EntryCreate
-from app.schemas.comment import CommentCreate
+from app.schemas.entry_update import EntryUpdateCreate
 from app.schemas.digest import DigestCreate
 from app.schemas.digest_generation_config import DigestGenerationConfigCreate
 
@@ -35,7 +35,7 @@ class FeedProjectService:
         self.author_service = AuthorService(db)
         self.source_author_service = SourceAuthorService(db)
         self.entry_service = EntryService(db)
-        self.comment_service = CommentService(db)
+        self.entry_update_service = EntryUpdateService(db)
         self.digest_service = DigestService(db)
         self.digest_generation_config_service = DigestGenerationConfigService(db)
 
@@ -59,7 +59,7 @@ class FeedProjectService:
         # Create fake authors
         authors = self._create_fake_authors(project.workspace_id, github_source.id)
 
-        # Create entries with comments
+        # Create entries with entry updates
         entries = self._create_fake_entries(
             project, github_source.id, authors, num_entries
         )
@@ -74,7 +74,7 @@ class FeedProjectService:
             "source_created": github_source.id,
             "authors_created": len(authors),
             "entries_created": len(entries),
-            "comments_created": sum(len(entry.comments) for entry in entries),
+            "entry_updates_created": sum(len(entry.entry_updates) for entry in entries),
             "digest_configs_created": len(digest_configs),
             "digests_created": len(digests),
         }
@@ -183,16 +183,16 @@ class FeedProjectService:
 
             entry = self.entry_service.create_entry(entry_data)
 
-            # Create comments for this entry
-            num_comments = random.randint(0, 8)
-            for _ in range(num_comments):
-                comment_author = random.choice(source_authors)
-                comment_data = CommentCreate(
+            # Create entry updates for this entry
+            num_entry_updates = random.randint(0, 8)
+            for _ in range(num_entry_updates):
+                entry_update_author = random.choice(source_authors)
+                entry_update_data = EntryUpdateCreate(
                     body=self._generate_comment_body(),
-                    source_author_id=comment_author.id,
+                    source_author_id=entry_update_author.id,
                     entry_id=entry.id,
-                    tags=["github", "comment"],
-                    labels={"type": "comment"},
+                    tags=["github", "entry-update"],
+                    labels={"type": "entry-update"},
                     meta_data={
                         "created_at": self.fake.date_time_between(
                             start_date=datetime.fromisoformat(
@@ -206,12 +206,12 @@ class FeedProjectService:
                             "❤️": self.fake.random_int(min=0, max=5),
                         },
                     },
-                    external_id=f"comment-{self.fake.random_int(min=1, max=100000)}-{self.fake.uuid4()}",
+                    external_id=f"entry-update-{self.fake.random_int(min=1, max=100000)}-{self.fake.uuid4()}",
                     source_id=source_id,
                 )
-                self.comment_service.create_comment(comment_data)
+                self.entry_update_service.create_entry_update(entry_update_data)
 
-            # Reload entry with comments
+            # Reload entry with entry updates
             entry = self.entry_service.get_entry(entry.id)
             entries.append(entry)
 
@@ -344,9 +344,9 @@ class FeedProjectService:
         return title, body, tags
 
     def _generate_comment_body(self) -> str:
-        """Generate fake comment body."""
+        """Generate fake entry_update body."""
         comment_templates = [
-            "Thanks for the contribution! {comment}",
+            "Thanks for the contribution! {entry_update}",
             "I think we should {suggestion}",
             "This looks good to me. {approval}",
             "Could you please {request}?",
@@ -358,7 +358,7 @@ class FeedProjectService:
 
         template = random.choice(comment_templates)
         return template.format(
-            comment=self.fake.sentence(),
+            entry_update=self.fake.sentence(),
             suggestion=self.fake.sentence(),
             approval=self.fake.sentence(),
             request=self.fake.sentence(),
@@ -424,10 +424,12 @@ class FeedProjectService:
             selected_entries = random.sample(entries, min(max_entries, len(entries)))
             entry_ids = [entry.id for entry in selected_entries]
 
-            # Get comments for selected entries
-            comment_ids = []
+            # Get entry updates for selected entries
+            entry_update_ids = []
             for entry in selected_entries:
-                comment_ids.extend([comment.id for comment in entry.comments])
+                entry_update_ids.extend(
+                    [entry_update.id for entry_update in entry.entry_updates]
+                )
 
             # Generate digest content
             digest_title = f"{config.title} - {self.fake.date_between(start_date='-1m', end_date='now').strftime('%B %Y')}"
@@ -437,7 +439,7 @@ class FeedProjectService:
                 title=digest_title,
                 body=digest_body,
                 entries_ids=entry_ids,
-                comments_ids=comment_ids,
+                entry_updates_ids=entry_update_ids,
                 tags=config.tags + ["generated", "auto"],
                 labels={
                     "type": config.labels.get("type", "summary"),

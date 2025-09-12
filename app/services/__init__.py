@@ -1,5 +1,5 @@
 from app.services.author_service import AuthorService
-from app.services.comment_service import CommentService
+from app.services.entry_update_service import EntryUpdateService
 from app.services.digest_generation_config_service import DigestGenerationConfigService
 from app.services.digest_service import DigestService
 from app.services.entry_service import EntryService
@@ -16,7 +16,7 @@ from app.services.workspace_service import WorkspaceService
 
 __all__ = [
     "AuthorService",
-    "CommentService",
+    "EntryUpdateService",
     "DigestGenerationConfigService",
     "DigestService",
     "EntryService",

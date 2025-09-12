@@ -1,4 +1,4 @@
-"""Add external id to comments
+"""Add external id to entry updates
 
 Revision ID: 854ec3d91178
 Revises: c7bc1e173d5d
@@ -21,27 +21,29 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.add_column("comments", sa.Column("external_id", sa.String(), nullable=False))
-    op.add_column("comments", sa.Column("source_id", sa.UUID(), nullable=False))
+    op.add_column(
+        "entry_updates", sa.Column("external_id", sa.String(), nullable=False)
+    )
+    op.add_column("entry_updates", sa.Column("source_id", sa.UUID(), nullable=False))
     op.create_foreign_key(
-        "fk_comments_source_id",
-        "comments",
+        "fk_entry_updates_source_id",
+        "entry_updates",
         "sources",
         ["source_id"],
         ["id"],
         ondelete="CASCADE",
     )
     op.create_unique_constraint(
-        "uq_comments_external_id", "comments", ["source_id", "external_id"]
+        "uq_entry_updates_external_id", "entry_updates", ["source_id", "external_id"]
     )
 
     op.create_unique_constraint(
-        "uq_comments_external_id_entries", "entries", ["source_id", "external_id"]
+        "uq_entry_updates_external_id_entries", "entries", ["source_id", "external_id"]
     )
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_column("comments", "external_id")
-    op.drop_column("comments", "source_id")
-    op.drop_constraint("uq_comments_external_id", "comments")
+    op.drop_column("entry_updates", "external_id")
+    op.drop_column("entry_updates", "source_id")
+    op.drop_constraint("uq_entry_updates_external_id", "entry_updates")

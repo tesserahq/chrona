@@ -70,7 +70,7 @@ class ProcessImportRequestCommand:
                         "success": result["success"],
                         "author_id": result.get("author_id"),
                         "entry_id": result.get("entry_id"),
-                        "comment_ids": result.get("comment_ids", []),
+                        "entry_update_ids": result.get("entry_update_ids", []),
                         "source_author_id": result.get("source_author_id"),
                         "error": result.get("error"),
                     }

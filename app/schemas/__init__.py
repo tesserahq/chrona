@@ -5,7 +5,7 @@ from app.schemas.user import *
 from app.schemas.invitation import *
 from app.schemas.project_membership import *
 from app.schemas.entry import *
-from app.schemas.comment import *
+from app.schemas.entry_update import *
 from app.schemas.import_request import *
 from app.schemas.import_request_item import *
 from app.schemas.digest_generation_config import *

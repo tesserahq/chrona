@@ -19,7 +19,7 @@ class Digest(Base, TimestampMixin, SoftDeleteMixin):
     entries_ids = Column(ARRAY(UUID(as_uuid=True)), default=list, nullable=False)
     tags = Column(ARRAY(String), default=list, nullable=False)
     labels = Column(JSONB, default=dict, nullable=False)  # Dictionary of labels
-    comments_ids = Column(ARRAY(UUID(as_uuid=True)), default=list, nullable=False)
+    entry_updates_ids = Column(ARRAY(UUID(as_uuid=True)), default=list, nullable=False)
     from_date = Column(DateTime, nullable=True)
     to_date = Column(DateTime, nullable=True)
     digest_generation_config_id = Column(

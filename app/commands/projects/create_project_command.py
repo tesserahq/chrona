@@ -1,4 +1,3 @@
-import uuid
 from app.config import get_settings
 from app.ext.quore_service import QuoreService
 from app.schemas.project_membership import ProjectMembershipCreate
