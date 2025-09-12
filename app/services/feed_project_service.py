@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import random
+from app.constants.digest_constants import DigestStatuses
 import faker
 
 from app.models.project import Project
@@ -451,6 +452,7 @@ class FeedProjectService:
                 to_date=datetime.now(),
                 digest_generation_config_id=config.id,
                 project_id=project_id,
+                status=DigestStatuses.PUBLISHED,
             )
 
             digest = self.digest_service.create_digest(digest_data)

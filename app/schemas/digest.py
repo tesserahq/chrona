@@ -2,6 +2,7 @@ from typing import Optional, Dict, Any, List
 from uuid import UUID
 from pydantic import BaseModel, Field
 from datetime import datetime
+from app.constants.digest_constants import DigestStatuses
 
 
 class DigestBase(BaseModel):
@@ -35,6 +36,9 @@ class DigestBase(BaseModel):
     project_id: UUID = Field(
         ..., description="UUID of the project this digest belongs to"
     )
+    status: str = Field(
+        default=DigestStatuses.DRAFT, description="Status of the digest"
+    )
 
 
 class DigestCreate(DigestBase):
@@ -67,6 +71,7 @@ class DigestUpdate(BaseModel):
     project_id: Optional[UUID] = Field(
         None, description="UUID of the project this digest belongs to"
     )
+    status: Optional[str] = Field(None, description="Status of the digest")
 
 
 class Digest(DigestBase):

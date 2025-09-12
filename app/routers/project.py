@@ -1,3 +1,4 @@
+from app.constants.digest_constants import DigestStatuses
 from app.utils.auth import get_current_user
 from fastapi import (
     APIRouter,
@@ -7,6 +8,9 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 from uuid import UUID
+
+from fastapi_pagination import Page, Params
+from fastapi_pagination.ext.sqlalchemy import paginate
 
 from app.db import get_db
 from app.schemas.project import (
@@ -80,18 +84,19 @@ def list_project_memberships(
     return ListResponse(data=memberships)
 
 
-@router.get("/{project_id}/digests", response_model=ListResponse[Digest])
+@router.get("/{project_id}/digests", response_model=Page[Digest])
 def list_project_digests(
     project: ProjectModel = Depends(get_project_by_id),
-    skip: int = 0,
-    limit: int = 100,
+    params: Params = Depends(),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     """List all digests for a specific project with pagination."""
     service = DigestService(db)
-    digests = service.get_digests_by_project(UUID(str(project.id)), skip, limit)
-    return ListResponse(data=digests)
+    query = service.get_digests_by_project_query(
+        project.id, status=DigestStatuses.PUBLISHED
+    )
+    return paginate(query, params)
 
 
 @router.get("/{project_id}", response_model=Project)
