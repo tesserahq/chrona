@@ -26,6 +26,9 @@ class WorkspaceBase(BaseModel):
     locked: Optional[bool] = False
     """Whether the workspace is locked and cannot be deleted."""
 
+    quore_workspace_id: Optional[str] = None
+    """Updated workspace Quore ID."""
+
 
 class WorkspaceCreate(WorkspaceBase):
     """Schema for creating a new workspace. Inherits all fields from WorkspaceBase."""
@@ -51,9 +54,6 @@ class WorkspaceUpdate(BaseModel):
 
     locked: Optional[bool] = None
     """Whether the workspace is locked and cannot be deleted."""
-
-    quore_workspace_id: Optional[str] = None
-    """Updated workspace Quore ID."""
 
 
 class WorkspaceInDB(WorkspaceBase):
