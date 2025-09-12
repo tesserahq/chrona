@@ -48,6 +48,15 @@ class DigestService(SoftDeleteService[Digest]):
             .all()
         )
 
+    def get_digests_by_project_query(
+        self, project_id: UUID, status: Optional[str] = None
+    ):
+        """Get query for digests belonging to a specific project for pagination."""
+        query = self.db.query(Digest).filter(Digest.project_id == project_id)
+        if status:
+            query = query.filter(Digest.status == status)
+        return query
+
     def create_digest(self, digest: DigestCreate) -> Digest:
         """Create a new digest."""
         # Validate project exists

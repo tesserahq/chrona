@@ -548,8 +548,11 @@ def test_list_project_digests(client, setup_project):
     response = client.get(f"/projects/{project.id}/digests")
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert "page" in data
+    assert "pages" in data
+    assert "size" in data
 
 
 def test_list_project_digests_nonexistent_project(client):
@@ -563,8 +566,12 @@ def test_list_project_digests_nonexistent_project(client):
 def test_list_project_digests_pagination(client, setup_project):
     """Test GET /projects/{project_id}/digests endpoint with pagination parameters."""
     project = setup_project
-    response = client.get(f"/projects/{project.id}/digests?skip=0&limit=10")
+    response = client.get(f"/projects/{project.id}/digests?page=1&size=10")
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert "page" in data
+    assert "pages" in data
+    assert "size" in data
+    assert data["size"] == 10

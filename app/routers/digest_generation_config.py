@@ -18,6 +18,7 @@ from app.schemas.digest_generation_config import (
     DigestGenerationConfig,
     DigestGenerationConfigSearchFilters,
 )
+from app.schemas.digest import Digest
 from app.services.digest_generation_config_service import DigestGenerationConfigService
 from app.models.digest_generation_config import (
     DigestGenerationConfig as DigestGenerationConfigModel,
@@ -27,6 +28,7 @@ from app.routers.utils.dependencies import (
     get_project_by_id,
     get_digest_generation_config_by_id,
 )
+from app.exceptions.resource_not_found_error import ResourceNotFoundError
 
 
 # Project-scoped router for list and create operations
@@ -133,6 +135,30 @@ def update_digest_generation_config(
             detail="Digest generation config not found",
         )
     return updated_digest_generation_config
+
+
+@router.post(
+    "/{digest_generation_config_id}/draft",
+    response_model=Digest,
+    status_code=status.HTTP_201_CREATED,
+)
+def generate_draft_digest(
+    digest_generation_config: DigestGenerationConfigModel = Depends(
+        get_digest_generation_config_by_id
+    ),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Generate a draft digest for a digest generation config."""
+    service = DigestGenerationConfigService(db)
+    try:
+        draft_digest = service.generate_draft_digest(digest_generation_config.id)
+        return draft_digest
+    except ResourceNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
 
 
 @router.delete("/{digest_generation_config_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -1,3 +1,4 @@
+from app.constants.digest_constants import DigestStatuses
 from app.models.mixins import TimestampMixin, SoftDeleteMixin
 from sqlalchemy import Column, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
@@ -22,6 +23,7 @@ class Digest(Base, TimestampMixin, SoftDeleteMixin):
     entry_updates_ids = Column(ARRAY(UUID(as_uuid=True)), default=list, nullable=False)
     from_date = Column(DateTime, nullable=True)
     to_date = Column(DateTime, nullable=True)
+    status = Column(String, nullable=False, default=DigestStatuses.DRAFT)
     digest_generation_config_id = Column(
         UUID(as_uuid=True), ForeignKey("digest_generation_configs.id"), nullable=False
     )
