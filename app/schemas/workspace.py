@@ -55,6 +55,9 @@ class WorkspaceUpdate(BaseModel):
     locked: Optional[bool] = None
     """Whether the workspace is locked and cannot be deleted."""
 
+    quore_workspace_id: Optional[str] = None
+    """Updated workspace Quore ID."""
+
 
 class WorkspaceInDB(WorkspaceBase):
     """Schema representing a workspace as stored in the database. Includes database-specific fields."""

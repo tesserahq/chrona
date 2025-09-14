@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func, desc
+from sqlalchemy import and_, desc
 from datetime import datetime, date
 from app.models.digest_generation_config import DigestGenerationConfig
 from app.models.entry import Entry

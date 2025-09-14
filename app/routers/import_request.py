@@ -1,4 +1,4 @@
-from app.utils.auth import get_current_user
+from tessera_sdk.utils.auth import get_current_user
 from fastapi import (
     APIRouter,
     Depends,

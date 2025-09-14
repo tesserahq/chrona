@@ -1,7 +1,7 @@
 from app.commands.workspaces.create_workspace_command import CreateWorkspaceCommand
 from app.commands.projects.create_project_command import CreateProjectCommand
 from app.schemas.project import ProjectCreate, Project
-from app.utils.auth import get_current_user
+from tessera_sdk.utils.auth import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
