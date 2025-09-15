@@ -87,6 +87,23 @@ def get_import_request(
     return import_request
 
 
+@router.delete(
+    "/import-requests/{import_request_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+def delete_import_request(
+    import_request: ImportRequestModel = Depends(get_import_request_by_id),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Delete a specific import request by ID."""
+    service = ImportRequestService(db)
+    success = service.delete_import_request(import_request.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Import request not found")
+
+    # 204 No Content - no return value needed
+
+
 @router.post(
     "/import-requests/{import_request_id}/process",
     response_model=ImportRequestProcessResponse,

@@ -338,6 +338,29 @@ def test_get_import_request_not_found(client):
     assert response.json()["detail"] == "Import request not found"
 
 
+def test_delete_import_request(client, setup_import_request):
+    """Test DELETE /import-requests/{import_request_id} endpoint."""
+    import_request = setup_import_request
+
+    response = client.delete(f"/import-requests/{import_request.id}")
+    assert response.status_code == 204
+    # 204 No Content means no response body
+    assert response.content == b""
+
+    # Verify the import request was soft deleted (should return 404)
+    get_response = client.get(f"/import-requests/{import_request.id}")
+    assert get_response.status_code == 404
+
+
+def test_delete_import_request_not_found(client):
+    """Test DELETE /import-requests/{import_request_id} with non-existent ID."""
+    non_existent_id = "00000000-0000-0000-0000-000000000000"
+
+    response = client.delete(f"/import-requests/{non_existent_id}")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Import request not found"
+
+
 def test_list_import_requests(client, setup_import_request):
     """Test GET /projects/{project_id}/import-requests endpoint."""
     import_request = setup_import_request
