@@ -23,6 +23,8 @@ from app.services.import_request_service import ImportRequestService
 from app.models.import_request import ImportRequest
 from app.services.digest_generation_config_service import DigestGenerationConfigService
 from app.models.digest_generation_config import DigestGenerationConfig
+from app.services.source_service import SourceService
+from app.models.source import Source
 
 
 def get_workspace_by_id(
@@ -252,3 +254,25 @@ def get_digest_generation_config_by_id(
             status_code=404, detail="Digest generation config not found"
         )
     return digest_generation_config
+
+
+def get_source_by_id(
+    source_id: UUID,
+    db: Session = Depends(get_db),
+) -> Source:
+    """FastAPI dependency to get a source by ID.
+
+    Args:
+        source_id: The UUID of the source to retrieve
+        db: Database session dependency
+
+    Returns:
+        Source: The retrieved source
+
+    Raises:
+        HTTPException: If the source is not found
+    """
+    source = SourceService(db).get_source(source_id)
+    if source is None:
+        raise HTTPException(status_code=404, detail="Source not found")
+    return source
