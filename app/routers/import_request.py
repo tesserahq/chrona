@@ -4,6 +4,7 @@ from fastapi import (
     Depends,
     HTTPException,
     status,
+    Query,
 )
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -33,6 +34,7 @@ router = APIRouter(tags=["import-requests"])
 )
 def list_import_requests(
     project_id: UUID,
+    with_items: bool = Query(False, description="Include items in the response"),
     project: ProjectModel = Depends(get_project_by_id),
     params: Params = Depends(),
     db: Session = Depends(get_db),
@@ -40,7 +42,7 @@ def list_import_requests(
 ):
     """List all import requests for a specific project with pagination."""
     service = ImportRequestService(db)
-    query = service.get_import_requests_by_project_query(project_id)
+    query = service.get_import_requests_by_project_query(project_id, with_items)
     return paginate(query, params)
 
 
@@ -50,6 +52,7 @@ def list_import_requests(
 def search_import_requests(
     project_id: UUID,
     filters: ImportRequestSearchFilters,
+    with_items: bool = Query(False, description="Include items in the response"),
     project: ProjectModel = Depends(get_project_by_id),
     params: Params = Depends(),
     db: Session = Depends(get_db),
@@ -74,16 +77,22 @@ def search_import_requests(
     # Add project_id to filters to scope the search
     search_filters = filters.model_dump(exclude_none=True)
     search_filters["project_id"] = str(project_id)
-    query = service.search_query(search_filters)
+    query = service.search_query(search_filters, with_items)
     return paginate(query, params)
 
 
 @router.get("/import-requests/{import_request_id}", response_model=ImportRequest)
 def get_import_request(
-    import_request: ImportRequestModel = Depends(get_import_request_by_id),
+    import_request_id: UUID,
+    with_items: bool = Query(False, description="Include items in the response"),
+    db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     """Get a specific import request by ID."""
+    service = ImportRequestService(db)
+    import_request = service.get_import_request(import_request_id, with_items)
+    if not import_request:
+        raise HTTPException(status_code=404, detail="Import request not found")
     return import_request
 
 

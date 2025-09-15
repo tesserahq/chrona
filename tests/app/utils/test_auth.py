@@ -7,7 +7,6 @@ from tessera_sdk.utils.auth import (
     UnauthorizedException,
     UnauthenticatedException,
 )
-from app.schemas.user import UserOnboard
 from app.models.user import User
 
 # Mock JWT token for testing

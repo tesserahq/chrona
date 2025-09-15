@@ -205,12 +205,14 @@ def get_author_by_id(
 def get_import_request_by_id(
     import_request_id: UUID,
     db: Session = Depends(get_db),
+    with_items: bool = False,
 ) -> ImportRequest:
     """FastAPI dependency to get an import request by ID.
 
     Args:
         import_request_id: The UUID of the import request to retrieve
         db: Database session dependency
+        with_items: Whether to include items in the response
 
     Returns:
         ImportRequest: The retrieved import request
@@ -218,7 +220,9 @@ def get_import_request_by_id(
     Raises:
         HTTPException: If the import request is not found
     """
-    import_request = ImportRequestService(db).get_import_request(import_request_id)
+    import_request = ImportRequestService(db).get_import_request(
+        import_request_id, with_items
+    )
     if import_request is None:
         raise HTTPException(status_code=404, detail="Import request not found")
     return import_request

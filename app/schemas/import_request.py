@@ -6,6 +6,7 @@ from typing import Literal
 
 from app.schemas.user import User
 from app.schemas.source import Source
+from app.schemas.import_request_item import ImportRequestItem
 
 
 class ImportRequestBase(BaseModel):
@@ -58,6 +59,9 @@ class ImportRequest(ImportRequestInDB):
     )
     requested_by: Optional[User] = Field(
         None, description="User who requested this import"
+    )
+    items: Optional[List[ImportRequestItem]] = Field(
+        None, description="Items associated with this import request"
     )
 
 

@@ -359,6 +359,64 @@ def test_get_import_request_not_found(client):
     assert response.json()["detail"] == "Import request not found"
 
 
+def test_get_import_request_with_items(client, setup_import_request_with_items):
+    """Test GET /import-requests/{import_request_id} with with_items=true parameter."""
+    import_request, items = setup_import_request_with_items
+
+    response = client.get(f"/import-requests/{import_request.id}?with_items=true")
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify response structure
+    assert data["id"] == str(import_request.id)
+    assert data["status"] == import_request.status
+    assert data["project_id"] == str(import_request.project_id)
+    assert data["requested_by_id"] == str(import_request.requested_by_id)
+
+    # Verify associations are included
+    assert "source" in data
+    assert "requested_by" in data
+    assert "items" in data
+
+    # Verify items are included
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) == len(items)
+
+    # Verify item structure
+    if data["items"]:
+        item = data["items"][0]
+        assert "id" in item
+        assert "import_request_id" in item
+        assert "source_id" in item
+        assert "source_item_id" in item
+        assert "status" in item
+        assert "created_at" in item
+        assert "updated_at" in item
+
+
+def test_get_import_request_without_items(client, setup_import_request):
+    """Test GET /import-requests/{import_request_id} with with_items=false parameter."""
+    import_request = setup_import_request
+
+    response = client.get(f"/import-requests/{import_request.id}?with_items=false")
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify response structure
+    assert data["id"] == str(import_request.id)
+    assert data["status"] == import_request.status
+    assert data["project_id"] == str(import_request.project_id)
+    assert data["requested_by_id"] == str(import_request.requested_by_id)
+
+    # Verify associations are included
+    assert "source" in data
+    assert "requested_by" in data
+
+    # Verify items are not included (should be None or empty)
+    assert "items" in data
+    assert data["items"] is None or data["items"] == []
+
+
 def test_delete_import_request(client, setup_import_request):
     """Test DELETE /import-requests/{import_request_id} endpoint."""
     import_request = setup_import_request
@@ -438,6 +496,82 @@ def test_list_import_requests_pagination(client, setup_import_request):
     assert "size" in data
     assert "total" in data
     assert "pages" in data
+
+
+def test_list_import_requests_with_items(client, setup_import_request_with_items):
+    """Test GET /projects/{project_id}/import-requests with with_items=true parameter."""
+    import_request, items = setup_import_request_with_items
+
+    response = client.get(
+        f"/projects/{import_request.project_id}/import-requests?with_items=true"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
+
+    # Find our import request in the response
+    import_request_found = False
+    for item in data["items"]:
+        if item["id"] == str(import_request.id):
+            import_request_found = True
+            assert item["status"] == import_request.status
+            assert item["project_id"] == str(import_request.project_id)
+            assert item["requested_by_id"] == str(import_request.requested_by_id)
+
+            # Verify associations are included
+            assert "source" in item
+            assert "requested_by" in item
+            assert "items" in item
+
+            # Verify items are included
+            assert isinstance(item["items"], list)
+            assert len(item["items"]) == len(items)
+
+            # Verify item structure
+            if item["items"]:
+                import_item = item["items"][0]
+                assert "id" in import_item
+                assert "import_request_id" in import_item
+                assert "source_id" in import_item
+                assert "source_item_id" in import_item
+                assert "status" in import_item
+            break
+    assert import_request_found
+
+
+def test_list_import_requests_without_items(client, setup_import_request):
+    """Test GET /projects/{project_id}/import-requests with with_items=false parameter."""
+    import_request = setup_import_request
+
+    response = client.get(
+        f"/projects/{import_request.project_id}/import-requests?with_items=false"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
+
+    # Find our import request in the response
+    import_request_found = False
+    for item in data["items"]:
+        if item["id"] == str(import_request.id):
+            import_request_found = True
+            assert item["status"] == import_request.status
+            assert item["project_id"] == str(import_request.project_id)
+            assert item["requested_by_id"] == str(import_request.requested_by_id)
+
+            # Verify associations are included
+            assert "source" in item
+            assert "requested_by" in item
+
+            # Verify items are not included (should be None or empty)
+            assert "items" in item
+            assert item["items"] is None or item["items"] == []
+            break
+    assert import_request_found
 
 
 def test_search_import_requests_exact_match(client, setup_import_request):

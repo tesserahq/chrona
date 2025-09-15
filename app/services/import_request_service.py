@@ -25,14 +25,18 @@ class ImportRequestService(SoftDeleteService[ImportRequest]):
     def __init__(self, db: Session):
         super().__init__(db, ImportRequest)
 
-    def get_import_request(self, import_request_id: UUID) -> Optional[ImportRequest]:
+    def get_import_request(
+        self, import_request_id: UUID, with_items: bool = False
+    ) -> Optional[ImportRequest]:
         """Get a single import request by ID."""
-        return (
-            self.db.query(ImportRequest)
-            .options(joinedload(ImportRequest.source), joinedload(ImportRequest.user))
-            .filter(ImportRequest.id == import_request_id)
-            .first()
+        query = self.db.query(ImportRequest).options(
+            joinedload(ImportRequest.source), joinedload(ImportRequest.user)
         )
+
+        if with_items:
+            query = query.options(joinedload(ImportRequest.items))
+
+        return query.filter(ImportRequest.id == import_request_id).first()
 
     def get_import_requests(
         self, skip: int = 0, limit: int = 100
@@ -52,13 +56,18 @@ class ImportRequestService(SoftDeleteService[ImportRequest]):
             .all()
         )
 
-    def get_import_requests_by_project_query(self, project_id: UUID):
+    def get_import_requests_by_project_query(
+        self, project_id: UUID, with_items: bool = False
+    ):
         """Get a query object for import requests by project for use with fastapi-pagination."""
-        return (
-            self.db.query(ImportRequest)
-            .options(joinedload(ImportRequest.source), joinedload(ImportRequest.user))
-            .filter(ImportRequest.project_id == project_id)
+        query = self.db.query(ImportRequest).options(
+            joinedload(ImportRequest.source), joinedload(ImportRequest.user)
         )
+
+        if with_items:
+            query = query.options(joinedload(ImportRequest.items))
+
+        return query.filter(ImportRequest.project_id == project_id)
 
     def get_import_requests_by_user(
         self, user_id: UUID, skip: int = 0, limit: int = 100
@@ -126,11 +135,15 @@ class ImportRequestService(SoftDeleteService[ImportRequest]):
         query = apply_filters(query, ImportRequest, filters)
         return query.all()
 
-    def search_query(self, filters: Dict[str, Any]):
+    def search_query(self, filters: Dict[str, Any], with_items: bool = False):
         """Get a query object for import request search for use with fastapi-pagination."""
         query = self.db.query(ImportRequest).options(
             joinedload(ImportRequest.source), joinedload(ImportRequest.user)
         )
+
+        if with_items:
+            query = query.options(joinedload(ImportRequest.items))
+
         query = apply_filters(query, ImportRequest, filters)
         return query
 
