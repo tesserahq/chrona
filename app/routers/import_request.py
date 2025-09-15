@@ -25,7 +25,7 @@ from app.models.project import Project as ProjectModel
 from app.services.import_request_service import ImportRequestService
 from app.routers.utils.dependencies import get_project_by_id, get_import_request_by_id
 
-router = APIRouter(prefix="/import-requests", tags=["import-requests"])
+router = APIRouter(tags=["import-requests"])
 
 
 @router.get(
@@ -78,8 +78,18 @@ def search_import_requests(
     return paginate(query, params)
 
 
+@router.get("/import-requests/{import_request_id}", response_model=ImportRequest)
+def get_import_request(
+    import_request: ImportRequestModel = Depends(get_import_request_by_id),
+    current_user=Depends(get_current_user),
+):
+    """Get a specific import request by ID."""
+    return import_request
+
+
 @router.post(
-    "/{import_request_id}/process", response_model=ImportRequestProcessResponse
+    "/import-requests/{import_request_id}/process",
+    response_model=ImportRequestProcessResponse,
 )
 def process_import_request(
     import_request: ImportRequestModel = Depends(get_import_request_by_id),

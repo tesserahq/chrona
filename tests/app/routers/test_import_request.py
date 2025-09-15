@@ -312,13 +312,37 @@ def test_process_import_request_integration(client, setup_import_request_with_it
     assert data["import_request_id"] == str(import_request.id)
 
 
-def test_list_import_requests(client, setup_import_request):
-    """Test GET /import-requests/projects/{project_id}/import-requests endpoint."""
+def test_get_import_request(client, setup_import_request):
+    """Test GET /import-requests/{import_request_id} endpoint."""
     import_request = setup_import_request
 
-    response = client.get(
-        f"/import-requests/projects/{import_request.project_id}/import-requests"
-    )
+    response = client.get(f"/import-requests/{import_request.id}")
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify response structure
+    assert data["id"] == str(import_request.id)
+    assert data["status"] == import_request.status
+    assert data["project_id"] == str(import_request.project_id)
+    assert data["requested_by_id"] == str(import_request.requested_by_id)
+    assert "created_at" in data
+    assert "updated_at" in data
+
+
+def test_get_import_request_not_found(client):
+    """Test GET /import-requests/{import_request_id} with non-existent ID."""
+    non_existent_id = "00000000-0000-0000-0000-000000000000"
+
+    response = client.get(f"/import-requests/{non_existent_id}")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Import request not found"
+
+
+def test_list_import_requests(client, setup_import_request):
+    """Test GET /projects/{project_id}/import-requests endpoint."""
+    import_request = setup_import_request
+
+    response = client.get(f"/projects/{import_request.project_id}/import-requests")
     assert response.status_code == 200
     data = response.json()
     assert "items" in data
@@ -338,12 +362,12 @@ def test_list_import_requests(client, setup_import_request):
 
 
 def test_list_import_requests_pagination(client, setup_import_request):
-    """Test GET /import-requests/projects/{project_id}/import-requests with pagination parameters."""
+    """Test GET /projects/{project_id}/import-requests with pagination parameters."""
     import_request = setup_import_request
 
     # Test with page and size (fastapi-pagination format)
     response = client.get(
-        f"/import-requests/projects/{import_request.project_id}/import-requests?page=1&size=1"
+        f"/projects/{import_request.project_id}/import-requests?page=1&size=1"
     )
     assert response.status_code == 200
     data = response.json()
@@ -357,7 +381,7 @@ def test_list_import_requests_pagination(client, setup_import_request):
 
 
 def test_search_import_requests_exact_match(client, setup_import_request):
-    """Test POST /import-requests/projects/{project_id}/import-requests/search with exact match."""
+    """Test POST /projects/{project_id}/import-requests/search with exact match."""
     import_request = setup_import_request
     search_filters = {
         "status": import_request.status,
@@ -365,7 +389,7 @@ def test_search_import_requests_exact_match(client, setup_import_request):
     }
 
     response = client.post(
-        f"/import-requests/projects/{import_request.project_id}/import-requests/search",
+        f"/projects/{import_request.project_id}/import-requests/search",
         json=search_filters,
     )
     assert response.status_code == 200
@@ -385,12 +409,12 @@ def test_search_import_requests_exact_match(client, setup_import_request):
 
 
 def test_search_import_requests_no_results(client, setup_project):
-    """Test POST /import-requests/projects/{project_id}/import-requests/search with filters that return no results."""
+    """Test POST /projects/{project_id}/import-requests/search with filters that return no results."""
     project = setup_project
     search_filters = {"status": "NonExistentStatus123"}
 
     response = client.post(
-        f"/import-requests/projects/{project.id}/import-requests/search",
+        f"/projects/{project.id}/import-requests/search",
         json=search_filters,
     )
     assert response.status_code == 200
