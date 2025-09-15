@@ -42,13 +42,20 @@ class ImportRequestStatuses:
     """Import request status constants."""
 
     PROCESSING = "processing"
+    PENDING = "pending"
     COMPLETED = "completed"
     COMPLETED_WITH_ERRORS = "completed_with_errors"
     FAILED = "failed"
 
     @classmethod
     def get_all(cls):
-        return [cls.PROCESSING, cls.COMPLETED, cls.COMPLETED_WITH_ERRORS, cls.FAILED]
+        return [
+            cls.PROCESSING,
+            cls.PENDING,
+            cls.COMPLETED,
+            cls.COMPLETED_WITH_ERRORS,
+            cls.FAILED,
+        ]
 
 
 class ImportItemStatuses:
@@ -56,6 +63,7 @@ class ImportItemStatuses:
 
     SUCCESS = "success"
     FAILED = "failed"
+    PENDING = "pending"
 
     @classmethod
     def get_all(cls):

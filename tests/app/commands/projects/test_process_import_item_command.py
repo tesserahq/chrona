@@ -366,6 +366,7 @@ class TestProcessImportItemCommand:
         result = process_command._create_entry(
             sample_import_item_data,
             source_author.id,
+            None,  # source_assignee_id
             source.id,
             setup_project.id,
             "external_entry_123",

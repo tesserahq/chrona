@@ -9,7 +9,7 @@ from app.schemas.project_import import (
     ImportItemRequest,
     ImportItemData,
 )
-from app.schemas.import_request import ImportRequestCreate, ImportRequestUpdate
+from app.schemas.import_request import ImportRequestCreate
 from app.schemas.import_request_item import ImportRequestItemCreate
 from app.services.source_service import SourceService
 from app.services.import_request_service import ImportRequestService
@@ -17,6 +17,7 @@ from app.constants.import_constants import (
     ImportRequestStatuses,
     ImportItemStatuses,
 )
+from slugify import slugify
 
 
 class ImportItemsCommand:
@@ -40,18 +41,18 @@ class ImportItemsCommand:
         :return: Dictionary with import results
         """
         # Create or get the source for this import
-        source_identifier = f"import_{project.id}"
+        # source_identifier = f"import_{project.id}"
         source = self.source_service.get_or_create_source_by_identifier(
-            identifier=source_identifier,
+            identifier=slugify(import_request.source),
             workspace_id=project.workspace_id,
-            name=source_identifier.capitalize(),
+            name=import_request.source.capitalize(),
         )
 
         # Create the import request
         import_request_data = ImportRequestCreate(
             source_id=source.id,
             requested_by_id=requested_by_id,
-            status=ImportRequestStatuses.PROCESSING,
+            status=ImportRequestStatuses.PENDING,
             received_count=len(import_request.items),
             success_count=0,
             failure_count=0,
@@ -63,55 +64,21 @@ class ImportItemsCommand:
             import_request_data
         )
 
-        success_count = 0
-        failure_count = 0
-
         # Process each item
         # TODO: We could insert all the items in a bulk insert instead of one by one
         for item_data in import_request.items:
-            try:
-                # Create import request item with raw payload
-                import_item = self._create_import_request_item(
-                    db_import_request, source, item_data, ImportItemStatuses.SUCCESS
-                )
-
-                success_count += 1
-
-            except Exception as e:
-                # Create failed import request item
-                self._create_import_request_item(
-                    db_import_request, source, item_data, ImportItemStatuses.FAILED
-                )
-                failure_count += 1
-                print(
-                    f"Failed to import item: {e}"
-                )  # In production, use proper logging
-
-        # Update import request with final counts
-        self.import_request_service.update_import_request(
-            db_import_request.id,
-            ImportRequestUpdate(
-                status=(
-                    ImportRequestStatuses.COMPLETED
-                    if failure_count == 0
-                    else ImportRequestStatuses.COMPLETED_WITH_ERRORS
-                ),
-                success_count=success_count,
-                failure_count=failure_count,
-            ),
-        )
+            # Create import request item with raw payload
+            self._create_import_request_item(
+                db_import_request, source, item_data, ImportItemStatuses.PENDING
+            )
 
         return {
             "id": str(db_import_request.id),
             "total_items": len(import_request.items),
-            "processed_items": success_count + failure_count,
-            "success_count": success_count,
-            "failure_count": failure_count,
-            "status": (
-                ImportRequestStatuses.COMPLETED
-                if failure_count == 0
-                else ImportRequestStatuses.COMPLETED_WITH_ERRORS
-            ),
+            "processed_items": 0,
+            "success_count": 0,
+            "failure_count": 0,
+            "status": ImportRequestStatuses.PENDING,
         }
 
     def _create_import_request_item(
