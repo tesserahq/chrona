@@ -26,7 +26,7 @@ class Entry(Base, TimestampMixin, SoftDeleteMixin):
         UUID(as_uuid=True), ForeignKey("source_authors.id"), nullable=False
     )
     source_assignee_id = Column(
-        UUID(as_uuid=True), ForeignKey("source_authors.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("source_authors.id"), nullable=True
     )
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
 
