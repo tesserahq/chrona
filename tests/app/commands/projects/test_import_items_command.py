@@ -19,6 +19,7 @@ class TestImportItemsCommand:
 
         # Test payload from user request
         payload = {
+            "source": "github",
             "items": [
                 {
                     "source": "github",
@@ -71,7 +72,7 @@ class TestImportItemsCommand:
                         "meta_data": {"source": "github"},
                     },
                 },
-            ]
+            ],
         }
 
         import_request = ImportItemRequest(**payload)
@@ -91,10 +92,10 @@ class TestImportItemsCommand:
 
         # Assert result values
         assert result["total_items"] == 3
-        assert result["processed_items"] == 3
-        assert result["success_count"] == 3
+        assert result["processed_items"] == 0
+        assert result["success_count"] == 0
         assert result["failure_count"] == 0
-        assert result["status"] == ImportRequestStatuses.COMPLETED
+        assert result["status"] == ImportRequestStatuses.PENDING
 
         # Assert import request was created
         id = result["id"]
@@ -104,9 +105,9 @@ class TestImportItemsCommand:
         assert db_import_request is not None
         assert db_import_request.project_id == project.id
         assert db_import_request.requested_by_id == user.id
-        assert db_import_request.status == ImportRequestStatuses.COMPLETED
+        assert db_import_request.status == ImportRequestStatuses.PENDING
         assert db_import_request.received_count == 3
-        assert db_import_request.success_count == 3
+        assert db_import_request.success_count == 0
         assert db_import_request.failure_count == 0
 
         # Assert source was created
@@ -114,7 +115,7 @@ class TestImportItemsCommand:
             db.query(Source).filter(Source.id == db_import_request.source_id).first()
         )
         assert source is not None
-        assert source.identifier == f"import_{project.id}"
+        assert source.identifier == "github"
         assert source.workspace_id == project.workspace_id
 
         # Assert import request items were created
@@ -127,7 +128,7 @@ class TestImportItemsCommand:
 
         # Assert each item has correct data
         for i, item in enumerate(items):
-            assert item.status == ImportItemStatuses.SUCCESS
+            assert item.status == ImportItemStatuses.PENDING
             assert item.source_id == source.id
             assert item.raw_payload is not None
 
@@ -151,7 +152,7 @@ class TestImportItemsCommand:
         # Arrange
         user = setup_user
         project = setup_project
-        import_request = ImportItemRequest(items=[])
+        import_request = ImportItemRequest(source="github", items=[])
 
         # Act
         command = ImportItemsCommand(db)
@@ -162,7 +163,7 @@ class TestImportItemsCommand:
         assert result["processed_items"] == 0
         assert result["success_count"] == 0
         assert result["failure_count"] == 0
-        assert result["status"] == ImportRequestStatuses.COMPLETED
+        assert result["status"] == ImportRequestStatuses.PENDING
 
         # Assert import request was created
         id = result["id"]
@@ -170,7 +171,7 @@ class TestImportItemsCommand:
             db.query(ImportRequest).filter(ImportRequest.id == id).first()
         )
         assert db_import_request is not None
-        assert db_import_request.status == ImportRequestStatuses.COMPLETED
+        assert db_import_request.status == ImportRequestStatuses.PENDING
 
     def test_import_items_single_item(self, db, setup_user, setup_project):
         """Test importing a single item."""
@@ -179,6 +180,7 @@ class TestImportItemsCommand:
         project = setup_project
 
         payload = {
+            "source": "github",
             "items": [
                 {
                     "source": "github",
@@ -197,7 +199,7 @@ class TestImportItemsCommand:
                         "meta_data": {"source": "github"},
                     },
                 }
-            ]
+            ],
         }
 
         import_request = ImportItemRequest(**payload)
@@ -208,10 +210,10 @@ class TestImportItemsCommand:
 
         # Assert result
         assert result["total_items"] == 1
-        assert result["processed_items"] == 1
-        assert result["success_count"] == 1
+        assert result["processed_items"] == 0
+        assert result["success_count"] == 0
         assert result["failure_count"] == 0
-        assert result["status"] == ImportRequestStatuses.COMPLETED
+        assert result["status"] == ImportRequestStatuses.PENDING
 
         # Assert single item was created
         id = result["id"]
@@ -224,7 +226,7 @@ class TestImportItemsCommand:
 
         item = items[0]
         assert item.source_item_id == "123456789"
-        assert item.status == ImportItemStatuses.SUCCESS
+        assert item.status == ImportItemStatuses.PENDING
         assert item.raw_payload["title"] == "Single test item"
 
     def test_import_items_creates_source_once(self, db, setup_user, setup_project):
@@ -235,6 +237,7 @@ class TestImportItemsCommand:
 
         # Create two separate import requests for the same project
         payload1 = {
+            "source": "github",
             "items": [
                 {
                     "source": "github",
@@ -253,10 +256,11 @@ class TestImportItemsCommand:
                         "meta_data": {"source": "github"},
                     },
                 }
-            ]
+            ],
         }
 
         payload2 = {
+            "source": "github",
             "items": [
                 {
                     "source": "github",
@@ -275,7 +279,7 @@ class TestImportItemsCommand:
                         "meta_data": {"source": "github"},
                     },
                 }
-            ]
+            ],
         }
 
         # Act
@@ -284,8 +288,8 @@ class TestImportItemsCommand:
         result2 = command.execute(project, ImportItemRequest(**payload2), user.id)
 
         # Assert both import requests were created
-        assert result1["success_count"] == 1
-        assert result2["success_count"] == 1
+        assert result1["success_count"] == 0
+        assert result2["success_count"] == 0
 
         # Assert only one source was created for the project
         sources = (
@@ -294,7 +298,7 @@ class TestImportItemsCommand:
         assert len(sources) == 1
 
         source = sources[0]
-        assert source.identifier == f"import_{project.id}"
+        assert source.identifier == "github"
 
         # Assert both import requests use the same source
         import_request1 = (
@@ -328,6 +332,7 @@ class TestImportItemsCommand:
         db.refresh(project2)
 
         payload = {
+            "source": "github",
             "items": [
                 {
                     "source": "github",
@@ -346,7 +351,7 @@ class TestImportItemsCommand:
                         "meta_data": {"source": "github"},
                     },
                 }
-            ]
+            ],
         }
 
         # Act
@@ -355,18 +360,17 @@ class TestImportItemsCommand:
         result2 = command.execute(project2, ImportItemRequest(**payload), user.id)
 
         # Assert both import requests were created
-        assert result1["success_count"] == 1
-        assert result2["success_count"] == 1
+        assert result1["success_count"] == 0
+        assert result2["success_count"] == 0
 
         # Assert two different sources were created
         sources = (
             db.query(Source).filter(Source.workspace_id == project1.workspace_id).all()
         )
-        assert len(sources) == 2
+        assert len(sources) == 1
 
         source_identifiers = [source.identifier for source in sources]
-        assert f"import_{project1.id}" in source_identifiers
-        assert f"import_{project2.id}" in source_identifiers
+        assert "github" in source_identifiers
 
     def test_import_items_verifies_database_persistence(
         self, db, setup_user, setup_project
@@ -377,6 +381,7 @@ class TestImportItemsCommand:
         project = setup_project
 
         payload = {
+            "source": "github",
             "items": [
                 {
                     "source": "github",
@@ -395,7 +400,7 @@ class TestImportItemsCommand:
                         "meta_data": {"source": "github"},
                     },
                 }
-            ]
+            ],
         }
 
         # Act
@@ -419,7 +424,7 @@ class TestImportItemsCommand:
         )
         assert db_item is not None
         assert db_item.source_item_id == "444444444"
-        assert db_item.status == ImportItemStatuses.SUCCESS
+        assert db_item.status == ImportItemStatuses.PENDING
         assert db_item.raw_payload["title"] == "Persistence test item"
         assert db_item.raw_payload["author"]["display_name"] == "Persistence Tester"
 
@@ -430,6 +435,7 @@ class TestImportItemsCommand:
         project = setup_project
 
         payload = {
+            "source": "github",
             "items": [
                 {
                     "source": "github",
@@ -448,7 +454,7 @@ class TestImportItemsCommand:
                         "meta_data": {},
                     },
                 }
-            ]
+            ],
         }
 
         # Act
@@ -456,9 +462,9 @@ class TestImportItemsCommand:
         result = command.execute(project, ImportItemRequest(**payload), user.id)
 
         # Assert result
-        assert result["success_count"] == 1
+        assert result["success_count"] == 0
         assert result["failure_count"] == 0
-        assert result["status"] == ImportRequestStatuses.COMPLETED
+        assert result["status"] == ImportRequestStatuses.PENDING
 
         # Assert item was created with minimal data
         id = result["id"]

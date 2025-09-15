@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from uuid import UUID
 from pydantic import BaseModel, Field
 
@@ -52,6 +52,9 @@ class ImportItemData(BaseModel):
         default_factory=dict, description="Metadata for the item"
     )
     author: ImportAuthorData = Field(..., description="Author information for the item")
+    assignee: Optional[ImportAuthorData] = Field(
+        None, description="Assignee information for the item"
+    )
     entry_updates: List[ImportEntryUpdateData] = Field(
         default_factory=list, description="Entry updates associated with the item"
     )
@@ -60,6 +63,7 @@ class ImportItemData(BaseModel):
 class ImportItemRequest(BaseModel):
     """Schema for the project import request payload."""
 
+    source: str = Field(..., description="Source identifier (e.g., 'github')")
     items: List[ImportItemData] = Field(..., description="List of items to import")
 
 

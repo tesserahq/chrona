@@ -1,3 +1,6 @@
+from app.constants.import_constants import ImportRequestStatuses
+
+
 def test_get_project(client, setup_project):
     """Test GET /projects/{project_id} endpoint."""
     project = setup_project
@@ -248,6 +251,7 @@ def test_import_items_success(client, setup_project):
 
     # Test payload from user request
     payload = {
+        "source": "github",
         "items": [
             {
                 "source": "github",
@@ -300,7 +304,7 @@ def test_import_items_success(client, setup_project):
                     "meta_data": {"source": "github"},
                 },
             },
-        ]
+        ],
     }
 
     response = client.post(f"/projects/{project.id}/import", json=payload)
@@ -316,17 +320,17 @@ def test_import_items_success(client, setup_project):
 
     # Verify response values
     assert data["total_items"] == 3
-    assert data["processed_items"] == 3
-    assert data["success_count"] == 3
+    assert data["processed_items"] == 0
+    assert data["success_count"] == 0
     assert data["failure_count"] == 0
-    assert data["status"] == "completed"
+    assert data["status"] == ImportRequestStatuses.PENDING
 
 
 def test_import_items_empty_list(client, setup_project):
     """Test POST /projects/{project_id}/import endpoint with empty items list."""
     project = setup_project
 
-    payload = {"items": []}
+    payload = {"source": "github", "items": []}
 
     response = client.post(f"/projects/{project.id}/import", json=payload)
     assert response.status_code == 200
@@ -336,7 +340,7 @@ def test_import_items_empty_list(client, setup_project):
     assert data["processed_items"] == 0
     assert data["success_count"] == 0
     assert data["failure_count"] == 0
-    assert data["status"] == "completed"
+    assert data["status"] == ImportRequestStatuses.PENDING
 
 
 def test_import_items_single_item(client, setup_project):
@@ -344,6 +348,7 @@ def test_import_items_single_item(client, setup_project):
     project = setup_project
 
     payload = {
+        "source": "github",
         "items": [
             {
                 "source": "github",
@@ -362,7 +367,7 @@ def test_import_items_single_item(client, setup_project):
                     "meta_data": {"source": "github"},
                 },
             }
-        ]
+        ],
     }
 
     response = client.post(f"/projects/{project.id}/import", json=payload)
@@ -370,16 +375,17 @@ def test_import_items_single_item(client, setup_project):
 
     data = response.json()
     assert data["total_items"] == 1
-    assert data["processed_items"] == 1
-    assert data["success_count"] == 1
+    assert data["processed_items"] == 0
+    assert data["success_count"] == 0
     assert data["failure_count"] == 0
-    assert data["status"] == "completed"
+    assert data["status"] == ImportRequestStatuses.PENDING
 
 
 def test_import_items_nonexistent_project(client):
     """Test POST /projects/{project_id}/import endpoint with non-existent project."""
     non_existent_id = "00000000-0000-0000-0000-000000000000"
     payload = {
+        "source": "github",
         "items": [
             {
                 "source": "github",
@@ -398,7 +404,7 @@ def test_import_items_nonexistent_project(client):
                     "meta_data": {"source": "github"},
                 },
             }
-        ]
+        ],
     }
 
     response = client.post(f"/projects/{non_existent_id}/import", json=payload)
@@ -412,13 +418,14 @@ def test_import_items_invalid_payload(client, setup_project):
 
     # Missing required fields
     invalid_payload = {
+        "source": "github",
         "items": [
             {
                 "source": "github",
                 "title": "Test item",
                 # Missing body, tags, labels, meta_data, author
             }
-        ]
+        ],
     }
 
     response = client.post(f"/projects/{project.id}/import", json=invalid_payload)
@@ -430,6 +437,7 @@ def test_import_items_invalid_author_data(client, setup_project):
     project = setup_project
 
     payload = {
+        "source": "github",
         "items": [
             {
                 "source": "github",
@@ -446,7 +454,7 @@ def test_import_items_invalid_author_data(client, setup_project):
                     "meta_data": {"source": "github"},
                 },
             }
-        ]
+        ],
     }
 
     response = client.post(f"/projects/{project.id}/import", json=payload)
@@ -458,6 +466,7 @@ def test_import_items_minimal_data(client, setup_project):
     project = setup_project
 
     payload = {
+        "source": "github",
         "items": [
             {
                 "source": "github",
@@ -476,16 +485,16 @@ def test_import_items_minimal_data(client, setup_project):
                     "meta_data": {},
                 },
             }
-        ]
+        ],
     }
 
     response = client.post(f"/projects/{project.id}/import", json=payload)
     assert response.status_code == 200
 
     data = response.json()
-    assert data["success_count"] == 1
+    assert data["success_count"] == 0
     assert data["failure_count"] == 0
-    assert data["status"] == "completed"
+    assert data["status"] == ImportRequestStatuses.PENDING
 
 
 def test_import_items_multiple_items(client, setup_project):
@@ -493,6 +502,7 @@ def test_import_items_multiple_items(client, setup_project):
     project = setup_project
 
     payload = {
+        "source": "github",
         "items": [
             {
                 "source": "github",
@@ -528,7 +538,7 @@ def test_import_items_multiple_items(client, setup_project):
                     "meta_data": {"source": "github"},
                 },
             },
-        ]
+        ],
     }
 
     response = client.post(f"/projects/{project.id}/import", json=payload)
@@ -536,10 +546,10 @@ def test_import_items_multiple_items(client, setup_project):
 
     data = response.json()
     assert data["total_items"] == 2
-    assert data["processed_items"] == 2
-    assert data["success_count"] == 2
+    assert data["processed_items"] == 0
+    assert data["success_count"] == 0
     assert data["failure_count"] == 0
-    assert data["status"] == "completed"
+    assert data["status"] == ImportRequestStatuses.PENDING
 
 
 def test_list_project_digests(client, setup_project):

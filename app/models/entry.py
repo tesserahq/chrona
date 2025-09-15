@@ -25,10 +25,18 @@ class Entry(Base, TimestampMixin, SoftDeleteMixin):
     source_author_id = Column(
         UUID(as_uuid=True), ForeignKey("source_authors.id"), nullable=False
     )
+    source_assignee_id = Column(
+        UUID(as_uuid=True), ForeignKey("source_authors.id"), nullable=False
+    )
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
 
     # Relationships
-    source_author = relationship("SourceAuthor", back_populates="entries")
+    source_author = relationship(
+        "SourceAuthor", foreign_keys=[source_author_id], back_populates="entries"
+    )
+    source_assignee = relationship(
+        "SourceAuthor", foreign_keys=[source_assignee_id], back_populates="entries"
+    )
     project = relationship("Project", back_populates="entries")
     source = relationship("Source", back_populates="entries")
     entry_updates = relationship("EntryUpdate", back_populates="entry")

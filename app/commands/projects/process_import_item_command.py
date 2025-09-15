@@ -52,10 +52,21 @@ class ProcessImportItemCommand:
                 author.id, import_request_item.source_id, item_data.author.id
             )
 
+            # Create or get the assignee if provided
+            source_assignee = None
+            if item_data.assignee:
+                assignee = self._create_or_get_author(
+                    item_data.assignee, project.workspace_id
+                )
+                source_assignee = self._create_or_get_source_author(
+                    assignee.id, import_request_item.source_id, item_data.assignee.id
+                )
+
             # Create the entry
             entry = self._create_entry(
                 item_data,
                 source_author.id,
+                source_assignee.id if source_assignee else None,
                 import_request_item.source_id,
                 project.id,
                 import_request_item.source_item_id,
@@ -88,6 +99,7 @@ class ProcessImportItemCommand:
                 "entry_id": entry.id,
                 "entry_update_ids": [entry_update.id for entry_update in entry_updates],
                 "source_author_id": source_author.id,
+                "source_assignee_id": source_assignee.id if source_assignee else None,
             }
 
         except Exception as e:
@@ -140,6 +152,7 @@ class ProcessImportItemCommand:
         self,
         item_data: ImportItemData,
         source_author_id: UUID,
+        source_assignee_id: UUID | None,
         source_id: UUID,
         project_id: UUID,
         external_id: str,
@@ -160,6 +173,8 @@ class ProcessImportItemCommand:
                 tags=item_data.tags,
                 labels=item_data.labels,
                 meta_data=item_data.meta_data,
+                source_author_id=source_author_id,
+                source_assignee_id=source_assignee_id,
             )
             return self.entry_service.update_entry(existing_entry.id, entry_update)
 
@@ -173,6 +188,7 @@ class ProcessImportItemCommand:
             labels=item_data.labels,
             meta_data=item_data.meta_data,
             source_author_id=source_author_id,
+            source_assignee_id=source_assignee_id,
             project_id=project_id,
         )
 

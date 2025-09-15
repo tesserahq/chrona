@@ -33,6 +33,9 @@ class EntryBase(BaseModel):
     source_author_id: Optional[UUID] = Field(
         None, description="UUID of the author (user) who created the entry."
     )
+    source_assignee_id: Optional[UUID] = Field(
+        None, description="UUID of the assignee (user) for the entry."
+    )
     project_id: Optional[UUID] = Field(
         None, description="UUID of the project this entry belongs to."
     )
@@ -50,6 +53,8 @@ class EntryUpdate(BaseModel):
     tags: Optional[List[str]] = None
     labels: Optional[Dict[str, Any]] = None
     meta_data: Optional[Dict[str, Any]] = None
+    source_author_id: Optional[UUID] = None
+    source_assignee_id: Optional[UUID] = None
 
 
 class EntryInDB(EntryBase):
@@ -81,10 +86,11 @@ class SourceAuthorWithAuthor(SourceAuthor):
 
 
 class EntryResponse(EntryInDB):
-    """Entry response schema with source, source_author, and entry updates information included."""
+    """Entry response schema with source, source_author, source_assignee, and entry updates information included."""
 
     source: Optional[Source] = None
     source_author: Optional[SourceAuthorWithAuthor] = None
+    source_assignee: Optional[SourceAuthorWithAuthor] = None
     entry_updates: Optional[List[EntryUpdateResponse]] = None
 
     @field_validator("source", mode="before")
@@ -101,6 +107,14 @@ class EntryResponse(EntryInDB):
         """Get source_author object from the model's source_author relationship."""
         if hasattr(info.data, "source_author") and info.data.source_author:
             return info.data.source_author
+        return v
+
+    @field_validator("source_assignee", mode="before")
+    @classmethod
+    def get_source_assignee_from_model(cls, v, info):
+        """Get source_assignee object from the model's source_assignee relationship."""
+        if hasattr(info.data, "source_assignee") and info.data.source_assignee:
+            return info.data.source_assignee
         return v
 
     @field_validator("entry_updates", mode="before")
