@@ -4,6 +4,9 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import Literal
 
+from app.schemas.user import User
+from app.schemas.source import Source
+
 
 class ImportRequestBase(BaseModel):
     source_id: UUID = Field(
@@ -50,7 +53,12 @@ class ImportRequestInDB(ImportRequestBase):
 
 
 class ImportRequest(ImportRequestInDB):
-    pass
+    source: Optional[Source] = Field(
+        None, description="Source object associated with this import request"
+    )
+    requested_by: Optional[User] = Field(
+        None, description="User who requested this import"
+    )
 
 
 class SearchOperator(BaseModel):

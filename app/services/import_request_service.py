@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict, Any
 from uuid import UUID
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.models.import_request import ImportRequest
 from app.models.import_request_item import ImportRequestItem
 from app.schemas.import_request import (
@@ -29,6 +29,7 @@ class ImportRequestService(SoftDeleteService[ImportRequest]):
         """Get a single import request by ID."""
         return (
             self.db.query(ImportRequest)
+            .options(joinedload(ImportRequest.source), joinedload(ImportRequest.user))
             .filter(ImportRequest.id == import_request_id)
             .first()
         )
@@ -53,8 +54,10 @@ class ImportRequestService(SoftDeleteService[ImportRequest]):
 
     def get_import_requests_by_project_query(self, project_id: UUID):
         """Get a query object for import requests by project for use with fastapi-pagination."""
-        return self.db.query(ImportRequest).filter(
-            ImportRequest.project_id == project_id
+        return (
+            self.db.query(ImportRequest)
+            .options(joinedload(ImportRequest.source), joinedload(ImportRequest.user))
+            .filter(ImportRequest.project_id == project_id)
         )
 
     def get_import_requests_by_user(
@@ -125,7 +128,9 @@ class ImportRequestService(SoftDeleteService[ImportRequest]):
 
     def search_query(self, filters: Dict[str, Any]):
         """Get a query object for import request search for use with fastapi-pagination."""
-        query = self.db.query(ImportRequest)
+        query = self.db.query(ImportRequest).options(
+            joinedload(ImportRequest.source), joinedload(ImportRequest.user)
+        )
         query = apply_filters(query, ImportRequest, filters)
         return query
 

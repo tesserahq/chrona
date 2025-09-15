@@ -328,6 +328,27 @@ def test_get_import_request(client, setup_import_request):
     assert "created_at" in data
     assert "updated_at" in data
 
+    # Verify associations are included
+    assert "source" in data
+    assert "requested_by" in data
+
+    # Verify source object structure
+    if data["source"]:
+        assert "id" in data["source"]
+        assert "name" in data["source"]
+        assert "identifier" in data["source"]
+        assert "workspace_id" in data["source"]
+        assert "created_at" in data["source"]
+        assert "updated_at" in data["source"]
+
+    # Verify requested_by object structure
+    if data["requested_by"]:
+        assert "id" in data["requested_by"]
+        assert "first_name" in data["requested_by"]
+        assert "last_name" in data["requested_by"]
+        assert "created_at" in data["requested_by"]
+        assert "updated_at" in data["requested_by"]
+
 
 def test_get_import_request_not_found(client):
     """Test GET /import-requests/{import_request_id} with non-existent ID."""
@@ -380,6 +401,22 @@ def test_list_import_requests(client, setup_import_request):
             assert item["status"] == import_request.status
             assert item["project_id"] == str(import_request.project_id)
             assert item["requested_by_id"] == str(import_request.requested_by_id)
+
+            # Verify associations are included
+            assert "source" in item
+            assert "requested_by" in item
+
+            # Verify source object structure
+            if item["source"]:
+                assert "id" in item["source"]
+                assert "name" in item["source"]
+                assert "identifier" in item["source"]
+
+            # Verify requested_by object structure
+            if item["requested_by"]:
+                assert "id" in item["requested_by"]
+                assert "first_name" in item["requested_by"]
+                assert "last_name" in item["requested_by"]
             break
     assert import_request_found
 
