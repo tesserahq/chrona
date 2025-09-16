@@ -1,4 +1,3 @@
-from app.constants.digest_constants import DigestStatuses
 from tessera_sdk.utils.auth import get_current_user
 from fastapi import (
     APIRouter,
@@ -93,9 +92,7 @@ def list_project_digests(
 ):
     """List all digests for a specific project with pagination."""
     service = DigestService(db)
-    query = service.get_digests_by_project_query(
-        project.id, status=DigestStatuses.PUBLISHED
-    )
+    query = service.get_digests_by_project_query(project.id)
     return paginate(query, params)
 
 
