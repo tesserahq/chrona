@@ -20,6 +20,7 @@ from app.schemas.digest_generation_config import (
 )
 from app.schemas.digest import Digest
 from app.services.digest_generation_config_service import DigestGenerationConfigService
+from app.commands.digest.generate_draft_digest_command import GenerateDraftDigestCommand
 from app.models.digest_generation_config import (
     DigestGenerationConfig as DigestGenerationConfigModel,
 )
@@ -150,9 +151,9 @@ def generate_draft_digest(
     current_user=Depends(get_current_user),
 ):
     """Generate a draft digest for a digest generation config."""
-    service = DigestGenerationConfigService(db)
+    command = GenerateDraftDigestCommand(db)
     try:
-        draft_digest = service.generate_draft_digest(digest_generation_config.id)
+        draft_digest = command.execute(UUID(str(digest_generation_config.id)))
         return draft_digest
     except ResourceNotFoundError as e:
         raise HTTPException(

@@ -51,9 +51,6 @@ class QuoreService:
         }
         headers = self._get_headers(bearer_token)
 
-        print("headeeeeeeeers")
-        print(headers)
-
         with httpx.Client() as client:
             response = client.post(url, json=payload, headers=headers)
             response.raise_for_status()

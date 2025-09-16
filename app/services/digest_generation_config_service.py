@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, desc
@@ -117,8 +117,14 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
         filtered_query = apply_filters(query, DigestGenerationConfig, filters)
         return filtered_query
 
-    def generate_draft_digest(self, digest_generation_config_id: UUID) -> Digest:
-        """Generate a draft digest for a digest generation config."""
+    def get_entries_for_digest(
+        self, digest_generation_config_id: UUID
+    ) -> Tuple[List[Entry], List[EntryUpdate], DigestGenerationConfig]:
+        """Get all entries and entry updates for a digest generation config.
+
+        Returns:
+            tuple: (entries, entry_updates, config)
+        """
         # Get the digest generation config
         config = self.get_digest_generation_config(digest_generation_config_id)
         if not config:
@@ -156,12 +162,8 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
         if not entries and not config.generate_empty_digest:
             raise ResourceNotFoundError("No entries found matching the criteria")
 
-        # Get entry IDs
-        entry_ids = [entry.id for entry in entries]
-
         # Get the latest entry update for each entry
         entry_updates = []
-        entry_updates_ids = []
 
         # TODO: This can be optimized.
         for entry in entries:
@@ -179,10 +181,23 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
 
             if latest_update:
                 entry_updates.append(latest_update)
-                entry_updates_ids.append(latest_update.id)
 
-        # Generate the digest body
+        return entries, entry_updates, config
+
+    def format_digest_body(
+        self, entries: List[Entry], entry_updates: List[EntryUpdate]
+    ) -> str:
+        """Format the digest body content from entries and entry updates.
+
+        Args:
+            entries: List of entries to include in the digest
+            entry_updates: List of entry updates to include in the digest
+
+        Returns:
+            Formatted digest body as a string
+        """
         digest_body_parts = []
+
         for entry in entries:
             # Find the latest update for this entry
             latest_update = next(
@@ -192,12 +207,40 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
 
             digest_body_parts.append(f"* {entry.title}")
             if entry.body:
-                digest_body_parts.append(entry.body)
+                digest_body_parts.append(str(entry.body))
             if latest_update and latest_update.body:
                 digest_body_parts.append(f"Latest update: {latest_update.body}")
             digest_body_parts.append("")  # Empty line between entries
 
-        digest_body = "\n".join(digest_body_parts)
+        return "\n".join(digest_body_parts)
+
+    def create_digest_from_entries(
+        self,
+        entries: List[Entry],
+        entry_updates: List[EntryUpdate],
+        config: DigestGenerationConfig,
+    ) -> Digest:
+        """Create a digest from entries and entry updates.
+
+        Args:
+            entries: List of entries to include in the digest
+            entry_updates: List of entry updates to include in the digest
+            config: The digest generation config
+
+        Returns:
+            The created digest
+        """
+        # Get entry IDs and entry update IDs
+        entry_ids: List[UUID] = [UUID(str(entry.id)) for entry in entries]
+        entry_updates_ids: List[UUID] = [
+            UUID(str(update.id)) for update in entry_updates
+        ]
+
+        # Generate the digest body using the formatting function
+        digest_body = self.format_digest_body(entries, entry_updates)
+
+        # Get today's date for the digest date range
+        today = date.today()
 
         # Create the draft digest
         digest_data = DigestCreate(
@@ -207,14 +250,30 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
             entry_updates_ids=entry_updates_ids,
             from_date=datetime.combine(today, datetime.min.time()),
             to_date=datetime.combine(today, datetime.max.time()),
-            digest_generation_config_id=config.id,
-            project_id=config.project_id,
-            tags=config.tags.copy(),
-            labels=config.labels.copy(),
+            digest_generation_config_id=UUID(str(config.id)),
+            project_id=UUID(str(config.project_id)),
+            tags=list(config.tags) if config.tags else [],
+            labels=dict(config.labels) if config.labels else {},
             status=DigestStatuses.DRAFT,
         )
 
         # Create the digest with draft status
         digest = self.digest_service.create_digest(digest_data)
+
+        return digest
+
+    def create_draft_digest(self, digest_data: DigestCreate) -> Digest:
+        """Create a draft digest from a digest data object."""
+        return self.digest_service.create_digest(digest_data)
+
+    def generate_draft_digest(self, digest_generation_config_id: UUID) -> Digest:
+        """Generate a draft digest for a digest generation config."""
+        # Get entries and entry updates for the digest
+        entries, entry_updates, config = self.get_entries_for_digest(
+            digest_generation_config_id
+        )
+
+        # Create the digest from the entries
+        digest = self.create_digest_from_entries(entries, entry_updates, config)
 
         return digest
