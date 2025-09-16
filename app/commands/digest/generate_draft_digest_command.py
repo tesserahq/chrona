@@ -6,6 +6,7 @@ from app.models.digest import Digest
 from app.schemas.digest import DigestCreate
 from app.services.digest_generation_config_service import DigestGenerationConfigService
 from datetime import datetime, date
+from app.services.project_service import ProjectService
 from app.utils.m2m_token import M2MTokenClient
 from tessera_sdk import QuoreClient
 
@@ -42,26 +43,33 @@ class GenerateDraftDigestCommand:
             entries, entry_updates
         )
 
-        m2m_token = self._get_m2m_token()
-
-        quore_client = QuoreClient(
-            base_url=get_settings().quore_api_url,
-            timeout=60,  # Shorter timeout for middleware
-            max_retries=1,  # Fewer retries for middleware
-            api_token=m2m_token,
+        project = ProjectService(self.db).get_project(
+            digest_generation_config.project_id
         )
+        summary = formatted_body
 
-        summary_response = quore_client.summarize(
-            project_id="46421313-a8fe-4f81-97d5-25c24d3d25e1",
-            prompt_id="summarize",
-            text=formatted_body,
-        )
+        if project and project.quore_project_id:
+            m2m_token = self._get_m2m_token()
+
+            quore_client = QuoreClient(
+                base_url=get_settings().quore_api_url,
+                timeout=60,  # Shorter timeout for middleware
+                max_retries=1,  # Fewer retries for middleware
+                api_token=m2m_token,
+            )
+
+            summary_response = quore_client.summarize(
+                project_id=project.quore_project_id,
+                prompt_id="summarize",
+                text=formatted_body,
+            )
+            summary = summary_response.summary
 
         # Create the digest from the entries
         digest = self.digest_generation_config_service.create_draft_digest(
             DigestCreate(
                 title=digest_generation_config.title,
-                body=summary_response.summary,
+                body=summary,
                 entries_ids=entry_ids,
                 entry_updates_ids=entry_updates_ids,
                 from_date=datetime.combine(today, datetime.min.time()),

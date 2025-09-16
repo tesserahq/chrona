@@ -501,7 +501,7 @@ def test_generate_draft_digest(
     data = response.json()
 
     # Verify the digest was created
-    assert data["title"] == f"Draft Digest - {config.title}"
+    assert data["title"] == config.title
     assert data["status"] == DigestStatuses.DRAFT
     assert data["digest_generation_config_id"] == str(config.id)
     assert data["project_id"] == str(config.project_id)
@@ -579,7 +579,7 @@ def test_generate_draft_digest_empty_digest_allowed(
     data = response.json()
 
     # Verify the digest was created even with no entries
-    assert data["title"] == f"Draft Digest - {config.title}"
+    assert data["title"] == config.title
     assert data["status"] == DigestStatuses.DRAFT
     assert len(data["entries_ids"]) == 0
     assert len(data["entry_updates_ids"]) == 0
