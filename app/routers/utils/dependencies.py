@@ -27,6 +27,8 @@ from app.services.source_service import SourceService
 from app.models.source import Source
 from app.services.digest_service import DigestService
 from app.models.digest import Digest
+from app.services.gazette_service import GazetteService
+from app.models.gazette import Gazette
 
 
 def get_workspace_by_id(
@@ -300,3 +302,25 @@ def get_digest_by_id(
     if digest is None:
         raise HTTPException(status_code=404, detail="Digest not found")
     return digest
+
+
+def get_gazette_by_id(
+    gazette_id: UUID,
+    db: Session = Depends(get_db),
+) -> Gazette:
+    """FastAPI dependency to get a gazette by ID.
+
+    Args:
+        gazette_id: The UUID of the gazette to retrieve
+        db: Database session dependency
+
+    Returns:
+        Gazette: The retrieved gazette
+
+    Raises:
+        HTTPException: If the gazette is not found
+    """
+    gazette = GazetteService(db).get_gazette(gazette_id)
+    if gazette is None:
+        raise HTTPException(status_code=404, detail="Gazette not found")
+    return gazette

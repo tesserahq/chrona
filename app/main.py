@@ -22,6 +22,7 @@ from .routers import (
     digest_generation_config,
     source,
     digest,
+    gazette,
 )
 from .ws import status
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -102,6 +103,8 @@ def create_app(testing: bool = False, auth_middleware=None) -> FastAPI:
     app.include_router(digest_generation_config.project_router)
     app.include_router(digest_generation_config.router)
     app.include_router(digest.router)
+    app.include_router(gazette.project_router)
+    app.include_router(gazette.router)
     app.include_router(status.router)
     app.include_router(system.router)
     app.include_router(invitation.router)
