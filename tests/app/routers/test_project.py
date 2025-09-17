@@ -260,6 +260,8 @@ def test_import_items_success(client, setup_project):
                 "tags": ["bug", "api"],
                 "labels": {"priority": "high"},
                 "meta_data": {"repo": "org/repo"},
+                "created_at": "2021-01-01T00:00:00Z",
+                "updated_at": "2021-01-01T00:00:00Z",
                 "author": {
                     "id": "9876543210",
                     "display_name": "Alice Smith",
@@ -277,6 +279,8 @@ def test_import_items_success(client, setup_project):
                 "tags": ["bug", "frontend"],
                 "labels": {"priority": "medium"},
                 "meta_data": {"repo": "org/repo"},
+                "created_at": "2021-01-01T00:00:00Z",
+                "updated_at": "2021-01-01T00:00:00Z",
                 "author": {
                     "id": "2468013579",
                     "display_name": "Bob Johnson",
@@ -294,6 +298,8 @@ def test_import_items_success(client, setup_project):
                 "tags": ["enhancement", "ui"],
                 "labels": {"priority": "low"},
                 "meta_data": {"repo": "org/repo"},
+                "created_at": "2021-01-01T00:00:00Z",
+                "updated_at": "2021-01-01T00:00:00Z",
                 "author": {
                     "id": "1122334455",
                     "display_name": "Charlie Lee",
@@ -357,6 +363,8 @@ def test_import_items_single_item(client, setup_project):
                 "tags": ["test"],
                 "labels": {"priority": "low"},
                 "meta_data": {"repo": "test/repo"},
+                "created_at": "2021-01-01T00:00:00Z",
+                "updated_at": "2021-01-01T00:00:00Z",
                 "author": {
                     "id": "123456789",
                     "display_name": "Test Author",
@@ -394,6 +402,8 @@ def test_import_items_nonexistent_project(client):
                 "tags": ["test"],
                 "labels": {"priority": "low"},
                 "meta_data": {"repo": "test/repo"},
+                "created_at": "2021-01-01T00:00:00Z",
+                "updated_at": "2021-01-01T00:00:00Z",
                 "author": {
                     "id": "123456789",
                     "display_name": "Test Author",
@@ -446,6 +456,8 @@ def test_import_items_invalid_author_data(client, setup_project):
                 "tags": ["test"],
                 "labels": {"priority": "low"},
                 "meta_data": {"repo": "test/repo"},
+                "created_at": "2021-01-01T00:00:00Z",
+                "updated_at": "2021-01-01T00:00:00Z",
                 "author": {
                     "id": "123456789",
                     # Missing required fields: display_name, avatar_url, email
@@ -475,6 +487,8 @@ def test_import_items_minimal_data(client, setup_project):
                 "tags": [],
                 "labels": {},
                 "meta_data": {},
+                "created_at": "2021-01-01T00:00:00Z",
+                "updated_at": "2021-01-01T00:00:00Z",
                 "author": {
                     "id": "555555555",
                     "display_name": "Minimal Author",
@@ -511,6 +525,8 @@ def test_import_items_multiple_items(client, setup_project):
                 "tags": ["test", "first"],
                 "labels": {"priority": "high"},
                 "meta_data": {"repo": "test/repo", "issue": "1"},
+                "created_at": "2021-01-01T00:00:00Z",
+                "updated_at": "2021-01-01T00:00:00Z",
                 "author": {
                     "id": "111111111",
                     "display_name": "First Author",
@@ -528,6 +544,8 @@ def test_import_items_multiple_items(client, setup_project):
                 "tags": ["test", "second"],
                 "labels": {"priority": "medium"},
                 "meta_data": {"repo": "test/repo", "issue": "2"},
+                "created_at": "2021-01-01T00:00:00Z",
+                "updated_at": "2021-01-01T00:00:00Z",
                 "author": {
                     "id": "222222222",
                     "display_name": "Second Author",

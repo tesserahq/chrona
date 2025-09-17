@@ -28,6 +28,8 @@ class TestImportItemsCommand:
                     "tags": ["bug", "api"],
                     "labels": {"priority": "high"},
                     "meta_data": {"repo": "org/repo"},
+                    "created_at": "2025-01-01T00:00:00Z",
+                    "updated_at": "2025-01-01T00:00:00Z",
                     "author": {
                         "id": "9876543210",
                         "display_name": "Alice Smith",
@@ -45,6 +47,8 @@ class TestImportItemsCommand:
                     "tags": ["bug", "frontend"],
                     "labels": {"priority": "medium"},
                     "meta_data": {"repo": "org/repo"},
+                    "created_at": "2025-01-01T00:00:00Z",
+                    "updated_at": "2025-01-01T00:00:00Z",
                     "author": {
                         "id": "2468013579",
                         "display_name": "Bob Johnson",
@@ -62,6 +66,8 @@ class TestImportItemsCommand:
                     "tags": ["enhancement", "ui"],
                     "labels": {"priority": "low"},
                     "meta_data": {"repo": "org/repo"},
+                    "created_at": "2025-01-01T00:00:00Z",
+                    "updated_at": "2025-01-01T00:00:00Z",
                     "author": {
                         "id": "1122334455",
                         "display_name": "Charlie Lee",
@@ -189,6 +195,8 @@ class TestImportItemsCommand:
                     "tags": ["test"],
                     "labels": {"priority": "low"},
                     "meta_data": {"repo": "test/repo"},
+                    "created_at": "2025-01-01T00:00:00Z",
+                    "updated_at": "2025-01-01T00:00:00Z",
                     "author": {
                         "id": "123456789",
                         "display_name": "Test Author",
@@ -246,6 +254,8 @@ class TestImportItemsCommand:
                     "tags": ["test"],
                     "labels": {"priority": "low"},
                     "meta_data": {"repo": "test/repo"},
+                    "created_at": "2025-01-01T00:00:00Z",
+                    "updated_at": "2025-01-01T00:00:00Z",
                     "author": {
                         "id": "111111111",
                         "display_name": "Author 1",
@@ -269,6 +279,8 @@ class TestImportItemsCommand:
                     "tags": ["test"],
                     "labels": {"priority": "low"},
                     "meta_data": {"repo": "test/repo"},
+                    "created_at": "2025-01-01T00:00:00Z",
+                    "updated_at": "2025-01-01T00:00:00Z",
                     "author": {
                         "id": "222222222",
                         "display_name": "Author 2",
@@ -341,6 +353,8 @@ class TestImportItemsCommand:
                     "tags": ["test"],
                     "labels": {"priority": "low"},
                     "meta_data": {"repo": "test/repo"},
+                    "created_at": "2025-01-01T00:00:00Z",
+                    "updated_at": "2025-01-01T00:00:00Z",
                     "author": {
                         "id": "333333333",
                         "display_name": "Test Author",
@@ -390,6 +404,8 @@ class TestImportItemsCommand:
                     "tags": ["test", "persistence"],
                     "labels": {"priority": "medium"},
                     "meta_data": {"repo": "test/persistence"},
+                    "created_at": "2025-01-01T00:00:00Z",
+                    "updated_at": "2025-01-01T00:00:00Z",
                     "author": {
                         "id": "444444444",
                         "display_name": "Persistence Tester",
@@ -444,6 +460,8 @@ class TestImportItemsCommand:
                     "tags": [],
                     "labels": {},
                     "meta_data": {},
+                    "created_at": "2025-01-01T00:00:00Z",
+                    "updated_at": "2025-01-01T00:00:00Z",
                     "author": {
                         "id": "555555555",
                         "display_name": "Minimal Author",

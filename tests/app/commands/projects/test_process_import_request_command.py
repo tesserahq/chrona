@@ -55,6 +55,8 @@ class TestProcessImportRequestCommand:
             body="This is a valid item",
             tags=["test"],
             labels={"priority": "high"},
+            created_at="2025-01-01T00:00:00Z",
+            updated_at="2025-01-01T00:00:00Z",
             author=ImportAuthorData(
                 id="valid_author",
                 display_name="Valid Author",
@@ -194,6 +196,8 @@ class TestProcessImportRequestCommand:
             body="This is a test item",
             tags=["test"],
             labels={"priority": "high"},
+            created_at="2025-01-01T00:00:00Z",
+            updated_at="2025-01-01T00:00:00Z",
             author=ImportAuthorData(
                 id="test_author",
                 display_name="Test Author",
@@ -274,6 +278,8 @@ class TestProcessImportRequestCommand:
             body="This is a valid item",
             tags=["test"],
             labels={"priority": "high"},
+            created_at="2025-01-01T00:00:00Z",
+            updated_at="2025-01-01T00:00:00Z",
             author=ImportAuthorData(
                 id="valid_author",
                 display_name="Valid Author",

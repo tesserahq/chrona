@@ -1,5 +1,5 @@
 from app.models.mixins import TimestampMixin, SoftDeleteMixin
-from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy import Column, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.dialects.postgresql import JSONB
@@ -25,6 +25,8 @@ class EntryUpdate(Base, TimestampMixin, SoftDeleteMixin):
     meta_data = Column(JSONB, default=dict, nullable=False)  # Dictionary of metadata
     external_id = Column(String, nullable=False)
     source_id = Column(UUID(as_uuid=True), ForeignKey("sources.id"), nullable=False)
+    source_created_at = Column(DateTime, nullable=True)
+    source_updated_at = Column(DateTime, nullable=True)
 
     # Relationships
     source_author = relationship("SourceAuthor", back_populates="entry_updates")

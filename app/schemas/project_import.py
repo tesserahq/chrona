@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional
 from uuid import UUID
 from pydantic import BaseModel, Field
+from datetime import datetime
 
 
 class ImportAuthorData(BaseModel):
@@ -26,7 +27,6 @@ class ImportEntryUpdateData(BaseModel):
 
     id: str = Field(..., description="External entry update ID")
     body: str = Field(..., description="Body content of the entry update")
-    created_at: str = Field(..., description="Creation timestamp of the entry update")
     author: ImportAuthorData = Field(
         ..., description="Author information for the entry update"
     )
@@ -35,6 +35,12 @@ class ImportEntryUpdateData(BaseModel):
     )
     labels: Dict[str, Any] = Field(
         default_factory=dict, description="Labels for the entry update"
+    )
+    created_at: str = Field(
+        ..., description="Creation timestamp of the entry update in the source"
+    )
+    updated_at: str = Field(
+        ..., description="Update timestamp of the entry update in the source"
     )
 
 
@@ -58,6 +64,8 @@ class ImportItemData(BaseModel):
     entry_updates: List[ImportEntryUpdateData] = Field(
         default_factory=list, description="Entry updates associated with the item"
     )
+    created_at: str = Field(..., description="Creation timestamp of the item")
+    updated_at: str = Field(..., description="Update timestamp of the item")
 
 
 class ImportItemRequest(BaseModel):

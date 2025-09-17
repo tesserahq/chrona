@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict, Any
 from uuid import UUID
+from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 from app.models.import_request import ImportRequest
 from app.models.import_request_item import ImportRequestItem
@@ -60,8 +61,10 @@ class ImportRequestService(SoftDeleteService[ImportRequest]):
         self, project_id: UUID, with_items: bool = False
     ):
         """Get a query object for import requests by project for use with fastapi-pagination."""
-        query = self.db.query(ImportRequest).options(
-            joinedload(ImportRequest.source), joinedload(ImportRequest.user)
+        query = (
+            self.db.query(ImportRequest)
+            .options(joinedload(ImportRequest.source), joinedload(ImportRequest.user))
+            .order_by(desc(ImportRequest.created_at))
         )
 
         if with_items:
