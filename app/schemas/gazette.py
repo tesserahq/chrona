@@ -132,7 +132,25 @@ class GazetteWithDigests(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# Import Digest schema for forward reference
+class GazetteWithSectionsAndDigests(BaseModel):
+    """Response schema for gazette with sections and their associated digests."""
+
+    gazette: Gazette
+    digests: List["Digest"] = Field(
+        default_factory=list,
+        description="Published digests from the project that match the gazette's tags/labels",
+    )
+    sections: List["SectionWithDigests"] = Field(
+        default_factory=list,
+        description="Sections belonging to this gazette, each with their matching digests",
+    )
+
+    model_config = {"from_attributes": True}
+
+
+# Import schemas for forward references
 from app.schemas.digest import Digest
+from app.schemas.section import SectionWithDigests
 
 GazetteWithDigests.model_rebuild()
+GazetteWithSectionsAndDigests.model_rebuild()

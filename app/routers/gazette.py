@@ -17,9 +17,12 @@ from app.schemas.gazette import (
     GazetteUpdate,
     Gazette,
     GazetteShare,
-    GazetteWithDigests,
+    GazetteWithSectionsAndDigests,
 )
 from app.services.gazette_service import GazetteService
+from app.commands.gazette.get_gazette_with_digests_command import (
+    GetGazetteWithDigestsCommand,
+)
 from app.models.gazette import Gazette as GazetteModel
 from app.models.project import Project as ProjectModel
 from app.routers.utils.dependencies import get_project_by_id, get_gazette_by_id
@@ -128,19 +131,12 @@ def regenerate_gazette_share_key(
     return updated_gazette
 
 
-@router.get("/share/{share_key}", response_model=GazetteWithDigests)
+@router.get("/share/{share_key}", response_model=GazetteWithSectionsAndDigests)
 def get_gazette_by_share_key(
     share_key: str,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     """Get a gazette by its share key along with matching published digests."""
-    service = GazetteService(db)
-    gazette = service.get_gazette_by_share_key(share_key)
-    if not gazette:
-        raise HTTPException(status_code=404, detail="Gazette not found")
-
-    # Get filtered digests for this gazette
-    digests = service.get_gazette_digests(gazette)
-
-    return GazetteWithDigests(gazette=gazette, digests=digests)
+    command = GetGazetteWithDigestsCommand(db)
+    return command.execute(share_key)

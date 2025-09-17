@@ -8,6 +8,7 @@ from app.services.invitation_service import InvitationService
 from app.services.membership_service import MembershipService
 from app.services.project_membership_service import ProjectMembershipService
 from app.services.project_service import ProjectService
+from app.services.section_service import SectionService
 from app.services.source_author_service import SourceAuthorService
 from app.services.source_service import SourceService
 from app.services.user_service import UserService
@@ -25,6 +26,7 @@ __all__ = [
     "MembershipService",
     "ProjectMembershipService",
     "ProjectService",
+    "SectionService",
     "SourceAuthorService",
     "SourceService",
     "UserService",

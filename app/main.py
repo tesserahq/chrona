@@ -30,6 +30,8 @@ from app.telemetry import setup_tracing
 from app.exceptions.handlers import register_exception_handlers
 from app.core.logging_config import get_logger
 
+SKIP_PATHS = ["/gazettes/share/", "/health", "/openapi.json", "/docs"]
+
 
 def create_app(testing: bool = False, auth_middleware=None) -> FastAPI:
     logger = get_logger()
@@ -68,7 +70,9 @@ def create_app(testing: bool = False, auth_middleware=None) -> FastAPI:
             user_service_factory=user_service_factory,
         )
         app.add_middleware(
-            AuthenticationMiddleware, identies_base_url=settings.identies_host
+            AuthenticationMiddleware,
+            identies_base_url=settings.identies_host,
+            skip_paths=SKIP_PATHS,
         )
 
     else:

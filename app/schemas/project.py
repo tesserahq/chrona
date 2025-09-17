@@ -23,6 +23,10 @@ class ProjectBase(BaseModel):
         description="Optional labels for the project. This can be used to store arbitrary data about the project.",
     )
 
+    quore_project_id: Optional[str] = Field(
+        None, description="The ID of the project in Quore."
+    )
+
 
 class ProjectCreate(ProjectBase):
     labels: Optional[Dict[str, Any]] = Field(default_factory=dict)
@@ -32,6 +36,7 @@ class ProjectUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     description: Optional[str] = None
     labels: Optional[Dict[str, Any]] = None
+    quore_project_id: Optional[str] = None
 
 
 class ProjectInDB(ProjectBase):
