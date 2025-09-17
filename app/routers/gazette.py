@@ -134,8 +134,7 @@ def regenerate_gazette_share_key(
 @router.get("/share/{share_key}", response_model=GazetteWithSectionsAndDigests)
 def get_gazette_by_share_key(
     share_key: str,
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """Get a gazette by its share key along with matching published digests."""
     command = GetGazetteWithDigestsCommand(db)
