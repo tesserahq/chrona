@@ -39,6 +39,14 @@ class EntryBase(BaseModel):
     project_id: Optional[UUID] = Field(
         None, description="UUID of the project this entry belongs to."
     )
+    source_created_at: Optional[datetime] = Field(
+        None,
+        description="The date and time the entry was created in the source system.",
+    )
+    source_updated_at: Optional[datetime] = Field(
+        None,
+        description="The date and time the entry was updated in the source system.",
+    )
 
 
 class EntryCreate(EntryBase):
@@ -55,6 +63,8 @@ class EntryUpdate(BaseModel):
     meta_data: Optional[Dict[str, Any]] = None
     source_author_id: Optional[UUID] = None
     source_assignee_id: Optional[UUID] = None
+    source_created_at: Optional[datetime] = None
+    source_updated_at: Optional[datetime] = None
 
 
 class EntryInDB(EntryBase):

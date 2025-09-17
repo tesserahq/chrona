@@ -1,5 +1,5 @@
 from app.models.mixins import TimestampMixin, SoftDeleteMixin
-from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy import Column, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.dialects.postgresql import JSONB
@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 import uuid
 
 from app.db import Base
+from app.models.entry_update import EntryUpdate
 
 
 class Entry(Base, TimestampMixin, SoftDeleteMixin):
@@ -29,6 +30,8 @@ class Entry(Base, TimestampMixin, SoftDeleteMixin):
         UUID(as_uuid=True), ForeignKey("source_authors.id"), nullable=True
     )
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
+    source_created_at = Column(DateTime, nullable=True)
+    source_updated_at = Column(DateTime, nullable=True)
 
     # Relationships
     source_author = relationship(
@@ -39,4 +42,9 @@ class Entry(Base, TimestampMixin, SoftDeleteMixin):
     )
     project = relationship("Project", back_populates="entries")
     source = relationship("Source", back_populates="entries")
-    entry_updates = relationship("EntryUpdate", back_populates="entry")
+    entry_updates = relationship(
+        "EntryUpdate",
+        back_populates="entry",
+        order_by=EntryUpdate.source_created_at.desc(),
+        lazy="selectin",
+    )

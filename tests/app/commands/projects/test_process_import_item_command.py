@@ -28,6 +28,8 @@ def sample_import_item_data():
             "external_id": "123",
             "url": "https://github.com/test/repo/issues/123",
         },
+        created_at="2025-01-01T00:00:00Z",
+        updated_at="2025-01-01T00:00:00Z",
         author=ImportAuthorData(
             id="author_123",
             display_name="Test Author",
@@ -51,6 +53,8 @@ def sample_import_item_data_with_comments():
         tags=["bug", "api"],
         labels={"priority": "high"},
         meta_data={"repo": "org/repo"},
+        created_at="2025-01-01T00:00:00Z",
+        updated_at="2025-01-01T00:00:00Z",
         author=ImportAuthorData(
             id="9876543210",
             display_name="Alice Smith",
@@ -65,6 +69,7 @@ def sample_import_item_data_with_comments():
                 id="1234567890",
                 body="I am also experiencing this issue.",
                 created_at="2024-10-01T12:34:56Z",
+                updated_at="2024-10-01T12:34:56Z",
                 author=ImportAuthorData(
                     id="1234567890",
                     display_name="John Doe",
@@ -81,6 +86,7 @@ def sample_import_item_data_with_comments():
                 id="1122334455",
                 body="I can reproduce this issue.",
                 created_at="2024-10-01T12:34:56Z",
+                updated_at="2024-10-01T12:34:56Z",
                 author=ImportAuthorData(
                     id="1122334455",
                     display_name="Jane Roe",
@@ -423,6 +429,8 @@ class TestProcessImportItemCommand:
                 external_id="external_entry_123",
                 source_author_id=source_author.id,
                 project_id=setup_project.id,
+                source_created_at=sample_import_item_data_with_comments.created_at,
+                source_updated_at=sample_import_item_data_with_comments.updated_at,
             )
         )
 
@@ -491,6 +499,8 @@ class TestProcessImportItemCommand:
                 external_id="external_entry_123",
                 source_author_id=source_author.id,
                 project_id=setup_project.id,
+                source_created_at=sample_import_item_data.created_at,
+                source_updated_at=sample_import_item_data.updated_at,
             )
         )
 

@@ -35,6 +35,12 @@ class EntryUpdateBase(BaseModel):
     source_id: Optional[UUID] = Field(
         None, description="UUID of the source this entry update belongs to."
     )
+    source_created_at: Optional[datetime] = Field(
+        None, description="Creation timestamp of the entry update in the source"
+    )
+    source_updated_at: Optional[datetime] = Field(
+        None, description="Update timestamp of the entry update in the source"
+    )
 
 
 class EntryUpdateCreate(EntryUpdateBase):
@@ -73,6 +79,12 @@ class EntryUpdateUpdate(BaseModel):
     )
     source_id: Optional[UUID] = Field(
         None, description="UUID of the source this entry update belongs to."
+    )
+    source_created_at: Optional[datetime] = Field(
+        None, description="Creation timestamp of the entry update in the source"
+    )
+    source_updated_at: Optional[datetime] = Field(
+        None, description="Update timestamp of the entry update in the source"
     )
 
 

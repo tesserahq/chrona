@@ -175,6 +175,8 @@ class ProcessImportItemCommand:
                 meta_data=item_data.meta_data,
                 source_author_id=source_author_id,
                 source_assignee_id=source_assignee_id,
+                source_created_at=item_data.created_at,
+                source_updated_at=item_data.updated_at,
             )
             return self.entry_service.update_entry(existing_entry.id, entry_update)
 
@@ -190,6 +192,8 @@ class ProcessImportItemCommand:
             source_author_id=source_author_id,
             source_assignee_id=source_assignee_id,
             project_id=project_id,
+            source_created_at=item_data.created_at,
+            source_updated_at=item_data.updated_at,
         )
 
         return self.entry_service.create_entry(entry_create)
@@ -245,6 +249,8 @@ class ProcessImportItemCommand:
             tags=updates.tags,
             labels=updates.labels,
             meta_data=self._extract_update_meta_data(updates),
+            source_created_at=updates.created_at,
+            source_updated_at=updates.updated_at,
         )
 
         return self.entry_update_service.update_entry_update(
@@ -276,6 +282,8 @@ class ProcessImportItemCommand:
             meta_data=self._extract_update_meta_data(updates),
             external_id=updates.id,
             source_id=source_id,
+            source_created_at=updates.created_at,
+            source_updated_at=updates.updated_at,
         )
 
         return self.entry_update_service.create_entry_update(entry_update_create)
