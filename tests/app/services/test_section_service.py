@@ -67,7 +67,6 @@ class TestSectionService:
         db.commit()
         db.refresh(other_gazette)
 
-
         other_section_data = {
             "header": faker.sentence(nb_words=3),
             "gazette_id": other_gazette.id,
