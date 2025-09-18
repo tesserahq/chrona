@@ -52,6 +52,8 @@ fastapi-pagination = "^0.14.0"
 # tessera-sdk = { path = "../tessera-sdk-py/", develop = true }
 tessera-sdk = { git = "https://github.com/tesserahq/tessera-sdk-py.git", branch = "main" }
 python-slugify = "^8.0.4"
+crontab = "^1.0.5"
+pytz = "^2025.2"
 
 [tool.poetry.dependencies.uvicorn]
 extras = [ "standard" ]

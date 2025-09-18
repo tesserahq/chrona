@@ -17,6 +17,7 @@ from app.utils.db.filtering import apply_filters
 from app.exceptions.resource_not_found_error import ResourceNotFoundError
 from app.services.digest_service import DigestService
 from app.constants.digest_constants import DigestStatuses
+from app.utils.date_filter import calculate_digest_date_range
 
 
 class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
@@ -118,14 +119,20 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
         return filtered_query
 
     def get_entries_for_digest(
-        self, digest_generation_config_id: UUID
+        self,
+        digest_generation_config_id: UUID,
+        execution_time: Optional[datetime] = None,
     ) -> Tuple[List[Entry], List[EntryUpdate], DigestGenerationConfig]:
         """Get all entries and entry updates for a digest generation config.
 
         Returns entries that:
         - Belong to the specified project
         - Match the filter_tags and filter_labels (if specified)
-        - Have entry updates created in the last 2 days
+        - Have entry updates created within the calculated date range based on cron expression
+
+        Args:
+            digest_generation_config_id: ID of the digest generation config
+            execution_time: Time when the digest is being generated (defaults to now)
 
         Returns:
             tuple: (entries, entry_updates, config)
@@ -137,19 +144,21 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
                 f"Digest generation config with ID {digest_generation_config_id} not found"
             )
 
-        # Get date range for filtering entry updates (last 2 days)
-        # TODO: This should be a setting users can choose.
-        two_days_ago = datetime.now() - timedelta(days=2)
+        # Calculate date range based on cron expression and timezone
+        start_date, end_date = calculate_digest_date_range(
+            str(config.cron_expression), str(config.timezone), execution_time
+        )
 
-        # Build the query to find entries with recent entry updates
-        # Join entries with entry_updates and filter by entry_update.created_at
+        # Build the query to find entries with entry updates in the calculated date range
+        # Join entries with entry_updates and filter by entry_update.source_created_at
         query = (
             self.db.query(Entry)
             .join(EntryUpdate, Entry.id == EntryUpdate.entry_id)
             .filter(
                 and_(
                     Entry.project_id == config.project_id,
-                    EntryUpdate.source_created_at >= two_days_ago,
+                    EntryUpdate.source_created_at >= start_date,
+                    EntryUpdate.source_created_at <= end_date,
                     EntryUpdate.deleted_at.is_(None),
                     Entry.deleted_at.is_(None),
                 )
@@ -171,14 +180,15 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
         if not entries and not config.generate_empty_digest:
             raise ResourceNotFoundError("No entries found matching the criteria")
 
-        # Get all entry updates for these entries that were created in the last 2 days
+        # Get all entry updates for these entries that were created in the calculated date range
         entry_ids = [entry.id for entry in entries]
         entry_updates = (
             self.db.query(EntryUpdate)
             .filter(
                 and_(
                     EntryUpdate.entry_id.in_(entry_ids),
-                    EntryUpdate.source_created_at >= two_days_ago,
+                    EntryUpdate.source_created_at >= start_date,
+                    EntryUpdate.source_created_at <= end_date,
                     EntryUpdate.deleted_at.is_(None),
                 )
             )
@@ -223,6 +233,7 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
         entries: List[Entry],
         entry_updates: List[EntryUpdate],
         config: DigestGenerationConfig,
+        execution_time: Optional[datetime] = None,
     ) -> Digest:
         """Create a digest from entries and entry updates.
 
@@ -230,6 +241,7 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
             entries: List of entries to include in the digest
             entry_updates: List of entry updates to include in the digest
             config: The digest generation config
+            execution_time: Time when the digest is being generated (defaults to now)
 
         Returns:
             The created digest
@@ -243,8 +255,10 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
         # Generate the digest body using the formatting function
         digest_body = self.format_digest_body(entries, entry_updates)
 
-        # Get today's date for the digest date range
-        today = date.today()
+        # Calculate the date range based on cron expression and timezone
+        from_date, to_date = calculate_digest_date_range(
+            str(config.cron_expression), str(config.timezone), execution_time
+        )
 
         # Create the draft digest
         digest_data = DigestCreate(
@@ -253,8 +267,8 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
             raw_body=digest_body,  # Set raw_body to the same as body for now
             entries_ids=entry_ids,
             entry_updates_ids=entry_updates_ids,
-            from_date=datetime.combine(today, datetime.min.time()),
-            to_date=datetime.combine(today, datetime.max.time()),
+            from_date=from_date,
+            to_date=to_date,
             digest_generation_config_id=UUID(str(config.id)),
             project_id=UUID(str(config.project_id)),
             tags=list(config.tags) if config.tags else [],
@@ -267,14 +281,20 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
 
         return digest
 
-    def generate_draft_digest(self, digest_generation_config_id: UUID) -> Digest:
+    def generate_draft_digest(
+        self,
+        digest_generation_config_id: UUID,
+        execution_time: Optional[datetime] = None,
+    ) -> Digest:
         """Generate a draft digest for a digest generation config."""
         # Get entries and entry updates for the digest
         entries, entry_updates, config = self.get_entries_for_digest(
-            digest_generation_config_id
+            digest_generation_config_id, execution_time
         )
 
         # Create the digest from the entries
-        digest = self.create_digest_from_entries(entries, entry_updates, config)
+        digest = self.create_digest_from_entries(
+            entries, entry_updates, config, execution_time
+        )
 
         return digest

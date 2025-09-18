@@ -1,4 +1,5 @@
 from uuid import UUID
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.constants.digest_constants import DigestStatuses
@@ -9,7 +10,8 @@ from datetime import datetime, date
 from app.services.digest_service import DigestService
 from app.services.project_service import ProjectService
 from app.utils.m2m_token import M2MTokenClient
-from tessera_sdk import QuoreClient
+from app.utils.date_filter import calculate_digest_date_range
+from tessera_sdk import QuoreClient  # type: ignore
 
 
 class GenerateDraftDigestCommand:
@@ -20,11 +22,16 @@ class GenerateDraftDigestCommand:
         self.digest_generation_config_service = DigestGenerationConfigService(db)
         self.digest_service = DigestService(db)
 
-    def execute(self, digest_generation_config_id: UUID) -> Digest:
+    def execute(
+        self,
+        digest_generation_config_id: UUID,
+        execution_time: Optional[datetime] = None,
+    ) -> Digest:
         """
         Execute the command to generate a draft digest.
 
         :param digest_generation_config_id: The ID of the digest generation config.
+        :param execution_time: Time when the digest is being generated (defaults to now).
         :return: The created draft Digest object.
         """
 
@@ -34,11 +41,26 @@ class GenerateDraftDigestCommand:
             )
         )
 
+        if not digest_generation_config:
+            raise ValueError(
+                f"Digest generation config with ID {digest_generation_config_id} not found"
+            )
+
+        # Calculate the date range based on cron expression and timezone
+        from_date, to_date = calculate_digest_date_range(
+            str(digest_generation_config.cron_expression),
+            str(digest_generation_config.timezone),
+            execution_time,
+        )
+
         # Create the digest from the entries
         digest = self.digest_service.create_digest(
             DigestCreate(
-                title=digest_generation_config.title,
+                title=str(digest_generation_config.title),
                 body="Generating...",
+                raw_body="Generating...",
+                from_date=from_date,
+                to_date=to_date,
                 digest_generation_config_id=UUID(str(digest_generation_config.id)),
                 project_id=UUID(str(digest_generation_config.project_id)),
                 status=DigestStatuses.GENGERATING,
@@ -48,18 +70,18 @@ class GenerateDraftDigestCommand:
         # Get entries and entry updates for the digest
         entries, entry_updates, config = (
             self.digest_generation_config_service.get_entries_for_digest(
-                digest_generation_config_id
+                digest_generation_config_id, execution_time
             )
         )
         entry_ids = [UUID(str(entry.id)) for entry in entries]
         entry_updates_ids = [UUID(str(update.id)) for update in entry_updates]
-        today = date.today()
+
         formatted_body = self.digest_generation_config_service.format_digest_body(
             entries, entry_updates
         )
 
         project = ProjectService(self.db).get_project(
-            digest_generation_config.project_id
+            UUID(str(digest_generation_config.project_id))
         )
         raw_body = formatted_body
         summary = formatted_body
@@ -83,16 +105,18 @@ class GenerateDraftDigestCommand:
             )
             summary = summary_response.summary
 
-        digest = self.digest_service.update_digest(
-            digest.id,
+        updated_digest = self.digest_service.update_digest(
+            UUID(str(digest.id)),
             DigestUpdate(
+                title=str(digest_generation_config.title),
+                project_id=UUID(str(digest_generation_config.project_id)),
                 status=DigestStatuses.DRAFT,
                 body=summary,
                 raw_body=raw_body,
                 entries_ids=entry_ids,
                 entry_updates_ids=entry_updates_ids,
-                from_date=datetime.combine(today, datetime.min.time()),
-                to_date=datetime.combine(today, datetime.max.time()),
+                from_date=from_date,
+                to_date=to_date,
                 tags=(
                     list(digest_generation_config.tags)
                     if digest_generation_config.tags
@@ -106,7 +130,10 @@ class GenerateDraftDigestCommand:
             ),
         )
 
-        return digest
+        if not updated_digest:
+            raise ValueError("Failed to update digest")
+
+        return updated_digest
 
     def _get_m2m_token(self) -> str:
         """
