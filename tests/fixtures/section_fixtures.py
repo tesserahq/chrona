@@ -9,6 +9,7 @@ def setup_section(db: Session, setup_gazette, faker):
     gazette = setup_gazette
 
     section_data = {
+        "name": faker.word(),
         "header": faker.sentence(nb_words=4),
         "subheader": faker.sentence(nb_words=6),
         "tags": [faker.word() for _ in range(3)],
@@ -29,6 +30,7 @@ def setup_section_minimal(db: Session, setup_gazette, faker):
     gazette = setup_gazette
 
     section_data = {
+        "name": faker.word(),
         "header": faker.sentence(nb_words=3),
         "gazette_id": gazette.id,
     }
@@ -46,6 +48,7 @@ def setup_another_section(db: Session, setup_gazette, faker):
     gazette = setup_gazette
 
     section_data = {
+        "name": faker.word(),
         "header": faker.sentence(nb_words=5),
         "subheader": faker.sentence(nb_words=4),
         "tags": [faker.word() for _ in range(2)],

@@ -6,6 +6,12 @@ from typing import Literal
 
 
 class GazetteBase(BaseModel):
+    name: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="The name of the gazette. Must be between 1 and 255 characters.",
+    )
     header: str = Field(
         ...,
         min_length=1,
@@ -41,6 +47,7 @@ class GazetteCreate(GazetteBase):
 
 
 class GazetteUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
     header: Optional[str] = Field(None, min_length=1, max_length=255)
     subheader: Optional[str] = Field(None, max_length=255)
     theme: Optional[str] = Field(None, max_length=100)
@@ -62,6 +69,7 @@ class Gazette(BaseModel):
     """Public gazette response schema that excludes share_key."""
 
     id: UUID
+    name: str
     header: str
     subheader: Optional[str] = None
     theme: Optional[str] = None
@@ -86,6 +94,10 @@ class SearchOperator(BaseModel):
 
 
 class GazetteSearchFilters(BaseModel):
+    name: Optional[Union[str, SearchOperator]] = Field(
+        None,
+        description="Filter by gazette name. Can be a direct string match or a SearchOperator for more complex comparisons.",
+    )
     header: Optional[Union[str, SearchOperator]] = Field(
         None,
         description="Filter by gazette header. Can be a direct string match or a SearchOperator for more complex comparisons.",

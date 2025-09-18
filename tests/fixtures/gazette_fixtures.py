@@ -9,6 +9,7 @@ def setup_gazette(db: Session, setup_project, faker):
     project = setup_project
 
     gazette_data = {
+        "name": faker.word(),
         "header": faker.sentence(nb_words=4),
         "subheader": faker.sentence(nb_words=6),
         "theme": faker.word(),
@@ -31,6 +32,7 @@ def setup_gazette_minimal(db: Session, setup_project, faker):
     project = setup_project
 
     gazette_data = {
+        "name": faker.word(),
         "header": faker.sentence(nb_words=3),
         "project_id": project.id,
     }
@@ -48,6 +50,7 @@ def setup_gazette_with_share_key(db: Session, setup_project, faker):
     project = setup_project
 
     gazette_data = {
+        "name": faker.word(),
         "header": faker.sentence(nb_words=4),
         "subheader": faker.sentence(nb_words=6),
         "theme": faker.word(),

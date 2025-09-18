@@ -13,6 +13,7 @@ def test_create_gazette(db: Session, setup_project, faker):
     service = GazetteService(db)
 
     gazette_in = GazetteCreate(
+        name="Test Gazette Name",
         header="Test Gazette Header",
         subheader="Test Subheader",
         theme="technology",
@@ -39,7 +40,9 @@ def test_create_gazette_minimal(db: Session, setup_project):
     project = setup_project
     service = GazetteService(db)
 
-    gazette_in = GazetteCreate(header="Minimal Gazette", project_id=project.id)
+    gazette_in = GazetteCreate(
+        name="Minimal Gazette", header="Minimal Gazette", project_id=project.id
+    )
 
     gazette = service.create_gazette(gazette_in)
 
@@ -58,7 +61,9 @@ def test_create_gazette_invalid_project(db: Session):
     service = GazetteService(db)
     fake_project_id = uuid4()
 
-    gazette_in = GazetteCreate(header="Test Gazette", project_id=fake_project_id)
+    gazette_in = GazetteCreate(
+        name="Test Gazette", header="Test Gazette", project_id=fake_project_id
+    )
 
     with pytest.raises(ResourceNotFoundError) as exc_info:
         service.create_gazette(gazette_in)
@@ -177,6 +182,7 @@ def test_get_gazettes_by_project(db: Session, setup_project, setup_gazette, fake
 
     # Create another gazette for the same project
     gazette_data = {
+        "name": faker.word(),
         "header": faker.sentence(nb_words=4),
         "project_id": project.id,
     }
@@ -353,6 +359,7 @@ def test_generate_unique_share_key(db: Session, setup_project):
 
     # Create a gazette with this key
     gazette_data = {
+        "name": "Test Gazette",
         "header": "Test Gazette",
         "project_id": project.id,
         "share_key": unique_key_1,
@@ -394,6 +401,7 @@ def test_generate_unique_share_key_collision_handling(
 
     # Create a gazette with the collision key
     gazette_data = {
+        "name": "Existing Gazette",
         "header": "Existing Gazette",
         "project_id": project.id,
         "share_key": "collision-key",
@@ -425,6 +433,7 @@ def test_generate_unique_share_key_max_attempts_exceeded(
 
     # Create a gazette with the collision key
     gazette_data = {
+        "name": "Existing Gazette",
         "header": "Existing Gazette",
         "project_id": project.id,
         "share_key": "always-collision",

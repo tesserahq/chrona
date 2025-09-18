@@ -14,6 +14,7 @@ class Gazette(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "gazettes"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False)
     header = Column(String, nullable=False)
     subheader = Column(String, nullable=True)
     theme = Column(String, nullable=True)

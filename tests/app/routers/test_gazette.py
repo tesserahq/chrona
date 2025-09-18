@@ -35,6 +35,7 @@ def test_create_gazette(client, setup_project):
     """Test POST /projects/{project_id}/gazettes endpoint."""
     project = setup_project
     gazette_data = {
+        "name": "Test Gazette Name",
         "header": "Test Gazette Header",
         "subheader": "Test Subheader",
         "theme": "technology",
@@ -48,6 +49,7 @@ def test_create_gazette(client, setup_project):
     assert response.status_code == 201
 
     created_gazette = response.json()
+    assert created_gazette["name"] == gazette_data["name"]
     assert created_gazette["header"] == gazette_data["header"]
     assert created_gazette["subheader"] == gazette_data["subheader"]
     assert created_gazette["theme"] == gazette_data["theme"]
@@ -65,6 +67,7 @@ def test_create_gazette_minimal(client, setup_project):
     """Test POST /projects/{project_id}/gazettes with minimal data."""
     project = setup_project
     gazette_data = {
+        "name": "Minimal Gazette Name",
         "header": "Minimal Gazette",
         "project_id": str(project.id),
     }
@@ -73,6 +76,7 @@ def test_create_gazette_minimal(client, setup_project):
     assert response.status_code == 201
 
     created_gazette = response.json()
+    assert created_gazette["name"] == gazette_data["name"]
     assert created_gazette["header"] == gazette_data["header"]
     assert created_gazette["subheader"] is None
     assert created_gazette["theme"] is None
@@ -87,6 +91,7 @@ def test_create_gazette_nonexistent_project(client):
     """Test POST /projects/{project_id}/gazettes with non-existent project."""
     non_existent_id = uuid4()
     gazette_data = {
+        "name": "Test Gazette Name",
         "header": "Test Gazette",
         "project_id": str(non_existent_id),
     }
@@ -105,6 +110,7 @@ def test_get_gazette(client, setup_gazette):
 
     retrieved_gazette = response.json()
     assert retrieved_gazette["id"] == str(gazette.id)
+    assert retrieved_gazette["name"] == gazette.name
     assert retrieved_gazette["header"] == gazette.header
     assert retrieved_gazette["subheader"] == gazette.subheader
     assert retrieved_gazette["theme"] == gazette.theme
@@ -127,6 +133,7 @@ def test_update_gazette(client, setup_gazette):
     """Test PUT /gazettes/{gazette_id} endpoint."""
     gazette = setup_gazette
     update_data = {
+        "name": "Updated Name",
         "header": "Updated Header",
         "subheader": "Updated Subheader",
         "theme": "updated_theme",
@@ -139,6 +146,7 @@ def test_update_gazette(client, setup_gazette):
 
     updated_gazette = response.json()
     assert updated_gazette["id"] == str(gazette.id)
+    assert updated_gazette["name"] == update_data["name"]
     assert updated_gazette["header"] == update_data["header"]
     assert updated_gazette["subheader"] == update_data["subheader"]
     assert updated_gazette["theme"] == update_data["theme"]
@@ -237,6 +245,7 @@ def test_list_gazettes_pagination(client, setup_project):
     # Create multiple gazettes using the API
     for i in range(5):
         gazette_data = {
+            "name": f"Test Gazette {i}",
             "header": f"Test Gazette {i}",
             "project_id": str(project.id),
         }
@@ -269,6 +278,7 @@ def test_create_gazette_project_id_override(client, setup_project):
     wrong_project_id = uuid4()
 
     gazette_data = {
+        "name": "Test Override",
         "header": "Test Override",
         "project_id": str(wrong_project_id),  # This should be ignored
     }
@@ -352,8 +362,16 @@ def test_share_key_uniqueness(client, setup_project):
     project = setup_project
 
     # Create two gazettes
-    gazette1_data = {"header": "Gazette 1", "project_id": str(project.id)}
-    gazette2_data = {"header": "Gazette 2", "project_id": str(project.id)}
+    gazette1_data = {
+        "name": "Gazette 1",
+        "header": "Gazette 1",
+        "project_id": str(project.id),
+    }
+    gazette2_data = {
+        "name": "Gazette 2",
+        "header": "Gazette 2",
+        "project_id": str(project.id),
+    }
 
     response1 = client.post(f"/projects/{project.id}/gazettes", json=gazette1_data)
     response2 = client.post(f"/projects/{project.id}/gazettes", json=gazette2_data)

@@ -7,6 +7,7 @@ from datetime import datetime
 class SectionBase(BaseModel):
     """Base section schema with common fields."""
 
+    name: str = Field(..., min_length=1, description="Name of the section")
     header: str = Field(..., min_length=1, description="Header of the section")
     subheader: Optional[str] = Field(None, description="Subheader of the section")
     tags: List[str] = Field(
@@ -29,6 +30,7 @@ class SectionCreate(SectionBase):
 class SectionUpdate(BaseModel):
     """Schema for updating a section."""
 
+    name: Optional[str] = Field(None, min_length=1, description="Name of the section")
     header: Optional[str] = Field(
         None, min_length=1, description="Header of the section"
     )

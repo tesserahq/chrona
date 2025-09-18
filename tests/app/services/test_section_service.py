@@ -59,6 +59,7 @@ class TestSectionService:
         from app.models.gazette import Gazette
 
         other_gazette_data = {
+            "name": faker.word(),
             "header": faker.sentence(nb_words=4),
             "project_id": gazette.project_id,
         }
@@ -68,6 +69,7 @@ class TestSectionService:
         db.refresh(other_gazette)
 
         other_section_data = {
+            "name": faker.word(),
             "header": faker.sentence(nb_words=3),
             "gazette_id": other_gazette.id,
         }
@@ -96,6 +98,7 @@ class TestSectionService:
         service = SectionService(db)
 
         section_data = SectionCreate(
+            name=faker.word(),
             header=faker.sentence(nb_words=4),
             subheader=faker.sentence(nb_words=6),
             tags=[faker.word() for _ in range(3)],
@@ -121,6 +124,7 @@ class TestSectionService:
         service = SectionService(db)
 
         section_data = SectionCreate(
+            name=faker.word(),
             header=faker.sentence(nb_words=3),
             gazette_id=gazette.id,
         )
