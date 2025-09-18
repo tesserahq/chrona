@@ -6,7 +6,7 @@ from app.constants.digest_constants import DigestStatuses
 from app.models.digest import Digest
 from app.schemas.digest import DigestCreate, DigestUpdate
 from app.services.digest_generation_config_service import DigestGenerationConfigService
-from datetime import datetime, date
+from datetime import datetime
 from app.services.digest_service import DigestService
 from app.services.project_service import ProjectService
 from app.utils.m2m_token import M2MTokenClient
@@ -64,7 +64,8 @@ class GenerateDraftDigestCommand:
                 digest_generation_config_id=UUID(str(digest_generation_config.id)),
                 project_id=UUID(str(digest_generation_config.project_id)),
                 status=DigestStatuses.GENGERATING,
-            )
+            ),
+            created_at=execution_time,
         )
 
         # Get entries and entry updates for the digest

@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict, Any
 from uuid import UUID
+from datetime import datetime
 from sqlalchemy.orm import Session
 from app.models.digest import Digest
 from app.schemas.digest import DigestCreate, DigestUpdate
@@ -62,7 +63,9 @@ class DigestService(SoftDeleteService[Digest]):
             query = query.filter(Digest.status == status)
         return query
 
-    def create_digest(self, digest: DigestCreate) -> Digest:
+    def create_digest(
+        self, digest: DigestCreate, created_at: Optional[datetime] = None
+    ) -> Digest:
         """Create a new digest."""
         # Validate project exists
         if digest.project_id:
@@ -73,7 +76,13 @@ class DigestService(SoftDeleteService[Digest]):
                 )
 
         digest_data = digest.model_dump()
+
+        # Add created_at to the data if provided (for backfilling)
+        if created_at is not None:
+            digest_data["created_at"] = created_at
+
         db_digest = Digest(**digest_data)
+
         self.db.add(db_digest)
         self.db.commit()
         self.db.refresh(db_digest)

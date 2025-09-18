@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Any, Tuple
 from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, desc
-from datetime import datetime, date, timedelta
+from datetime import datetime
 from app.models.digest_generation_config import DigestGenerationConfig
 from app.models.entry import Entry
 from app.models.entry_update import EntryUpdate

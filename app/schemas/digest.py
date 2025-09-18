@@ -85,3 +85,28 @@ class Digest(DigestBase):
     deleted_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+
+class DigestBackfillRequest(BaseModel):
+    """Schema for backfilling digests request."""
+
+    days: int = Field(
+        ..., gt=0, le=365, description="Number of days to backfill digests for (1-365)"
+    )
+    start_from_date: Optional[datetime] = Field(
+        None,
+        description="Date to start backfilling from (defaults to now if not provided)",
+    )
+
+
+class DigestBackfillResponse(BaseModel):
+    """Schema for backfill digests response."""
+
+    created_count: int = Field(..., description="Number of digests created")
+    skipped_count: int = Field(
+        ..., description="Number of digests skipped (already existed)"
+    )
+    failed_count: int = Field(
+        ..., description="Number of digests that failed to create"
+    )
+    digests: List[Digest] = Field(..., description="List of created digests")

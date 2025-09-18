@@ -18,9 +18,10 @@ from app.schemas.digest_generation_config import (
     DigestGenerationConfig,
     DigestGenerationConfigSearchFilters,
 )
-from app.schemas.digest import Digest
+from app.schemas.digest import Digest, DigestBackfillRequest, DigestBackfillResponse
 from app.services.digest_generation_config_service import DigestGenerationConfigService
 from app.commands.digest.generate_draft_digest_command import GenerateDraftDigestCommand
+from app.commands.digest.backfill_digests_command import BackfillDigestsCommand
 from app.models.digest_generation_config import (
     DigestGenerationConfig as DigestGenerationConfigModel,
 )
@@ -159,6 +160,70 @@ def generate_draft_digest(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
+        )
+
+
+@router.post(
+    "/{digest_generation_config_id}/backfill",
+    response_model=DigestBackfillResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def backfill_digests(
+    backfill_request: DigestBackfillRequest,
+    digest_generation_config: DigestGenerationConfigModel = Depends(
+        get_digest_generation_config_by_id
+    ),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Backfill digests for a digest generation config over a specified number of days.
+
+    This endpoint allows you to generate digests for previous days based on the
+    digest generation config's cron expression and timezone settings.
+
+    - **days**: Number of days to backfill (1-365)
+    - **start_from_date**: Optional start date (defaults to now)
+
+    The system will:
+    1. Calculate when digests should have been generated based on the cron schedule
+    2. Skip any time periods where digests already exist
+    3. Generate new digests for missing time periods
+    4. Return a summary of created, skipped, and failed digests
+    """
+    command = BackfillDigestsCommand(db)
+    try:
+        result = command.execute(
+            digest_generation_config_id=UUID(str(digest_generation_config.id)),
+            days=backfill_request.days,
+            start_from_date=backfill_request.start_from_date,
+        )
+
+        # Convert model objects to schema objects
+        digest_schemas = [
+            Digest.model_validate(digest) for digest in result.created_digests
+        ]
+
+        return DigestBackfillResponse(
+            created_count=len(result.created_digests),
+            skipped_count=result.skipped_count,
+            failed_count=result.failed_count,
+            digests=digest_schemas,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except ResourceNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred during backfill: {str(e)}",
         )
 
 
