@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.constants.digest_constants import DigestStatuses
 from app.models.digest import Digest
-from app.schemas.digest import DigestCreate
+from app.schemas.digest import DigestCreate, DigestUpdate
 from app.services.digest_generation_config_service import DigestGenerationConfigService
 from datetime import datetime, date
+from app.services.digest_service import DigestService
 from app.services.project_service import ProjectService
 from app.utils.m2m_token import M2MTokenClient
 from tessera_sdk import QuoreClient
@@ -17,6 +18,7 @@ class GenerateDraftDigestCommand:
     def __init__(self, db: Session):
         self.db = db
         self.digest_generation_config_service = DigestGenerationConfigService(db)
+        self.digest_service = DigestService(db)
 
     def execute(self, digest_generation_config_id: UUID) -> Digest:
         """
@@ -25,11 +27,24 @@ class GenerateDraftDigestCommand:
         :param digest_generation_config_id: The ID of the digest generation config.
         :return: The created draft Digest object.
         """
+
         digest_generation_config = (
             self.digest_generation_config_service.get_digest_generation_config(
                 digest_generation_config_id
             )
         )
+
+        # Create the digest from the entries
+        digest = self.digest_service.create_digest(
+            DigestCreate(
+                title=digest_generation_config.title,
+                body="Generating...",
+                digest_generation_config_id=UUID(str(digest_generation_config.id)),
+                project_id=UUID(str(digest_generation_config.project_id)),
+                status=DigestStatuses.GENGERATING,
+            )
+        )
+
         # Get entries and entry updates for the digest
         entries, entry_updates, config = (
             self.digest_generation_config_service.get_entries_for_digest(
@@ -46,6 +61,7 @@ class GenerateDraftDigestCommand:
         project = ProjectService(self.db).get_project(
             digest_generation_config.project_id
         )
+        raw_body = formatted_body
         summary = formatted_body
 
         if project and project.quore_project_id:
@@ -61,25 +77,33 @@ class GenerateDraftDigestCommand:
             summary_response = quore_client.summarize(
                 project_id=project.quore_project_id,
                 prompt_id="summarize",
+                # This could be part of the config.
                 text=formatted_body,
+                query="Summarize the tasks and their latest updates.",
             )
             summary = summary_response.summary
 
-        # Create the digest from the entries
-        digest = self.digest_generation_config_service.create_draft_digest(
-            DigestCreate(
-                title=digest_generation_config.title,
+        digest = self.digest_service.update_digest(
+            digest.id,
+            DigestUpdate(
+                status=DigestStatuses.DRAFT,
                 body=summary,
+                raw_body=raw_body,
                 entries_ids=entry_ids,
                 entry_updates_ids=entry_updates_ids,
                 from_date=datetime.combine(today, datetime.min.time()),
                 to_date=datetime.combine(today, datetime.max.time()),
-                digest_generation_config_id=UUID(str(config.id)),
-                project_id=UUID(str(config.project_id)),
-                tags=list(config.tags) if config.tags else [],
-                labels=dict(config.labels) if config.labels else {},
-                status=DigestStatuses.DRAFT,
-            )
+                tags=(
+                    list(digest_generation_config.tags)
+                    if digest_generation_config.tags
+                    else []
+                ),
+                labels=(
+                    dict(digest_generation_config.labels)
+                    if digest_generation_config.labels
+                    else {}
+                ),
+            ),
         )
 
         return digest

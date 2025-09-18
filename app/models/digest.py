@@ -17,6 +17,7 @@ class Digest(Base, TimestampMixin, SoftDeleteMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String, nullable=False)
     body = Column(String, nullable=True)
+    raw_body = Column(String, nullable=True)
     entries_ids = Column(ARRAY(UUID(as_uuid=True)), default=list, nullable=False)
     tags = Column(ARRAY(String), default=list, nullable=False)
     labels = Column(JSONB, default=dict, nullable=False)  # Dictionary of labels

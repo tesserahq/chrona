@@ -10,6 +10,7 @@ class DigestBase(BaseModel):
 
     title: str = Field(..., min_length=1, description="Title of the digest")
     body: Optional[str] = Field(None, description="Body content of the digest")
+    raw_body: Optional[str] = Field(None, description="Raw body content of the digest")
     entries_ids: List[UUID] = Field(
         default_factory=list, description="List of entry IDs included in this digest"
     )
@@ -52,6 +53,7 @@ class DigestUpdate(BaseModel):
 
     title: Optional[str] = Field(None, min_length=1, description="Title of the digest")
     body: Optional[str] = Field(None, description="Body content of the digest")
+    raw_body: Optional[str] = Field(None, description="Raw body content of the digest")
     entries_ids: Optional[List[UUID]] = Field(
         None, description="List of entry IDs included in this digest"
     )

@@ -144,6 +144,7 @@ def setup_test_entry_updates(db, setup_test_entries, setup_source_and_author, fa
     """Create test entry updates for the test entries."""
     source, author, source_author = setup_source_and_author
     entries = setup_test_entries
+    now = datetime.now()
 
     entry_updates = []
     for i, entry in enumerate(entries):
@@ -156,6 +157,7 @@ def setup_test_entry_updates(db, setup_test_entries, setup_source_and_author, fa
             "meta_data": {},
             "external_id": f"update-{i}",
             "source_id": source.id,
+            "source_created_at": now,  # Set to current time so it's within the last 2 days
         }
 
         from app.models.entry_update import EntryUpdate

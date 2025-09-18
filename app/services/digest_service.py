@@ -52,7 +52,12 @@ class DigestService(SoftDeleteService[Digest]):
         self, project_id: UUID, status: Optional[str] = None
     ):
         """Get query for digests belonging to a specific project for pagination."""
-        query = self.db.query(Digest).filter(Digest.project_id == project_id)
+        query = (
+            self.db.query(Digest)
+            .filter(Digest.project_id == project_id)
+            .order_by(Digest.created_at.desc())
+        )
+
         if status:
             query = query.filter(Digest.status == status)
         return query

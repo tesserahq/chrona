@@ -1,6 +1,7 @@
 class DigestStatuses:
     """Digest status constants."""
 
+    GENGERATING = "generating"
     DRAFT = "draft"
     PUBLISHED = "published"
     ARCHIVED = "archived"
