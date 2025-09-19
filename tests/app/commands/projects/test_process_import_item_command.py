@@ -19,6 +19,7 @@ def process_command(db):
 def sample_import_item_data():
     """Create sample import item data for testing."""
     return ImportItemData(
+        id="1",
         source="github",
         title="Test Issue",
         body="This is a test issue body",
@@ -47,6 +48,7 @@ def sample_import_item_data():
 def sample_import_item_data_with_comments():
     """Create sample import item data with entry updates for testing."""
     return ImportItemData(
+        id="1",
         source="github",
         title="API returns 500 error on POST /users",
         body="Steps to reproduce:\n1. Send POST request to /users with valid payload\n2. Server responds with 500 instead of 201",
@@ -641,7 +643,7 @@ class TestProcessImportItemCommand:
 
         entry_service = EntryService(process_command.db)
         entries = entry_service.get_entries_by_project(setup_project.id)
-        entry_count = len([e for e in entries if e.external_id == "item_123"])
+        entry_count = len([e for e in entries if e.external_id == "1"])
         assert entry_count == 1
 
         # Verify only expected number of entry updates exist in database

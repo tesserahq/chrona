@@ -22,6 +22,7 @@ class TestImportItemsCommand:
             "source": "github",
             "items": [
                 {
+                    "id": "1",
                     "source": "github",
                     "title": "API returns 500 error on POST /users",
                     "body": "Steps to reproduce:\n1. Send POST request to /users with valid payload\n2. Server responds with 500 instead of 201",
@@ -41,6 +42,7 @@ class TestImportItemsCommand:
                     },
                 },
                 {
+                    "id": "2",
                     "source": "github",
                     "title": "UI freezes when loading dashboard",
                     "body": "The dashboard page becomes unresponsive when more than 1000 records are loaded. Needs optimization.",
@@ -60,6 +62,7 @@ class TestImportItemsCommand:
                     },
                 },
                 {
+                    "id": "3",
                     "source": "github",
                     "title": "Add dark mode support",
                     "body": "Feature request: Implement dark mode toggle in settings. Many users have asked for this.",
@@ -189,6 +192,7 @@ class TestImportItemsCommand:
             "source": "github",
             "items": [
                 {
+                    "id": "1",
                     "source": "github",
                     "title": "Single test item",
                     "body": "This is a test item",
@@ -248,6 +252,7 @@ class TestImportItemsCommand:
             "source": "github",
             "items": [
                 {
+                    "id": "888888888",
                     "source": "github",
                     "title": "First item",
                     "body": "First test item",
@@ -273,6 +278,7 @@ class TestImportItemsCommand:
             "source": "github",
             "items": [
                 {
+                    "id": "777777777",
                     "source": "github",
                     "title": "Second item",
                     "body": "Second test item",
@@ -347,6 +353,7 @@ class TestImportItemsCommand:
             "source": "github",
             "items": [
                 {
+                    "id": "666666666",
                     "source": "github",
                     "title": "Test item",
                     "body": "Test item body",
@@ -398,6 +405,7 @@ class TestImportItemsCommand:
             "source": "github",
             "items": [
                 {
+                    "id": "444444444",
                     "source": "github",
                     "title": "Persistence test item",
                     "body": "Testing database persistence",
@@ -454,6 +462,7 @@ class TestImportItemsCommand:
             "source": "github",
             "items": [
                 {
+                    "id": "555555555",
                     "source": "github",
                     "title": "Minimal item",
                     "body": "Minimal test item",

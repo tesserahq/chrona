@@ -50,6 +50,7 @@ class TestProcessImportRequestCommand:
 
         # Valid item
         valid_item_data = ImportItemData(
+            id="valid_item",
             source="github",
             title="Valid Item",
             body="This is a valid item",
@@ -191,6 +192,7 @@ class TestProcessImportRequestCommand:
 
         # Create valid items for first request
         item_data = ImportItemData(
+            id="valid_item",
             source="github",
             title="Test Item",
             body="This is a test item",
@@ -273,6 +275,7 @@ class TestProcessImportRequestCommand:
 
         # Create valid item for first request
         valid_item_data = ImportItemData(
+            id="valid_item",
             source="github",
             title="Valid Item",
             body="This is a valid item",

@@ -64,6 +64,7 @@ class ImportEntryUpdateData(BaseModel):
 class ImportItemData(BaseModel):
     """Schema for individual item data in import payload."""
 
+    id: str = Field(..., description="External item ID")
     source: str = Field(..., description="Source identifier (e.g., 'github')")
     title: str = Field(..., description="Title of the item")
     body: str = Field(..., description="Body content of the item")

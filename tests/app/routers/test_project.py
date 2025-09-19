@@ -254,6 +254,7 @@ def test_import_items_success(client, setup_project):
         "source": "github",
         "items": [
             {
+                "id": "1",
                 "source": "github",
                 "title": "API returns 500 error on POST /users",
                 "body": "Steps to reproduce:\n1. Send POST request to /users with valid payload\n2. Server responds with 500 instead of 201",
@@ -273,6 +274,7 @@ def test_import_items_success(client, setup_project):
                 },
             },
             {
+                "id": "2",
                 "source": "github",
                 "title": "UI freezes when loading dashboard",
                 "body": "The dashboard page becomes unresponsive when more than 1000 records are loaded. Needs optimization.",
@@ -292,6 +294,7 @@ def test_import_items_success(client, setup_project):
                 },
             },
             {
+                "id": "3",
                 "source": "github",
                 "title": "Add dark mode support",
                 "body": "Feature request: Implement dark mode toggle in settings. Many users have asked for this.",
@@ -357,6 +360,7 @@ def test_import_items_single_item(client, setup_project):
         "source": "github",
         "items": [
             {
+                "id": "1",
                 "source": "github",
                 "title": "Single test item",
                 "body": "This is a test item",
@@ -396,6 +400,7 @@ def test_import_items_nonexistent_project(client):
         "source": "github",
         "items": [
             {
+                "id": "1",
                 "source": "github",
                 "title": "Test item",
                 "body": "Test body",
@@ -431,6 +436,7 @@ def test_import_items_invalid_payload(client, setup_project):
         "source": "github",
         "items": [
             {
+                "id": "1",
                 "source": "github",
                 "title": "Test item",
                 # Missing body, tags, labels, meta_data, author
@@ -450,6 +456,7 @@ def test_import_items_invalid_author_data(client, setup_project):
         "source": "github",
         "items": [
             {
+                "id": "1",
                 "source": "github",
                 "title": "Test item",
                 "body": "Test body",
@@ -481,6 +488,7 @@ def test_import_items_minimal_data(client, setup_project):
         "source": "github",
         "items": [
             {
+                "id": "1",
                 "source": "github",
                 "title": "Minimal item",
                 "body": "Minimal test item",
@@ -519,6 +527,7 @@ def test_import_items_multiple_items(client, setup_project):
         "source": "github",
         "items": [
             {
+                "id": "1",
                 "source": "github",
                 "title": "First item",
                 "body": "First test item",
@@ -538,6 +547,7 @@ def test_import_items_multiple_items(client, setup_project):
                 },
             },
             {
+                "id": "2",
                 "source": "github",
                 "title": "Second item",
                 "body": "Second test item",

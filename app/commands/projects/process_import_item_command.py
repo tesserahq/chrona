@@ -69,7 +69,7 @@ class ProcessImportItemCommand:
                 source_assignee.id if source_assignee else None,
                 import_request_item.source_id,
                 project.id,
-                import_request_item.source_item_id,
+                item_data.id,
             )
 
             # Create entry updates if any
