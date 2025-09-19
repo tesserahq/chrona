@@ -30,6 +30,7 @@ class BackfillDigestsCommand:
         digest_generation_config_id: UUID,
         days: int,
         start_from_date: Optional[datetime] = None,
+        force: bool = False,
     ) -> BackfillResult:
         """
         Execute the command to backfill digests for the specified number of days.
@@ -37,6 +38,7 @@ class BackfillDigestsCommand:
         :param digest_generation_config_id: The ID of the digest generation config.
         :param days: Number of days to backfill digests for.
         :param start_from_date: Date to start backfilling from (defaults to now).
+        :param force: If True, generate digests even if they already exist (defaults to False).
         :return: BackfillResult with created digests and counts.
         """
 
@@ -88,17 +90,22 @@ class BackfillDigestsCommand:
         # Generate digests for each execution time
         for execution_time in execution_times:
             try:
-                # Check if digest already exists for this time period
-                if not self._digest_exists_for_time_period(
+                # Check if digest already exists for this time period (unless force is True)
+                if force or not self._digest_exists_for_time_period(
                     digest_generation_config_id, execution_time
                 ):
                     digest = self.generate_draft_digest_command.execute(
                         digest_generation_config_id, execution_time
                     )
                     created_digests.append(digest)
-                    print(
-                        f"Created digest for {execution_time.strftime('%Y-%m-%d %H:%M:%S %Z')}"
-                    )
+                    if force:
+                        print(
+                            f"Created digest for {execution_time.strftime('%Y-%m-%d %H:%M:%S %Z')} (forced)"
+                        )
+                    else:
+                        print(
+                            f"Created digest for {execution_time.strftime('%Y-%m-%d %H:%M:%S %Z')}"
+                        )
                 else:
                     skipped_count += 1
                     print(

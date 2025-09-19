@@ -197,6 +197,7 @@ def backfill_digests(
             digest_generation_config_id=UUID(str(digest_generation_config.id)),
             days=backfill_request.days,
             start_from_date=backfill_request.start_from_date,
+            force=backfill_request.force,
         )
 
         # Convert model objects to schema objects

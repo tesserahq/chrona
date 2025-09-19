@@ -103,6 +103,10 @@ class DigestBackfillRequest(BaseModel):
         None,
         description="Date to start backfilling from (defaults to now if not provided)",
     )
+    force: bool = Field(
+        default=False,
+        description="If True, generate digests even if they already exist",
+    )
 
 
 class DigestBackfillResponse(BaseModel):

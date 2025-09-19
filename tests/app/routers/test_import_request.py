@@ -151,6 +151,8 @@ def test_process_import_request_assignee_none(client, db, setup_project):
     assert entries[0].body == item["body"]
     assert entries[0].tags == item["tags"]
     assert entries[0].labels == item["labels"]
+
+    # VER porque carajo no esta usando el id
     # assert entries[0].external_id ==  "SOMETHING-2965"
 
 

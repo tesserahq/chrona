@@ -125,11 +125,12 @@ class TestDigestGenerationConfigBackfillEndpoint:
 
             assert response.created_count == 0
 
-            # Verify the command was called with None for start_from_date
+            # Verify the command was called with None for start_from_date and default force=False
             mock_command_instance.execute.assert_called_once_with(
                 digest_generation_config_id=config.id,
                 days=3,
                 start_from_date=None,
+                force=False,
             )
 
     def test_backfill_digests_resource_not_found_error(
