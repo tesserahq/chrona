@@ -35,6 +35,9 @@ class DigestGenerationConfigBase(BaseModel):
     project_id: Optional[UUID] = Field(
         None, description="UUID of the project this digest generation config belongs to"
     )
+    ui_format: Optional[Dict[str, Any]] = Field(
+        None, description="UI format for this digest generation config"
+    )
 
 
 class DigestGenerationConfigCreate(DigestGenerationConfigBase):
@@ -70,6 +73,9 @@ class DigestGenerationConfigUpdate(BaseModel):
     )
     cron_expression: Optional[str] = Field(
         None, description="Cron expression for digest scheduling"
+    )
+    ui_format: Optional[Dict[str, Any]] = Field(
+        None, description="UI format for this digest generation config"
     )
 
 

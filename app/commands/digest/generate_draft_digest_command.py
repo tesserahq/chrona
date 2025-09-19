@@ -64,6 +64,7 @@ class GenerateDraftDigestCommand:
                 digest_generation_config_id=UUID(str(digest_generation_config.id)),
                 project_id=UUID(str(digest_generation_config.project_id)),
                 status=DigestStatuses.GENGERATING,
+                ui_format=digest_generation_config.ui_format,
             ),
             created_at=execution_time,
         )

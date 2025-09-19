@@ -16,6 +16,7 @@ def sample_digest_data(faker):
         "entry_updates_ids": [uuid4()],
         "from_date": datetime.now(timezone.utc),
         "to_date": datetime.now(timezone.utc),
+        "ui_format": {"color": "#000000"},
     }
 
 
@@ -36,6 +37,7 @@ def setup_digest(db, setup_project, setup_digest_generation_config, faker):
         "to_date": datetime.now(timezone.utc),
         "digest_generation_config_id": digest_generation_config.id,
         "project_id": project.id,
+        "ui_format": {"color": "#000000"},
     }
 
     digest = Digest(**digest_data)
@@ -62,6 +64,7 @@ def setup_another_digest(db, setup_project, setup_digest_generation_config, fake
         "to_date": datetime.now(timezone.utc),
         "digest_generation_config_id": digest_generation_config.id,
         "project_id": project.id,
+        "ui_format": {"color": "#ffffff"},
     }
 
     digest = Digest(**digest_data)

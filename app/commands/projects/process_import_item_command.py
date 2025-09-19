@@ -54,7 +54,7 @@ class ProcessImportItemCommand:
 
             # Create or get the assignee if provided
             source_assignee = None
-            if item_data.assignee:
+            if item_data.assignee and item_data.assignee.id:
                 assignee = self._create_or_get_author(
                     item_data.assignee, project.workspace_id
                 )
@@ -75,22 +75,6 @@ class ProcessImportItemCommand:
             # Create entry updates if any
             entry_updates = self._create_entry_updates(
                 item_data, entry.id, project.workspace_id, import_request_item.source_id
-            )
-
-            # Update the import request item status
-            update_data = ImportRequestItemUpdate(
-                status=ImportItemStatuses.SUCCESS,
-                raw_payload={
-                    **import_request_item.raw_payload,
-                    "created_author_id": str(author.id),
-                    "created_entry_id": str(entry.id),
-                    "created_entry_update_ids": [
-                        str(entry_update.id) for entry_update in entry_updates
-                    ],
-                },
-            )
-            self.import_request_service.update_import_request_item(
-                import_request_item.id, update_data
             )
 
             return {

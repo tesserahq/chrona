@@ -26,6 +26,8 @@ class DigestGenerationConfig(Base, TimestampMixin, SoftDeleteMixin):
     generate_empty_digest = Column(Boolean, default=False, nullable=False)
     cron_expression = Column(String, nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
+    # TODO: This is a temporary solution. We need to move the UI format into the gazette
+    ui_format = Column(JSONB, default=dict, nullable=False)
 
     # Relationships
     project = relationship("Project", back_populates="digest_generation_configs")

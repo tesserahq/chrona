@@ -161,5 +161,7 @@ class DigestService(SoftDeleteService[Digest]):
             for key, value in labels.items():
                 query = query.filter(Digest.labels[key].astext == str(value))
 
+        query = query.order_by(Digest.created_at.desc())
+
         # Apply pagination and execute query
         return query.offset(skip).limit(limit).all()

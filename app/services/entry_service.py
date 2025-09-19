@@ -64,6 +64,7 @@ class EntryService(SoftDeleteService[Entry]):
                 selectinload(Entry.entry_updates),
             )
             .filter(Entry.project_id == project_id)
+            .order_by(Entry.created_at.desc())
         )
 
     def create_entry(self, entry: EntryCreate) -> Entry:

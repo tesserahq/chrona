@@ -2,6 +2,8 @@ import pytest
 from uuid import uuid4
 from unittest.mock import patch, MagicMock
 
+from app.services.entry_service import EntryService
+
 
 def test_process_import_request_success(client, setup_import_request_with_items):
     """Test successful processing of an import request."""
@@ -103,6 +105,53 @@ def test_process_import_request_project_not_found(client, setup_import_request):
     # The endpoint logic is already tested through integration tests
     # and the 404 case is covered by the not found test
     pytest.skip("Complex to mock SQLAlchemy query - covered by integration tests")
+
+
+def test_process_import_request_assignee_none(client, db, setup_project):
+    """Test processing an import request with a null assignee."""
+    project = setup_project
+    item = {
+        "body": "some random title",
+        "tags": ["jira", "network", "stale"],
+        "title": "[vpp] VPP pod restarted in prod-eu during upgrade",
+        "id": "SOMETHING-2965",
+        "author": {
+            "id": "805743:c39e7c24-d5e0-4276-b5d6-fff0e51bb4a5",
+            "tags": [],
+            "email": "user908@example.com",
+            "labels": {},
+            "meta_data": {"source": "jira"},
+            "avatar_url": "https://secure.gravatar.com/avatar/98784b623f16467d8394800b74a3bd3a?d=identicon",
+            "display_name": "User 531",
+        },
+        "labels": {"team": "metal", "sprint": "kamikaze", "status": "triaged"},
+        "source": "jira",
+        "assignee": None,
+        "meta_data": {
+            "url": "https://example.atlassian.net/browse/ISSUE-4200",
+            "updated": None,
+            "assignee_accountId": None,
+        },
+        "created_at": "2024-04-04T07:32:22.817-0700",
+        "updated_at": "2023-11-13T12:21:33.934-0700",
+        "entry_updates": [],
+    }
+    import_data = {"source": "jira", "items": [item]}
+
+    response = client.post(f"/projects/{project.id}/import", json=import_data)
+    data = response.json()
+
+    response = client.post(f"/import-requests/{data['id']}/process")
+
+    entry_service = EntryService(db)
+    entries = entry_service.get_entries()
+    assert len(entries) == 1
+    assert entries[0].source_assignee_id is None
+    assert entries[0].title == item["title"]
+    assert entries[0].body == item["body"]
+    assert entries[0].tags == item["tags"]
+    assert entries[0].labels == item["labels"]
+    # assert entries[0].external_id ==  "SOMETHING-2965"
 
 
 def test_process_import_request_command_failure(

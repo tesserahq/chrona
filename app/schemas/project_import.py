@@ -21,6 +21,24 @@ class ImportAuthorData(BaseModel):
     )
 
 
+class ImportAssigneeData(BaseModel):
+    """Schema for author data in import payload."""
+
+    id: str = Field(..., description="External assignee ID")
+    display_name: str = Field(..., description="Display name of the assignee")
+    avatar_url: str = Field(..., description="URL of the assignee's avatar")
+    email: str = Field(..., description="Email address of the assignee")
+    tags: List[str] = Field(
+        default_factory=list, description="Tags associated with the assignee"
+    )
+    labels: Dict[str, Any] = Field(
+        default_factory=dict, description="Labels for the assignee"
+    )
+    meta_data: Dict[str, Any] = Field(
+        default_factory=dict, description="Metadata for the assignee"
+    )
+
+
 class ImportEntryUpdateData(BaseModel):
     """Schema for entry update data in import payload."""
 
@@ -57,7 +75,7 @@ class ImportItemData(BaseModel):
         default_factory=dict, description="Metadata for the item"
     )
     author: ImportAuthorData = Field(..., description="Author information for the item")
-    assignee: Optional[ImportAuthorData] = Field(
+    assignee: Optional[ImportAssigneeData] = Field(
         None, description="Assignee information for the item"
     )
     entry_updates: List[ImportEntryUpdateData] = Field(
