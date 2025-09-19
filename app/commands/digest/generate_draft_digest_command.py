@@ -93,7 +93,8 @@ class GenerateDraftDigestCommand:
 
             quore_client = QuoreClient(
                 base_url=get_settings().quore_api_url,
-                timeout=60,  # Shorter timeout for middleware
+                # TODO: This is a temporary solution, we need to move this into jobs
+                timeout=320,  # Shorter timeout for middleware
                 max_retries=1,  # Fewer retries for middleware
                 api_token=m2m_token,
             )
