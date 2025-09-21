@@ -24,6 +24,7 @@ class DigestGenerationConfigBase(BaseModel):
         default_factory=dict, description="Labels for this digest generation config"
     )
     system_prompt: str = Field(..., description="System prompt for digest generation")
+    query: str = Field(..., description="Query for digest generation")
     timezone: str = Field(..., description="Timezone for digest scheduling")
     generate_empty_digest: bool = Field(
         default=False,
@@ -67,6 +68,7 @@ class DigestGenerationConfigUpdate(BaseModel):
     system_prompt: Optional[str] = Field(
         None, description="System prompt for digest generation"
     )
+    query: Optional[str] = Field(None, description="Query for digest generation")
     timezone: Optional[str] = Field(None, description="Timezone for digest scheduling")
     generate_empty_digest: Optional[bool] = Field(
         None, description="Whether to generate digest even when no entries match"

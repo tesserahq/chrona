@@ -180,6 +180,7 @@ def test_create_digest_generation_config(client, setup_project):
         "timezone": "UTC",
         "generate_empty_digest": True,
         "cron_expression": "0 10 * * *",
+        "query": "Generate a daily digest of important updates",
     }
 
     response = client.post(

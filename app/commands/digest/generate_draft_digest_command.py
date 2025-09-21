@@ -26,7 +26,7 @@ class GenerateDraftDigestCommand:
         self,
         digest_generation_config_id: UUID,
         execution_time: Optional[datetime] = None,
-    ) -> Digest:
+    ) -> Optional[Digest]:
         """
         Execute the command to generate a draft digest.
 
@@ -53,12 +53,24 @@ class GenerateDraftDigestCommand:
             execution_time,
         )
 
+        # Get entries and entry updates for the digest
+        entries, entry_updates, config = (
+            self.digest_generation_config_service.get_entries_for_digest(
+                digest_generation_config_id, execution_time
+            )
+        )
+        entry_ids = [UUID(str(entry.id)) for entry in entries]
+        entry_updates_ids = [UUID(str(update.id)) for update in entry_updates]
+
+        if len(entry_ids) == 0 and not digest_generation_config.generate_empty_digest:
+            return None
+
         # Create the digest from the entries
         digest = self.digest_service.create_digest(
             DigestCreate(
                 title=str(digest_generation_config.title),
-                body="Generating...",
-                raw_body="Generating...",
+                body="",
+                raw_body="",
                 from_date=from_date,
                 to_date=to_date,
                 digest_generation_config_id=UUID(str(digest_generation_config.id)),
@@ -68,15 +80,6 @@ class GenerateDraftDigestCommand:
             ),
             created_at=execution_time,
         )
-
-        # Get entries and entry updates for the digest
-        entries, entry_updates, config = (
-            self.digest_generation_config_service.get_entries_for_digest(
-                digest_generation_config_id, execution_time
-            )
-        )
-        entry_ids = [UUID(str(entry.id)) for entry in entries]
-        entry_updates_ids = [UUID(str(update.id)) for update in entry_updates]
 
         formatted_body = self.digest_generation_config_service.format_digest_body(
             entries, entry_updates
@@ -101,10 +104,10 @@ class GenerateDraftDigestCommand:
 
             summary_response = quore_client.summarize(
                 project_id=project.quore_project_id,
-                prompt_id="summarize",
+                prompt_id=digest_generation_config.system_prompt,
                 # This could be part of the config.
                 text=formatted_body,
-                query="Summarize the tasks and their latest updates.",
+                query=digest_generation_config.query,
             )
             summary = summary_response.summary
 

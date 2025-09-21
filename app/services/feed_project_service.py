@@ -399,6 +399,7 @@ class FeedProjectService:
                     "category": random.choice(["summary", "technical", "community"]),
                     "max_entries": random.randint(5, 20),
                 },
+                query=f"Generate a {config_type[0].lower()} based on the following entries. Focus on the most important and relevant information. Format the output as a clear, concise summary.",
             )
 
             config = (

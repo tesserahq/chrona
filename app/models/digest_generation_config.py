@@ -22,6 +22,9 @@ class DigestGenerationConfig(Base, TimestampMixin, SoftDeleteMixin):
     tags = Column(ARRAY(String), default=list, nullable=False)
     labels = Column(JSONB, default=dict, nullable=False)  # Dictionary of labels
     system_prompt = Column(String, nullable=False)
+    query = Column(
+        String, nullable=False, default="Summarize the tasks and their latest updates."
+    )
     timezone = Column(String, nullable=False)
     generate_empty_digest = Column(Boolean, default=False, nullable=False)
     cron_expression = Column(String, nullable=False)

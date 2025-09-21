@@ -15,6 +15,7 @@ def sample_digest_generation_config_data(faker):
         "timezone": "UTC",
         "generate_empty_digest": True,
         "cron_expression": "0 10 * * *",
+        "query": "Summarize the tasks and their latest updates.",
     }
 
 
@@ -34,6 +35,7 @@ def setup_digest_generation_config(db, setup_project, faker):
         "generate_empty_digest": True,
         "cron_expression": "0 10 * * *",
         "project_id": project.id,
+        "query": "Summarize the tasks and their latest updates.",
     }
 
     digest_generation_config = DigestGenerationConfig(**digest_generation_config_data)
