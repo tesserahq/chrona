@@ -210,7 +210,7 @@ class TestProcessImportItemCommand:
         process_command.db.commit()
         process_command.db.refresh(import_request_item)
 
-        # First, create an author with the same email
+        # First, create an author with the same external ID through source_authors
         author_service = AuthorService(process_command.db)
         existing_author = author_service.create_author(
             AuthorCreate(
@@ -219,6 +219,14 @@ class TestProcessImportItemCommand:
                 avatar_url="https://example.com/avatar.png",
             ),
             setup_project.workspace_id,
+        )
+
+        # Create the source_author relationship with the same external ID
+        from app.services.source_author_service import SourceAuthorService
+
+        source_author_service = SourceAuthorService(process_command.db)
+        source_author_service.get_or_create_source_author(
+            source.id, existing_author.id, sample_import_item_data.author.id
         )
 
         # Execute the command
@@ -279,10 +287,22 @@ class TestProcessImportItemCommand:
     def test_create_or_get_author_existing_author(
         self, process_command, sample_import_item_data, setup_project
     ):
-        """Test getting an existing author."""
-        # First create an author
+        """Test getting an existing author by external ID through source_authors."""
+        # First create an author and source
         from app.services.author_service import AuthorService
         from app.schemas.author import AuthorCreate
+        from app.models.source import Source
+        from app.services.source_author_service import SourceAuthorService
+
+        # Create source
+        source = Source(
+            name="Test Source",
+            identifier="github",
+            workspace_id=setup_project.workspace_id,
+        )
+        process_command.db.add(source)
+        process_command.db.commit()
+        process_command.db.refresh(source)
 
         author_service = AuthorService(process_command.db)
         existing_author = author_service.create_author(
@@ -294,9 +314,15 @@ class TestProcessImportItemCommand:
             setup_project.workspace_id,
         )
 
-        # Now test getting the existing author
+        # Create the source_author relationship with the same external ID
+        source_author_service = SourceAuthorService(process_command.db)
+        source_author_service.get_or_create_source_author(
+            source.id, existing_author.id, sample_import_item_data.author.id
+        )
+
+        # Now test getting the existing author by external ID
         result = process_command._create_or_get_author(
-            sample_import_item_data.author, setup_project.workspace_id
+            sample_import_item_data.author, setup_project.workspace_id, source.id
         )
 
         assert result.id == existing_author.id

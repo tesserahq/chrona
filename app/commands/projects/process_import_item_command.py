@@ -1,5 +1,6 @@
 from typing import Dict, Any
 from uuid import UUID
+from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
@@ -45,21 +46,21 @@ class ProcessImportItemCommand:
             item_data = ImportItemData.model_validate(import_request_item.raw_payload)
 
             # Create or get the author
-            author = self._create_or_get_author(item_data.author, project.workspace_id)
+            author = self._create_or_get_author(item_data.author, project.workspace_id, import_request_item.source_id)  # type: ignore
 
             # Create or get the source author relationship
             source_author = self._create_or_get_source_author(
-                author.id, import_request_item.source_id, item_data.author.id
+                author.id, import_request_item.source_id, item_data.author.id  # type: ignore
             )
 
             # Create or get the assignee if provided
             source_assignee = None
             if item_data.assignee and item_data.assignee.id:
                 assignee = self._create_or_get_author(
-                    item_data.assignee, project.workspace_id
+                    item_data.assignee, project.workspace_id, import_request_item.source_id  # type: ignore
                 )
                 source_assignee = self._create_or_get_source_author(
-                    assignee.id, import_request_item.source_id, item_data.assignee.id
+                    assignee.id, import_request_item.source_id, item_data.assignee.id  # type: ignore
                 )
 
             # Create the entry
@@ -67,14 +68,14 @@ class ProcessImportItemCommand:
                 item_data,
                 source_author.id,
                 source_assignee.id if source_assignee else None,
-                import_request_item.source_id,
-                project.id,
+                import_request_item.source_id,  # type: ignore
+                project.id,  # type: ignore
                 item_data.id,
             )
 
             # Create entry updates if any
             entry_updates = self._create_entry_updates(
-                item_data, entry.id, project.workspace_id, import_request_item.source_id
+                item_data, entry.id, project.workspace_id, import_request_item.source_id  # type: ignore
             )
 
             return {
@@ -88,7 +89,7 @@ class ProcessImportItemCommand:
 
         except Exception as e:
             # Update the import request item status to failed
-            update_data = ImportRequestItemUpdate(
+            update_data = ImportRequestItemUpdate(  # type: ignore
                 status=ImportItemStatuses.FAILED,
                 raw_payload={
                     **import_request_item.raw_payload,
@@ -96,7 +97,7 @@ class ProcessImportItemCommand:
                 },
             )
             self.import_request_service.update_import_request_item(
-                import_request_item.id, update_data
+                import_request_item.id, update_data  # type: ignore
             )
 
             return {
@@ -104,13 +105,19 @@ class ProcessImportItemCommand:
                 "error": str(e),
             }
 
-    def _create_or_get_author(self, author_data, workspace_id: UUID):
-        """Create or get an existing author."""
-        # Check if author already exists by email in this workspace
-        existing_authors = self.author_service.get_authors_by_workspace(workspace_id)
-        for existing_author in existing_authors:
-            if existing_author.email == author_data.email:
-                return existing_author
+    def _create_or_get_author(
+        self, author_data, workspace_id: UUID, source_id: UUID | None = None
+    ):
+        """Create or get an existing author by checking source_author external ID first."""
+        # If we have source_id, check if author already exists by external ID through source_authors
+        if source_id:
+            existing_source_author = (
+                self.source_author_service.get_source_author_by_external_id(
+                    source_id, author_data.id
+                )
+            )
+            if existing_source_author:
+                return existing_source_author.author
 
         # Create new author
         author_create = AuthorCreate(
@@ -120,6 +127,7 @@ class ProcessImportItemCommand:
             tags=author_data.tags,
             labels=author_data.labels,
             meta_data=author_data.meta_data,
+            user_id=None,
         )
 
         return self.author_service.create_author(author_create, workspace_id)
@@ -159,10 +167,10 @@ class ProcessImportItemCommand:
                 meta_data=item_data.meta_data,
                 source_author_id=source_author_id,
                 source_assignee_id=source_assignee_id,
-                source_created_at=item_data.created_at,
-                source_updated_at=item_data.updated_at,
+                source_created_at=self._parse_datetime(item_data.created_at),
+                source_updated_at=self._parse_datetime(item_data.updated_at),
             )
-            return self.entry_service.update_entry(existing_entry.id, entry_update)
+            return self.entry_service.update_entry(existing_entry.id, entry_update)  # type: ignore
 
         # Create new entry
         entry_create = EntryCreate(
@@ -176,8 +184,8 @@ class ProcessImportItemCommand:
             source_author_id=source_author_id,
             source_assignee_id=source_assignee_id,
             project_id=project_id,
-            source_created_at=item_data.created_at,
-            source_updated_at=item_data.updated_at,
+            source_created_at=self._parse_datetime(item_data.created_at),
+            source_updated_at=self._parse_datetime(item_data.updated_at),
         )
 
         return self.entry_service.create_entry(entry_create)
@@ -190,7 +198,7 @@ class ProcessImportItemCommand:
         source_id: UUID,
     ):
         """Create entry updates from the item data entry_updates field, or update existing ones if they already exist."""
-        entry_updates = []
+        entry_updates: list = []
 
         if not item_data.entry_updates:
             return entry_updates
@@ -233,8 +241,8 @@ class ProcessImportItemCommand:
             tags=updates.tags,
             labels=updates.labels,
             meta_data=self._extract_update_meta_data(updates),
-            source_created_at=updates.created_at,
-            source_updated_at=updates.updated_at,
+            source_created_at=self._parse_datetime(updates.created_at),
+            source_updated_at=self._parse_datetime(updates.updated_at),
         )
 
         return self.entry_update_service.update_entry_update(
@@ -250,7 +258,9 @@ class ProcessImportItemCommand:
     ):
         """Create a new entry update with author and source author relationships."""
         # Create or get the entry update author
-        entry_update_author = self._create_or_get_author(updates.author, workspace_id)
+        entry_update_author = self._create_or_get_author(
+            updates.author, workspace_id, source_id
+        )
 
         # Create or get the source author relationship for the entry update author
         source_author = self._create_or_get_source_author(
@@ -266,8 +276,8 @@ class ProcessImportItemCommand:
             meta_data=self._extract_update_meta_data(updates),
             external_id=updates.id,
             source_id=source_id,
-            source_created_at=updates.created_at,
-            source_updated_at=updates.updated_at,
+            source_created_at=self._parse_datetime(updates.created_at),
+            source_updated_at=self._parse_datetime(updates.updated_at),
         )
 
         return self.entry_update_service.create_entry_update(entry_update_create)
@@ -275,3 +285,15 @@ class ProcessImportItemCommand:
     def _extract_update_meta_data(self, updates):
         """Extract meta_data from updates, handling missing attribute gracefully."""
         return updates.meta_data if hasattr(updates, "meta_data") else {}
+
+    def _parse_datetime(self, datetime_str: str) -> datetime | None:
+        """Parse datetime string to datetime object."""
+        if not datetime_str:
+            return None
+        try:
+            # Handle ISO format with Z suffix
+            if datetime_str.endswith("Z"):
+                datetime_str = datetime_str[:-1] + "+00:00"
+            return datetime.fromisoformat(datetime_str)
+        except (ValueError, TypeError):
+            return None

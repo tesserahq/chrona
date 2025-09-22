@@ -167,7 +167,7 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
 
         # Apply filter_tags if specified
         if config.filter_tags:
-            query = query.filter(Entry.tags.overlap(config.filter_tags))
+            query = query.filter(Entry.tags.contains(config.filter_tags))
 
         # Apply filter_labels if specified
         if config.filter_labels:
