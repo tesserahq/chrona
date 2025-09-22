@@ -63,3 +63,48 @@ class TestGetGazetteWithDigestsCommand:
             assert hasattr(section_with_digests, "section")
             assert hasattr(section_with_digests, "digests")
             assert isinstance(section_with_digests.digests, list)
+
+    def test_execute_with_valid_tag_filter(self, db, setup_gazette_with_share_key):
+        """Test executing command with valid tag filter."""
+        gazette = setup_gazette_with_share_key
+
+        # Set some tags on the gazette
+        gazette.tags = ["tag1", "tag2", "tag3"]
+        db.commit()
+
+        command = GetGazetteWithDigestsCommand(db)
+
+        # Test with subset of valid tags
+        result = command.execute(gazette.share_key, tag_filter=["tag1", "tag2"])
+
+        assert isinstance(result, GazetteWithSectionsAndDigests)
+        assert result.gazette.id == gazette.id
+
+    def test_execute_with_invalid_tag_filter(self, db, setup_gazette_with_share_key):
+        """Test executing command with invalid tag filter raises HTTPException."""
+        gazette = setup_gazette_with_share_key
+
+        # Set some tags on the gazette
+        gazette.tags = ["tag1", "tag2", "tag3"]
+        db.commit()
+
+        command = GetGazetteWithDigestsCommand(db)
+
+        # Test with invalid tags
+        with pytest.raises(HTTPException) as exc_info:
+            command.execute(gazette.share_key, tag_filter=["invalid_tag"])
+
+        assert exc_info.value.status_code == 400
+        assert "Invalid tags: invalid_tag" in exc_info.value.detail
+        assert "Available tags:" in exc_info.value.detail
+
+    def test_execute_with_empty_tag_filter(self, db, setup_gazette_with_share_key):
+        """Test executing command with empty tag filter works like no filter."""
+        gazette = setup_gazette_with_share_key
+        command = GetGazetteWithDigestsCommand(db)
+
+        # Test with empty tag filter
+        result = command.execute(gazette.share_key, tag_filter=[])
+
+        assert isinstance(result, GazetteWithSectionsAndDigests)
+        assert result.gazette.id == gazette.id

@@ -230,6 +230,43 @@ def test_get_gazette_by_share_key(client, setup_gazette_with_share_key):
     assert isinstance(digests, list)
 
 
+def test_get_gazette_by_share_key_with_tag_filter(
+    client, setup_gazette_with_share_key, db
+):
+    """Test GET /gazettes/share/{share_key} endpoint with tag filtering."""
+    gazette = setup_gazette_with_share_key
+
+    # Add some tags to the gazette
+    gazette.tags = ["tag1", "tag2", "tag3"]
+    db.commit()
+
+    # Test with valid tag filter
+    response = client.get(f"/gazettes/share/{gazette.share_key}?tags=tag1,tag2")
+    assert response.status_code == 200
+
+    response_data = response.json()
+    assert "gazette" in response_data
+    assert "digests" in response_data
+    assert isinstance(response_data["digests"], list)
+
+
+def test_get_gazette_by_share_key_with_invalid_tag_filter(
+    client, setup_gazette_with_share_key, db
+):
+    """Test GET /gazettes/share/{share_key} endpoint with invalid tag filter."""
+    gazette = setup_gazette_with_share_key
+
+    # Add some tags to the gazette
+    gazette.tags = ["tag1", "tag2", "tag3"]
+    db.commit()
+
+    # Test with invalid tag filter
+    response = client.get(f"/gazettes/share/{gazette.share_key}?tags=invalid_tag")
+    assert response.status_code == 400
+    assert "Invalid tags: invalid_tag" in response.json()["detail"]
+    assert "Available tags:" in response.json()["detail"]
+
+
 def test_get_gazette_by_share_key_nonexistent(client):
     """Test GET /gazettes/share/{share_key} with non-existent share key."""
     non_existent_key = "non-existent-key"

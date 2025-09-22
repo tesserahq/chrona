@@ -4,9 +4,11 @@ from fastapi import (
     Depends,
     HTTPException,
     status,
+    Query,
 )
 from sqlalchemy.orm import Session
 from uuid import UUID
+from typing import Optional
 
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -132,7 +134,19 @@ def regenerate_gazette_share_key(
 
 
 @router.get("/share/{share_key}", response_model=GazetteWithSectionsAndDigests)
-def get_gazette_by_share_key(share_key: str, db: Session = Depends(get_db)):
-    """Get a gazette by its share key along with matching published digests."""
+def get_gazette_by_share_key(
+    share_key: str,
+    tags: Optional[str] = Query(
+        None, description="Comma-separated list of tags to filter digests"
+    ),
+    db: Session = Depends(get_db),
+):
+    """Get a gazette by its share key along with matching published digests, optionally filtered by tags."""
     command = GetGazetteWithDigestsCommand(db)
-    return command.execute(share_key)
+
+    # Parse tags if provided
+    tag_list = None
+    if tags:
+        tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
+
+    return command.execute(share_key, tag_filter=tag_list)
