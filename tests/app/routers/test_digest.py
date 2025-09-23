@@ -189,5 +189,70 @@ def test_update_digest_dates(client, setup_digest):
     assert returned_to_date.replace(microsecond=0) == new_to_date.replace(microsecond=0)
 
 
+def test_get_digest_with_entries(
+    client, db, setup_digest, setup_entry, setup_entry_update
+):
+    """Test GET /digests/{digest_id}?include=entries endpoint."""
+    digest = setup_digest
+    entry = setup_entry
+    entry_update = setup_entry_update
+
+    # Update the digest to include the actual entry ID
+    digest.entries_ids = [entry.id]
+    digest.entry_updates_ids = [entry_update.id]
+    db.commit()
+    db.refresh(digest)
+
+    response = client.get(f"/digests/{digest.id}?include=entries")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["id"] == str(digest.id)
+    assert data["title"] == digest.title
+    assert "entries" in data
+    assert len(data["entries"]) == 1
+
+    entry_data = data["entries"][0]
+    assert entry_data["id"] == str(entry.id)
+    assert entry_data["title"] == entry.title
+    assert entry_data["body"] == entry.body
+    assert "entry_updates" in entry_data
+    assert len(entry_data["entry_updates"]) == 1
+
+    entry_update_data = entry_data["entry_updates"][0]
+    assert entry_update_data["id"] == str(entry_update.id)
+    assert entry_update_data["body"] == entry_update.body
+
+
+def test_get_digest_with_entries_empty(client, setup_digest):
+    """Test GET /digests/{digest_id}?include=entries endpoint with no entries."""
+    digest = setup_digest
+    # Ensure digest has no entries
+    digest.entries_ids = []
+
+    response = client.get(f"/digests/{digest.id}?include=entries")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["id"] == str(digest.id)
+    assert "entries" in data
+    assert len(data["entries"]) == 0
+
+
+def test_get_digest_without_include_param(client, setup_digest):
+    """Test GET /digests/{digest_id} endpoint without include parameter returns standard digest."""
+    digest = setup_digest
+    response = client.get(f"/digests/{digest.id}")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["id"] == str(digest.id)
+    assert data["title"] == digest.title
+    # Should not include entries field when include parameter is not used
+    assert "entries" not in data
+    # Should still include the entry IDs array
+    assert "entries_ids" in data
+
+
 # Note: Authentication tests are handled by the auth middleware and tested separately
 # The digest endpoints use the get_current_user dependency which ensures authentication

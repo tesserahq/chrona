@@ -1,8 +1,9 @@
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 from datetime import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from app.models.digest import Digest
+from app.models.entry import Entry
 from app.schemas.digest import DigestCreate, DigestUpdate
 from app.services.soft_delete_service import SoftDeleteService
 from app.services.project_service import ProjectService
@@ -20,6 +21,27 @@ class DigestService(SoftDeleteService[Digest]):
     def get_digest(self, digest_id: UUID) -> Optional[Digest]:
         """Get a single digest by ID."""
         return self.db.query(Digest).filter(Digest.id == digest_id).first()
+
+    def get_digest_with_entries(self, digest_id: UUID) -> Optional[Digest]:
+        """Get a single digest by ID with its associated entries and entry_updates."""
+        digest = self.db.query(Digest).filter(Digest.id == digest_id).first()
+        if not digest:
+            return None
+
+        # Fetch entries based on the entry IDs stored in the digest
+        if digest.entries_ids:
+            entries = (
+                self.db.query(Entry)
+                .filter(Entry.id.in_(digest.entries_ids))
+                .options(selectinload(Entry.entry_updates))
+                .all()
+            )
+            # Manually attach entries to the digest object for serialization
+            digest.entries = entries
+        else:
+            digest.entries = []
+
+        return digest
 
     def get_digests(self, skip: int = 0, limit: int = 100) -> List[Digest]:
         """Get a list of digests with pagination."""

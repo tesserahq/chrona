@@ -1,8 +1,13 @@
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, TYPE_CHECKING
 from uuid import UUID
 from pydantic import BaseModel, Field
 from datetime import datetime
 from app.constants.digest_constants import DigestStatuses
+
+if TYPE_CHECKING:
+    from app.schemas.entry import EntryResponse
+else:
+    from app.schemas.entry import EntryResponse
 
 
 class DigestBase(BaseModel):
@@ -107,6 +112,16 @@ class DigestBackfillRequest(BaseModel):
         default=False,
         description="If True, generate digests even if they already exist",
     )
+
+
+class DigestWithEntries(Digest):
+    """Schema for digest response with entries included."""
+
+    entries: List[EntryResponse] = Field(
+        default_factory=list, description="List of entries included in this digest"
+    )
+
+    model_config = {"from_attributes": True}
 
 
 class DigestBackfillResponse(BaseModel):
