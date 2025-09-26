@@ -18,10 +18,14 @@ from app.schemas.digest_generation_config import (
     DigestGenerationConfig,
     DigestGenerationConfigSearchFilters,
 )
-from app.schemas.digest import Digest, DigestBackfillRequest, DigestBackfillResponse
+from app.schemas.digest import (
+    Digest,
+    DigestBackfillRequest,
+    DigestBackfillTaskResponse,
+)
 from app.services.digest_generation_config_service import DigestGenerationConfigService
 from app.commands.digest.generate_draft_digest_command import GenerateDraftDigestCommand
-from app.commands.digest.backfill_digests_command import BackfillDigestsCommand
+from app.tasks.backfill_digests import backfill_digests_task
 from app.models.digest_generation_config import (
     DigestGenerationConfig as DigestGenerationConfigModel,
 )
@@ -31,7 +35,7 @@ from app.routers.utils.dependencies import (
     get_digest_generation_config_by_id,
 )
 from app.exceptions.resource_not_found_error import ResourceNotFoundError
-
+from app.core.logging_config import get_logger
 
 # Project-scoped router for list and create operations
 project_router = APIRouter(
@@ -55,7 +59,9 @@ def list_digest_generation_configs(
 ):
     """List all digest generation configs in a project with pagination."""
     service = DigestGenerationConfigService(db)
-    query = service.get_digest_generation_configs_by_project_query(project.id)
+    query = service.get_digest_generation_configs_by_project_query(
+        UUID(str(project.id))
+    )
     return paginate(query, params)
 
 
@@ -102,7 +108,9 @@ def create_digest_generation_config(
 ):
     """Create a new digest generation config in a project."""
     service = DigestGenerationConfigService(db)
-    return service.create_digest_generation_config(digest_generation_config, project.id)
+    return service.create_digest_generation_config(
+        digest_generation_config, UUID(str(project.id))
+    )
 
 
 # Global endpoints for individual digest generation config operations
@@ -129,7 +137,7 @@ def update_digest_generation_config(
     """Update a digest generation config."""
     service = DigestGenerationConfigService(db)
     updated_digest_generation_config = service.update_digest_generation_config(
-        digest_generation_config.id, digest_generation_config_update
+        UUID(str(digest_generation_config.id)), digest_generation_config_update
     )
     if not updated_digest_generation_config:
         raise HTTPException(
@@ -165,10 +173,10 @@ def generate_draft_digest(
 
 @router.post(
     "/{digest_generation_config_id}/backfill",
-    response_model=DigestBackfillResponse,
-    status_code=status.HTTP_201_CREATED,
+    response_model=DigestBackfillTaskResponse,
+    status_code=status.HTTP_202_ACCEPTED,
 )
-def backfill_digests(
+def backfill_digests_async(
     backfill_request: DigestBackfillRequest,
     digest_generation_config: DigestGenerationConfigModel = Depends(
         get_digest_generation_config_by_id
@@ -177,54 +185,59 @@ def backfill_digests(
     current_user=Depends(get_current_user),
 ):
     """
-    Backfill digests for a digest generation config over a specified number of days.
+    Initiate async backfill of digests for a digest generation config over a specified number of days.
 
-    This endpoint allows you to generate digests for previous days based on the
+    This endpoint starts an asynchronous task to generate digests for previous days based on the
     digest generation config's cron expression and timezone settings.
 
     - **days**: Number of days to backfill (1-365)
     - **start_from_date**: Optional start date (defaults to now)
+    - **force**: If True, generate digests even if they already exist
 
     The system will:
-    1. Calculate when digests should have been generated based on the cron schedule
-    2. Skip any time periods where digests already exist
-    3. Generate new digests for missing time periods
-    4. Return a summary of created, skipped, and failed digests
+    1. Start an async task to process the backfill
+    2. Calculate when digests should have been generated based on the cron schedule
+    3. Skip any time periods where digests already exist (unless force=True)
+    4. Generate new digests for missing time periods
+    5. Return a task ID for tracking progress
+
+    Returns immediately with a task ID - use the task status endpoint to check progress.
     """
-    command = BackfillDigestsCommand(db)
+
+    logger = get_logger()
+
     try:
-        result = command.execute(
-            digest_generation_config_id=UUID(str(digest_generation_config.id)),
+        # Convert start_from_date to ISO string if provided
+        start_date_str = None
+        if backfill_request.start_from_date:
+            start_date_str = backfill_request.start_from_date.isoformat()
+
+        logger.info(
+            f"Starting backfill task for {digest_generation_config.id} with {backfill_request.days} days"
+        )
+        # Start the async task
+        task = backfill_digests_task.delay(
+            digest_generation_config_id=str(digest_generation_config.id),
             days=backfill_request.days,
-            start_from_date=backfill_request.start_from_date,
+            start_from_date=start_date_str,
             force=backfill_request.force,
         )
 
-        # Convert model objects to schema objects
-        digest_schemas = [
-            Digest.model_validate(digest) for digest in result.created_digests
-        ]
-
-        return DigestBackfillResponse(
-            created_count=len(result.created_digests),
-            skipped_count=result.skipped_count,
-            failed_count=result.failed_count,
-            digests=digest_schemas,
+        return DigestBackfillTaskResponse(
+            task_id=task.id,
+            message=f"Backfill task started for {backfill_request.days} days. Use the task ID to check progress.",
+            estimated_completion_time=None,  # Could add estimation logic based on days
         )
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-    except ResourceNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
-        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An unexpected error occurred during backfill: {str(e)}",
+            detail=f"Failed to start backfill task: {str(e)}",
         )
 
 
@@ -238,7 +251,9 @@ def delete_digest_generation_config(
 ):
     """Delete a digest generation config."""
     service = DigestGenerationConfigService(db)
-    success = service.delete_digest_generation_config(digest_generation_config.id)
+    success = service.delete_digest_generation_config(
+        UUID(str(digest_generation_config.id))
+    )
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -34,6 +34,7 @@ from app.schemas.common import ListResponse
 from app.models.project_membership import ProjectMembership
 from app.schemas.project_import import ImportItemRequest, ImportItemResponse
 from app.commands.projects.import_items_command import ImportItemsCommand
+from app.tasks.process_import_items import process_import_items
 from app.schemas.system import FeedProjectRequest, FeedProjectResponse
 from app.services.feed_project_service import FeedProjectService
 from app.services.digest_service import DigestService
@@ -199,6 +200,10 @@ def import_items(
     """
     command = ImportItemsCommand(db)
     result = command.execute(project, import_request, current_user.id)
+
+    # Trigger background task to process the import items
+    process_import_items.delay(result["id"])
+
     return ImportItemResponse(**result)
 
 

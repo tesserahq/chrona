@@ -7,7 +7,6 @@ incorrectly (e.g., 6 PM instead of 10 PM for NYC timezone).
 """
 
 from datetime import datetime, timedelta
-import pytest
 import pytz
 from crontab import CronTab
 
