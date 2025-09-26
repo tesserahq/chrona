@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import List, Optional, NamedTuple
+from typing import List, Optional, NamedTuple, cast
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import pytz  # type: ignore
@@ -15,6 +15,7 @@ class BackfillResult(NamedTuple):
     created_digests: List[Digest]
     skipped_count: int
     failed_count: int
+    deleted_count: int
 
 
 class BackfillDigestsCommand:
@@ -38,8 +39,8 @@ class BackfillDigestsCommand:
         :param digest_generation_config_id: The ID of the digest generation config.
         :param days: Number of days to backfill digests for.
         :param start_from_date: Date to start backfilling from (defaults to now).
-        :param force: If True, generate digests even if they already exist (defaults to False).
-        :return: BackfillResult with created digests and counts.
+        :param force: If True, delete existing overlapping digests and create new ones (defaults to False).
+        :return: BackfillResult with created digests, skipped count, failed count, and deleted count.
         """
 
         digest_generation_config = (
@@ -86,25 +87,48 @@ class BackfillDigestsCommand:
         created_digests = []
         skipped_count = 0
         failed_count = 0
+        deleted_count = 0
 
         # Generate digests for each execution time
         for execution_time in execution_times:
             try:
-                # Check if digest already exists for this time period (unless force is True)
-                if force or not self._digest_exists_for_time_period(
-                    digest_generation_config_id, execution_time
-                ):
+                if force:
+                    # When force is True, delete any existing overlapping digests first
+                    deleted_in_period = self._delete_overlapping_digests(
+                        digest_generation_config_id, execution_time
+                    )
+                    deleted_count += deleted_in_period
+
+                    # Create the new digest
                     digest = self.generate_draft_digest_command.execute(
                         digest_generation_config_id, execution_time
                     )
-                    created_digests.append(digest)
-                    if force:
+                    if digest:
+                        created_digests.append(digest)
                         print(
                             f"Created digest for {execution_time.strftime('%Y-%m-%d %H:%M:%S %Z')} (forced)"
                         )
                     else:
+                        failed_count += 1
+                        print(
+                            f"Failed to create digest for {execution_time.strftime('%Y-%m-%d %H:%M:%S %Z')}: digest creation returned None"
+                        )
+                elif not self._digest_exists_for_time_period(
+                    digest_generation_config_id, execution_time
+                ):
+                    # Normal case: create digest if it doesn't exist
+                    digest = self.generate_draft_digest_command.execute(
+                        digest_generation_config_id, execution_time
+                    )
+                    if digest:
+                        created_digests.append(digest)
                         print(
                             f"Created digest for {execution_time.strftime('%Y-%m-%d %H:%M:%S %Z')}"
+                        )
+                    else:
+                        failed_count += 1
+                        print(
+                            f"Failed to create digest for {execution_time.strftime('%Y-%m-%d %H:%M:%S %Z')}: digest creation returned None"
                         )
                 else:
                     skipped_count += 1
@@ -123,6 +147,7 @@ class BackfillDigestsCommand:
             created_digests=created_digests,
             skipped_count=skipped_count,
             failed_count=failed_count,
+            deleted_count=deleted_count,
         )
 
     def _calculate_execution_times(
@@ -205,6 +230,66 @@ class BackfillDigestsCommand:
 
         except Exception:
             return False
+
+    def _delete_overlapping_digests(
+        self, digest_generation_config_id: UUID, execution_time: datetime
+    ) -> int:
+        """
+        Delete any existing digests that overlap with the time period for the given execution time.
+
+        :param digest_generation_config_id: The digest generation config ID.
+        :param execution_time: The execution time to check.
+        :return: Number of digests deleted.
+        """
+        # Import here to avoid circular imports
+        from app.utils.date_filter import calculate_digest_date_range
+        from app.services.digest_service import DigestService
+
+        digest_service = DigestService(self.db)
+
+        # Get the digest generation config to access cron expression and timezone
+        config = self.digest_generation_config_service.get_digest_generation_config(
+            digest_generation_config_id
+        )
+
+        if not config:
+            return 0
+
+        # Calculate what the date range would be for this execution time
+        from_date, to_date = calculate_digest_date_range(
+            str(config.cron_expression),
+            str(config.timezone),
+            execution_time,
+        )
+
+        # Find all digests that overlap with this time period
+        existing_digests = digest_service.get_digests_by_config(
+            digest_generation_config_id
+        )
+
+        deleted_count = 0
+        for digest in existing_digests:
+            if digest.from_date and digest.to_date:
+                # Ensure both dates are timezone-aware for comparison
+                digest_from = digest.from_date
+                digest_to = digest.to_date
+
+                if digest_from.tzinfo is None:
+                    digest_from = pytz.UTC.localize(digest_from)
+                if digest_to.tzinfo is None:
+                    digest_to = pytz.UTC.localize(digest_to)
+
+                # Check for overlap
+                if digest_from <= to_date and digest_to >= from_date:
+                    # Delete the overlapping digest
+                    if digest.id:
+                        digest_service.delete_digest(cast(UUID, digest.id))
+                        deleted_count += 1
+                        print(
+                            f"Deleted existing digest for period {digest_from.strftime('%Y-%m-%d %H:%M:%S %Z')} to {digest_to.strftime('%Y-%m-%d %H:%M:%S %Z')}"
+                        )
+
+        return deleted_count
 
     def _digest_exists_for_time_period(
         self, digest_generation_config_id: UUID, execution_time: datetime

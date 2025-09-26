@@ -247,3 +247,86 @@ class TestBackfillDigestsCommand:
                     assert result.failed_count > 0  # Should have failed some
                     # Generate command should have been called but failed
                     assert mock_generate_command.execute.called
+
+    def test_execute_with_force_deletes_existing_digests(
+        self, backfill_command, daily_config
+    ):
+        """Test that execute with force=True deletes existing overlapping digests."""
+        # Mock the delete overlapping digests method to return count of deleted digests
+        with patch.object(
+            backfill_command, "_delete_overlapping_digests", return_value=2
+        ):
+            with patch.object(
+                backfill_command, "generate_draft_digest_command"
+            ) as mock_generate_command:
+                mock_generate_command.execute.return_value = Mock()
+
+                with patch.object(
+                    backfill_command, "_calculate_execution_times"
+                ) as mock_calc:
+                    # Mock one execution time
+                    mock_calc.return_value = [
+                        datetime(2023, 10, 10, 10, 0, 0, tzinfo=pytz.UTC)
+                    ]
+
+                    test_date = datetime(2023, 10, 10, 12, 0, 0, tzinfo=pytz.UTC)
+                    result = backfill_command.execute(
+                        daily_config.id, 1, test_date, force=True
+                    )
+
+                    # Should have deleted 2 digests and created 1 new digest
+                    assert len(result.created_digests) == 1
+                    assert result.deleted_count == 2
+                    assert result.skipped_count == 0  # No skips when force=True
+                    # Generate command should have been called
+                    assert mock_generate_command.execute.called
+
+    def test_delete_overlapping_digests(self, backfill_command, daily_config):
+        """Test the _delete_overlapping_digests method."""
+        execution_time = datetime(2023, 10, 10, 10, 0, 0, tzinfo=pytz.UTC)
+
+        # Mock overlapping digest
+        mock_digest = Mock()
+        mock_digest.id = uuid4()
+        mock_digest.from_date = datetime(2023, 10, 9, 0, 0, 0, tzinfo=pytz.UTC)
+        mock_digest.to_date = datetime(2023, 10, 10, 0, 0, 0, tzinfo=pytz.UTC)
+
+        with patch("app.services.digest_service.DigestService") as mock_digest_service:
+            mock_service_instance = mock_digest_service.return_value
+            mock_service_instance.get_digests_by_config.return_value = [mock_digest]
+            mock_service_instance.delete_digest.return_value = True
+
+            deleted_count = backfill_command._delete_overlapping_digests(
+                daily_config.id, execution_time
+            )
+
+            # Should have deleted 1 digest
+            assert deleted_count == 1
+            # Delete method should have been called with the digest ID
+            mock_service_instance.delete_digest.assert_called_once()
+
+    def test_delete_overlapping_digests_no_overlap(
+        self, backfill_command, daily_config
+    ):
+        """Test the _delete_overlapping_digests method when there's no overlap."""
+        execution_time = datetime(2023, 10, 10, 10, 0, 0, tzinfo=pytz.UTC)
+
+        # Mock non-overlapping digest
+        mock_digest = Mock()
+        mock_digest.id = uuid4()
+        mock_digest.from_date = datetime(2023, 10, 7, 0, 0, 0, tzinfo=pytz.UTC)
+        mock_digest.to_date = datetime(2023, 10, 8, 0, 0, 0, tzinfo=pytz.UTC)
+
+        with patch("app.services.digest_service.DigestService") as mock_digest_service:
+            mock_service_instance = mock_digest_service.return_value
+            mock_service_instance.get_digests_by_config.return_value = [mock_digest]
+            mock_service_instance.delete_digest.return_value = True
+
+            deleted_count = backfill_command._delete_overlapping_digests(
+                daily_config.id, execution_time
+            )
+
+            # Should not have deleted any digests
+            assert deleted_count == 0
+            # Delete method should not have been called
+            mock_service_instance.delete_digest.assert_not_called()

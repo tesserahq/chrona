@@ -52,7 +52,10 @@ class TestDigestGenerationConfigBackfillEndpoint:
 
             # Mock the command result
             mock_result = BackfillResult(
-                created_digests=[mock_digest], skipped_count=2, failed_count=0
+                created_digests=[mock_digest],
+                skipped_count=2,
+                failed_count=0,
+                deleted_count=0,
             )
 
             mock_command_instance = mock_command_class.return_value
@@ -114,7 +117,7 @@ class TestDigestGenerationConfigBackfillEndpoint:
             "app.routers.digest_generation_config.BackfillDigestsCommand"
         ) as mock_command_class:
             mock_result = BackfillResult(
-                created_digests=[], skipped_count=0, failed_count=0
+                created_digests=[], skipped_count=0, failed_count=0, deleted_count=0
             )
 
             mock_command_instance = mock_command_class.return_value
