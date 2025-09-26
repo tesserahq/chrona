@@ -128,4 +128,15 @@ class DigestGenerationConfigSearchFilters(BaseModel):
     )
 
 
+class DigestGenerationConfigSummary(BaseModel):
+    """Minimal digest generation config schema for embedding in other responses."""
+
+    id: UUID = Field(..., description="UUID of the digest generation config")
+    ui_format: Optional[Dict[str, Any]] = Field(
+        None, description="UI format for this digest generation config"
+    )
+
+    model_config = {"from_attributes": True}
+
+
 # DigestGenerationConfigSearchResponse is no longer needed as we use Page[DigestGenerationConfig] from fastapi-pagination

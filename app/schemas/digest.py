@@ -6,8 +6,10 @@ from app.constants.digest_constants import DigestStatuses
 
 if TYPE_CHECKING:
     from app.schemas.entry import EntryResponse
+    from app.schemas.digest_generation_config import DigestGenerationConfigSummary
 else:
     from app.schemas.entry import EntryResponse
+    from app.schemas.digest_generation_config import DigestGenerationConfigSummary
 
 
 class DigestBase(BaseModel):
@@ -94,6 +96,9 @@ class Digest(DigestBase):
     created_at: datetime
     updated_at: datetime
     deleted_at: Optional[datetime] = None
+    digest_generation_config: Optional[DigestGenerationConfigSummary] = Field(
+        None, description="Digest generation config summary with id and ui_format"
+    )
 
     model_config = {"from_attributes": True}
 

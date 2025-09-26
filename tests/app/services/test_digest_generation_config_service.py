@@ -1,6 +1,6 @@
 import pytest
 from uuid import uuid4
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from app.services.digest_generation_config_service import DigestGenerationConfigService
 from app.schemas.digest_generation_config import (
     DigestGenerationConfigCreate,
@@ -411,9 +411,14 @@ class TestDigestGenerationConfigService:
         assert "* Test Entry 1" in draft_digest.body
         assert "* Test Entry 2" in draft_digest.body
 
-        # Verify date range
+        # Verify date range - should be within the last 2 days for daily cron
         today = date.today()
-        assert draft_digest.from_date.date() == today
+        yesterday = today - timedelta(days=1)
+
+        # from_date should be either today or yesterday (depending on when the test runs vs cron schedule)
+        # The cron runs at 10 AM UTC daily, so if we're before 10 AM, from_date would be yesterday
+        assert draft_digest.from_date.date() in [today, yesterday]
+        # to_date should be today (when the digest is being generated)
         assert draft_digest.to_date.date() == today
 
     def test_generate_draft_digest_no_matching_entries(

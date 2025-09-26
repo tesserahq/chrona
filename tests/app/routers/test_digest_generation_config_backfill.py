@@ -44,6 +44,12 @@ class TestDigestGenerationConfigBackfillEndpoint:
             mock_digest.status = "draft"
             mock_digest.ui_format = {}
 
+            # Add the digest_generation_config relationship
+            mock_config = Mock()
+            mock_config.id = config.id
+            mock_config.ui_format = config.ui_format
+            mock_digest.digest_generation_config = mock_config
+
             # Mock the command result
             mock_result = BackfillResult(
                 created_digests=[mock_digest], skipped_count=2, failed_count=0

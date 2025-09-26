@@ -20,11 +20,21 @@ class DigestService(SoftDeleteService[Digest]):
 
     def get_digest(self, digest_id: UUID) -> Optional[Digest]:
         """Get a single digest by ID."""
-        return self.db.query(Digest).filter(Digest.id == digest_id).first()
+        return (
+            self.db.query(Digest)
+            .options(selectinload(Digest.digest_generation_config))
+            .filter(Digest.id == digest_id)
+            .first()
+        )
 
     def get_digest_with_entries(self, digest_id: UUID) -> Optional[Digest]:
         """Get a single digest by ID with its associated entries and entry_updates."""
-        digest = self.db.query(Digest).filter(Digest.id == digest_id).first()
+        digest = (
+            self.db.query(Digest)
+            .options(selectinload(Digest.digest_generation_config))
+            .filter(Digest.id == digest_id)
+            .first()
+        )
         if not digest:
             return None
 
@@ -77,6 +87,7 @@ class DigestService(SoftDeleteService[Digest]):
         """Get query for digests belonging to a specific project for pagination."""
         query = (
             self.db.query(Digest)
+            .options(selectinload(Digest.digest_generation_config))
             .filter(Digest.project_id == project_id)
             .order_by(Digest.created_at.desc())
         )
@@ -160,7 +171,9 @@ class DigestService(SoftDeleteService[Digest]):
         Returns:
             List[Digest]: List of digests matching the search criteria
         """
-        query = self.db.query(Digest)
+        query = self.db.query(Digest).options(
+            selectinload(Digest.digest_generation_config)
+        )
 
         # Filter by project_id if provided
         if project_id:

@@ -1,6 +1,6 @@
 import pytest
 from uuid import uuid4
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from app.constants.digest_constants import DigestStatuses
 
 
@@ -524,11 +524,16 @@ def test_generate_draft_digest(
     assert "Test body content for entry 0" in data["body"]
     assert "Latest update: Latest update for entry 0" in data["body"]
 
-    # Verify date range
+    # Verify date range - should be within the last 2 days for daily cron
     today = date.today()
+    yesterday = today - timedelta(days=1)
     from_date = datetime.fromisoformat(data["from_date"].replace("Z", "+00:00"))
     to_date = datetime.fromisoformat(data["to_date"].replace("Z", "+00:00"))
-    assert from_date.date() == today
+
+    # from_date should be either today or yesterday (depending on when the test runs vs cron schedule)
+    # The cron runs at 10 AM UTC daily, so if we're before 10 AM, from_date would be yesterday
+    assert from_date.date() in [today, yesterday]
+    # to_date should be today (when the digest is being generated)
     assert to_date.date() == today
 
 
