@@ -10,6 +10,7 @@ def main():
     default_pool = "solo" if sys.platform == "darwin" else "prefork"
     pool = os.getenv("CELERY_POOL", default_pool)
     concurrency = os.getenv("CELERY_CONCURRENCY", "1" if pool == "solo" else "4")
+    queues = os.getenv("CELERY_QUEUES")  # Optional: specify which queues to process
 
     argv = [
         "worker",
@@ -17,6 +18,9 @@ def main():
         f"--pool={pool}",
         f"--concurrency={concurrency}",
     ]
+
+    if queues:
+        argv.append(f"--queues={queues}")
     celery_app.worker_main(argv)
 
 

@@ -4,7 +4,7 @@ from app.config import get_settings
 
 settings = get_settings()
 
-celery_app = Celery("worker")
+celery_app = Celery("chrona-worker")
 
 celery_app.conf.update(
     broker_url=f"redis://{settings.redis_host}:{settings.redis_port}/0",
@@ -21,3 +21,16 @@ celery_app.conf.update(
 )
 
 celery_app.autodiscover_tasks(["app.tasks"])  # ensure tasks are registered explicitly
+
+# # Explicitly register tasks to ensure they're available
+# def register_tasks():
+#     """Explicitly import tasks to ensure registration."""
+#     try:
+#         from app.tasks.process_import_items import process_import_items  # noqa: F401
+#         from app.tasks.backfill_digests import backfill_digests_task  # noqa: F401
+#         print(f"✅ Tasks registered: process_import_items, backfill_digests_task")
+#     except ImportError as e:
+#         print(f"⚠️  Warning: Could not import tasks: {e}")
+
+# # Register tasks when this module is imported
+# register_tasks()

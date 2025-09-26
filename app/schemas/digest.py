@@ -140,3 +140,15 @@ class DigestBackfillResponse(BaseModel):
         ..., description="Number of digests that failed to create"
     )
     digests: List[Digest] = Field(..., description="List of created digests")
+
+
+class DigestBackfillTaskResponse(BaseModel):
+    """Schema for async backfill digests task response."""
+
+    task_id: str = Field(
+        ..., description="Celery task ID for tracking the backfill process"
+    )
+    message: str = Field(..., description="Status message about the backfill task")
+    estimated_completion_time: Optional[str] = Field(
+        None, description="Estimated completion time for the backfill task"
+    )
