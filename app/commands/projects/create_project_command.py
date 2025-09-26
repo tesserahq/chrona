@@ -45,8 +45,9 @@ class CreateProjectCommand:
         # Create a project membership for the user who created the project
         self._create_project_membership(project, created_by_id)
 
-        # Create project in Quore
-        self._create_quore_project(project, workspace)
+        if not project.quore_project_id:
+            # Create project in Quore
+            self._create_quore_project(project, workspace)
 
         return project
 
