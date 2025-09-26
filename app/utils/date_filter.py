@@ -123,8 +123,16 @@ def _matches_cron_pattern(cron: CronTab, check_time: datetime) -> bool:
         # Get the next execution time from just before our check time
         test_time = check_time - timedelta(minutes=1)
 
+        # Convert to naive datetime in the local timezone to work around cron library bug
+        # The cron library has issues with timezone-aware timestamps
+        if test_time.tzinfo is not None:
+            # Convert to naive datetime (this assumes the cron expression is in the same timezone)
+            test_time_naive = test_time.replace(tzinfo=None)
+        else:
+            test_time_naive = test_time
+
         # Calculate how many seconds until the next execution from test_time
-        next_seconds = cron.next(now=test_time.timestamp())
+        next_seconds = cron.next(now=test_time_naive.timestamp())
 
         # If the next execution is within the next minute, it matches our check_time
         return next_seconds <= 60

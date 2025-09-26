@@ -173,9 +173,16 @@ class BackfillDigestsCommand:
         # Use the cron library to find previous execution times
         while current_time > end_date:
             try:
+                # Convert to naive datetime to work around cron library timezone bug
+                # The cron library has issues with timezone-aware timestamps when default_utc=True
+                if current_time.tzinfo is not None:
+                    current_time_naive = current_time.replace(tzinfo=None)
+                else:
+                    current_time_naive = current_time
+
                 # Get seconds until previous execution from current time
                 prev_seconds = cron.previous(
-                    now=current_time.timestamp(), default_utc=True
+                    now=current_time_naive.timestamp(), default_utc=False
                 )
 
                 # Calculate the actual previous execution time
@@ -217,13 +224,19 @@ class BackfillDigestsCommand:
         :return: True if the time matches the cron pattern.
         """
         try:
+            # Convert to naive datetime to work around cron library timezone bug
+            if check_time.tzinfo is not None:
+                check_time_naive = check_time.replace(tzinfo=None)
+            else:
+                check_time_naive = check_time
+
             # Use the crontab library's test method to check if time matches
             # Convert datetime to timestamp for testing
-            timestamp = check_time.timestamp()
+            timestamp = check_time_naive.timestamp()
 
             # Get the time difference to the previous execution
             # The previous() method returns the number of seconds since the last execution
-            prev_seconds = cron.previous(now=timestamp, default_utc=True)
+            prev_seconds = cron.previous(now=timestamp, default_utc=False)
 
             # If the previous execution was very recent (within 60 seconds), it's a match
             return abs(prev_seconds) <= 60
