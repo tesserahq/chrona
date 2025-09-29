@@ -9,7 +9,7 @@ from app.schemas.gazette import (
     GazetteWithSectionsAndDigests,
     Gazette,
 )
-from app.schemas.digest import Digest as DigestSchema
+from app.schemas.digest import DigestWithEntries as DigestSchema
 from app.schemas.section import Section as SectionSchema, SectionWithDigests
 from app.constants.digest_constants import DigestStatuses
 
@@ -99,8 +99,13 @@ class GetGazetteWithDigestsCommand:
             status=DigestStatuses.PUBLISHED,
         )
 
-        # Convert to Pydantic schemas
-        digests = [DigestSchema.model_validate(digest) for digest in digest_models]
+        # Convert to Pydantic schemas with entries
+        digests = []
+        for digest_model in digest_models:
+            digest_id: UUID = cast(UUID, digest_model.id)
+            digest_with_entries = self.digest_service.get_digest_with_entries(digest_id)
+            if digest_with_entries:
+                digests.append(DigestSchema.model_validate(digest_with_entries))
 
         # For each section, get its associated digests
         sections_with_digests = []
@@ -127,10 +132,17 @@ class GetGazetteWithDigestsCommand:
                 status=DigestStatuses.PUBLISHED,
             )
 
-            # Convert section digests to Pydantic schemas
-            section_digests = [
-                DigestSchema.model_validate(digest) for digest in section_digest_models
-            ]
+            # Convert section digests to Pydantic schemas with entries
+            section_digests = []
+            for digest_model in section_digest_models:
+                section_digest_id: UUID = cast(UUID, digest_model.id)
+                digest_with_entries = self.digest_service.get_digest_with_entries(
+                    section_digest_id
+                )
+                if digest_with_entries:
+                    section_digests.append(
+                        DigestSchema.model_validate(digest_with_entries)
+                    )
 
             # Convert section to Pydantic schema
             section_schema = SectionSchema.model_validate(section_model)

@@ -136,7 +136,7 @@ class GazetteWithDigests(BaseModel):
     """Response schema for gazette with associated digests."""
 
     gazette: Gazette
-    digests: List["Digest"] = Field(
+    digests: List["DigestWithEntries"] = Field(
         default_factory=list,
         description="Published digests from the project that match the gazette's tags/labels",
     )
@@ -148,7 +148,7 @@ class GazetteWithSectionsAndDigests(BaseModel):
     """Response schema for gazette with sections and their associated digests."""
 
     gazette: Gazette
-    digests: List["Digest"] = Field(
+    digests: List["DigestWithEntries"] = Field(
         default_factory=list,
         description="Published digests from the project that match the gazette's tags/labels",
     )
@@ -161,7 +161,7 @@ class GazetteWithSectionsAndDigests(BaseModel):
 
 
 # Import schemas for forward references
-from app.schemas.digest import Digest
+from app.schemas.digest import DigestWithEntries
 from app.schemas.section import SectionWithDigests
 
 GazetteWithDigests.model_rebuild()

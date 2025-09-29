@@ -9,6 +9,10 @@ celery_app = Celery("chrona-worker")
 celery_app.conf.update(
     broker_url=f"redis://{settings.redis_host}:{settings.redis_port}/0",
     result_backend=f"redis://{settings.redis_host}:{settings.redis_port}/0",
+    task_default_queue="chrona",  # Use dedicated queue for chrona tasks
+    task_routes={
+        "app.tasks.*": {"queue": "chrona"},  # Route all app.tasks.* to chrona queue
+    },
 )
 
 # Optional configuration

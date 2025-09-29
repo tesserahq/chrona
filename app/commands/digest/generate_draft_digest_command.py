@@ -12,6 +12,7 @@ from app.services.project_service import ProjectService
 from app.utils.m2m_token import M2MTokenClient
 from app.utils.date_filter import calculate_digest_date_range
 from tessera_sdk import QuoreClient  # type: ignore
+from app.core.logging_config import get_logger
 
 
 class GenerateDraftDigestCommand:
@@ -35,12 +36,14 @@ class GenerateDraftDigestCommand:
         :return: The created draft Digest object.
         """
 
+        logger = get_logger()
+
         digest_generation_config = (
             self.digest_generation_config_service.get_digest_generation_config(
                 digest_generation_config_id
             )
         )
-
+        logger.info(f"Digest generation config: {digest_generation_config}")
         if not digest_generation_config:
             raise ValueError(
                 f"Digest generation config with ID {digest_generation_config_id} not found"
@@ -62,9 +65,12 @@ class GenerateDraftDigestCommand:
         entry_ids = [UUID(str(entry.id)) for entry in entries]
         entry_updates_ids = [UUID(str(update.id)) for update in entry_updates]
 
+        logger.info(f"Number of entries: {len(entry_ids)}")
+        logger.info(f"Number of entry updates: {len(entry_updates_ids)}")
         if len(entry_ids) == 0 and not digest_generation_config.generate_empty_digest:
             return None
 
+        logger.info(f"Creating digest")
         # Create the digest from the entries
         digest = self.digest_service.create_digest(
             DigestCreate(
@@ -76,6 +82,8 @@ class GenerateDraftDigestCommand:
                 digest_generation_config_id=UUID(str(digest_generation_config.id)),
                 project_id=UUID(str(digest_generation_config.project_id)),
                 status=DigestStatuses.GENGERATING,
+                tags=digest_generation_config.tags,
+                labels=digest_generation_config.labels,
                 ui_format=digest_generation_config.ui_format,
             ),
             created_at=execution_time,
@@ -91,6 +99,8 @@ class GenerateDraftDigestCommand:
         raw_body = formatted_body
         summary = formatted_body
 
+        logger.info(f"Project: {project.id}")
+        logger.info(f"Quore project ID: {project.quore_project_id}")
         if project and project.quore_project_id:
             m2m_token = self._get_m2m_token()
 
@@ -111,6 +121,7 @@ class GenerateDraftDigestCommand:
             )
             summary = summary_response.summary
 
+        logger.info(f"Updating digest: {digest.id}")
         updated_digest = self.digest_service.update_digest(
             UUID(str(digest.id)),
             DigestUpdate(
@@ -123,16 +134,6 @@ class GenerateDraftDigestCommand:
                 entry_updates_ids=entry_updates_ids,
                 from_date=from_date,
                 to_date=to_date,
-                tags=(
-                    list(digest_generation_config.tags)
-                    if digest_generation_config.tags
-                    else []
-                ),
-                labels=(
-                    dict(digest_generation_config.labels)
-                    if digest_generation_config.labels
-                    else {}
-                ),
             ),
         )
 

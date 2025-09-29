@@ -84,9 +84,6 @@ class DigestUpdate(BaseModel):
         None, description="UUID of the project this digest belongs to"
     )
     status: Optional[str] = Field(None, description="Status of the digest")
-    ui_format: Optional[Dict[str, Any]] = Field(
-        None, description="UI format for this digest"
-    )
 
 
 class Digest(DigestBase):

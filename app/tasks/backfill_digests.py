@@ -30,7 +30,7 @@ def backfill_digests_task(
     Returns:
         dict: Contains created_count, skipped_count, failed_count, deleted_count
     """
-    logger = get_logger()
+    logger = get_logger("chrona.tasks.backfill_digests")
     logger.info(
         f"Starting backfill task for {digest_generation_config_id} with {days} days"
     )

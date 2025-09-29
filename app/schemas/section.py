@@ -64,7 +64,7 @@ class SectionWithDigests(BaseModel):
     """Schema for section responses with associated digests."""
 
     section: Section
-    digests: List["Digest"] = Field(
+    digests: List["DigestWithEntries"] = Field(
         default_factory=list,
         description="Published digests from the project that match the section's tags/labels",
     )
@@ -72,7 +72,7 @@ class SectionWithDigests(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# Import Digest schema for forward reference
-from app.schemas.digest import Digest
+# Import DigestWithEntries schema for forward reference
+from app.schemas.digest import DigestWithEntries
 
 SectionWithDigests.model_rebuild()
