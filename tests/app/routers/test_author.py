@@ -263,3 +263,58 @@ def test_merge_authors_workspace_not_found(client):
     )
     assert response.status_code == 404
     assert "Workspace not found" in response.json()["detail"]
+
+
+def test_get_author_with_sources(client, setup_author, setup_source, db):
+    """Test GET /authors/{author_id} endpoint returns sources field."""
+    from app.models.source_author import SourceAuthor
+
+    author = setup_author
+    source = setup_source
+
+    # Create a source_author relationship
+    source_author = SourceAuthor(
+        author_id=author.id, source_id=source.id, source_author_id="external_123"
+    )
+    db.add(source_author)
+    db.commit()
+    db.refresh(source_author)
+
+    response = client.get(f"/authors/{author.id}")
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify the basic author fields
+    assert data["id"] == str(author.id)
+    assert data["display_name"] == author.display_name
+    assert data["email"] == author.email
+    assert data["avatar_url"] == author.avatar_url
+    assert data["workspace_id"] == str(author.workspace_id)
+
+    # Verify the sources field is present and contains the source
+    assert "sources" in data
+    assert isinstance(data["sources"], list)
+    assert len(data["sources"]) == 1
+
+    source_data = data["sources"][0]
+    assert source_data["id"] == str(source.id)
+    assert source_data["name"] == source.name
+    assert source_data["identifier"] == source.identifier
+
+
+def test_get_author_no_sources(client, setup_author):
+    """Test GET /authors/{author_id} endpoint returns empty sources field when author has no sources."""
+    author = setup_author
+
+    response = client.get(f"/authors/{author.id}")
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify the basic author fields
+    assert data["id"] == str(author.id)
+    assert data["display_name"] == author.display_name
+
+    # Verify the sources field is present but empty
+    assert "sources" in data
+    assert isinstance(data["sources"], list)
+    assert len(data["sources"]) == 0

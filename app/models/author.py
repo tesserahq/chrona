@@ -3,6 +3,7 @@ from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.hybrid import hybrid_property
 
 import uuid
 
@@ -33,3 +34,8 @@ class Author(Base, TimestampMixin, SoftDeleteMixin):
     workspace = relationship("Workspace", back_populates="authors")
     user = relationship("User", back_populates="authors")
     source_authors = relationship("SourceAuthor", back_populates="author")
+
+    @hybrid_property
+    def sources(self):
+        """Get all sources this author belongs to through source_authors relationship."""
+        return [source_author.source for source_author in self.source_authors]

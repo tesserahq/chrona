@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict, Any
 from uuid import UUID
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 
 from app.models.author import Author
@@ -17,8 +17,13 @@ class AuthorService(SoftDeleteService[Author]):
         super().__init__(db, Author)
 
     def get_author(self, author_id: UUID) -> Optional[Author]:
-        """Get a single author by ID."""
-        return self.db.query(Author).filter(Author.id == author_id).first()
+        """Get a single author by ID with eagerly loaded sources."""
+        return (
+            self.db.query(Author)
+            .options(joinedload(Author.source_authors).joinedload(SourceAuthor.source))
+            .filter(Author.id == author_id)
+            .first()
+        )
 
     def get_authors(self, skip: int = 0, limit: int = 100) -> List[Author]:
         """Get a list of authors with pagination."""

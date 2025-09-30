@@ -4,6 +4,16 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 
+class SourceSummary(BaseModel):
+    """Summary of source information for authors."""
+
+    id: UUID = Field(..., description="Unique identifier for the source")
+    name: str = Field(..., description="Name of the source")
+    identifier: str = Field(..., description="Unique identifier for the source")
+
+    model_config = {"from_attributes": True}
+
+
 class AuthorBase(BaseModel):
     """Base author schema with common fields."""
 
@@ -69,6 +79,9 @@ class Author(AuthorBase):
     )
     user_id: Optional[UUID] = Field(
         None, description="Optional user ID if author is linked to a user"
+    )
+    sources: List[SourceSummary] = Field(
+        default_factory=list, description="Sources this author belongs to"
     )
     created_at: datetime = Field(
         ..., description="Timestamp when the author was created"
