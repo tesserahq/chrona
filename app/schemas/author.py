@@ -47,6 +47,19 @@ class AuthorUpdate(BaseModel):
     )
 
 
+class AuthorMerge(BaseModel):
+    """Schema for merging multiple authors into one."""
+
+    author_ids: List[UUID] = Field(
+        ...,
+        min_length=1,
+        description="List of author IDs to merge (must contain at least one)",
+    )
+    merge_to_author_id: UUID = Field(
+        ..., description="ID of the author to merge into (target author)"
+    )
+
+
 class Author(AuthorBase):
     """Schema for author responses."""
 

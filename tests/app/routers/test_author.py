@@ -218,3 +218,48 @@ def test_update_author_partial(client, setup_author):
     # Other fields should remain unchanged
     assert data["email"] == author.email
     assert data["avatar_url"] == author.avatar_url
+
+
+def test_merge_authors_validation_error(client, setup_workspace):
+    """Test POST /workspaces/{workspace_id}/authors/merge with validation errors."""
+    workspace = setup_workspace
+
+    # Test empty author_ids list
+    payload = {"author_ids": [], "merge_to_author_id": str(uuid4())}
+
+    response = client.post(f"/workspaces/{workspace.id}/authors/merge", json=payload)
+    assert response.status_code == 422  # Validation error due to min_length=1
+
+    # Test invalid UUID format
+    payload = {
+        "author_ids": ["invalid-uuid"],
+        "merge_to_author_id": "also-invalid-uuid",
+    }
+
+    response = client.post(f"/workspaces/{workspace.id}/authors/merge", json=payload)
+    assert response.status_code == 422  # Validation error
+
+
+def test_merge_authors_not_found(client, setup_workspace):
+    """Test POST /workspaces/{workspace_id}/authors/merge with non-existent authors."""
+    workspace = setup_workspace
+    fake_author_id = str(uuid4())
+    target_author_id = str(uuid4())
+
+    payload = {"author_ids": [fake_author_id], "merge_to_author_id": target_author_id}
+
+    response = client.post(f"/workspaces/{workspace.id}/authors/merge", json=payload)
+    assert response.status_code == 400
+    assert "not found in this workspace" in response.json()["detail"]
+
+
+def test_merge_authors_workspace_not_found(client):
+    """Test POST /workspaces/{workspace_id}/authors/merge with non-existent workspace."""
+    fake_workspace_id = str(uuid4())
+    payload = {"author_ids": [str(uuid4())], "merge_to_author_id": str(uuid4())}
+
+    response = client.post(
+        f"/workspaces/{fake_workspace_id}/authors/merge", json=payload
+    )
+    assert response.status_code == 404
+    assert "Workspace not found" in response.json()["detail"]
