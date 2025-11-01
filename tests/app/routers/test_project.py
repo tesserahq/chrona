@@ -1,3 +1,7 @@
+from uuid import uuid4
+
+from app.models.project import Project
+from app.constants.digest_constants import DigestStatuses
 from app.constants.import_constants import ImportRequestStatuses
 
 
@@ -613,3 +617,84 @@ def test_list_project_digests_pagination(client, setup_project):
     assert "pages" in data
     assert "size" in data
     assert data["size"] == 10
+
+
+def test_create_project_digest_success(client, setup_digest_generation_config):
+    """Test POST /projects/{project_id}/digests creates a digest for the project."""
+
+    config = setup_digest_generation_config
+
+    payload = {
+        "title": "Weekly Digest",
+        "body": "Summary of the week's work",
+        "raw_body": "Summary of the week's work",
+        "tags": ["weekly"],
+        "labels": {"priority": "high"},
+        "digest_generation_config_id": str(config.id),
+    }
+
+    response = client.post(f"/projects/{config.project_id}/digests", json=payload)
+    assert response.status_code == 201
+
+    data = response.json()
+    assert "data" in data
+    digest = data["data"]
+
+    assert digest["title"] == payload["title"]
+    assert digest["body"] == payload["body"]
+    assert digest["raw_body"] == payload["raw_body"]
+    assert digest["project_id"] == str(config.project_id)
+    assert digest["digest_generation_config_id"] == str(config.id)
+    assert digest["status"] == DigestStatuses.DRAFT
+    assert digest["tags"] == payload["tags"]
+    assert digest["labels"] == payload["labels"]
+    assert digest["entries_ids"] == []
+    assert digest["entry_updates_ids"] == []
+
+
+def test_create_project_digest_config_mismatch(
+    client, setup_digest_generation_config, setup_project, db, faker
+):
+    """Test POST /projects/{project_id}/digests with a config from another project."""
+
+    config = setup_digest_generation_config
+
+    # Create a second project in the same workspace
+    project1 = setup_project
+    project2 = Project(
+        name=faker.company(),
+        description=faker.text(100),
+        workspace_id=project1.workspace_id,
+    )
+    db.add(project2)
+    db.commit()
+    db.refresh(project2)
+
+    payload = {
+        "title": "Weekly Digest",
+        "body": "Summary of the week's work",
+        "digest_generation_config_id": str(config.id),
+    }
+
+    response = client.post(f"/projects/{project2.id}/digests", json=payload)
+    assert response.status_code == 404
+    assert (
+        response.json()["detail"]
+        == "Digest generation config does not belong to the specified project"
+    )
+
+
+def test_create_project_digest_config_not_found(client, setup_project):
+    """Test POST /projects/{project_id}/digests with a missing config."""
+
+    project = setup_project
+
+    payload = {
+        "title": "Weekly Digest",
+        "body": "Summary of the week's work",
+        "digest_generation_config_id": str(uuid4()),
+    }
+
+    response = client.post(f"/projects/{project.id}/digests", json=payload)
+    assert response.status_code == 404
+    assert "Digest generation config" in response.json()["detail"]

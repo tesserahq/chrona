@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session, selectinload
 from app.models.digest import Digest
 from app.models.entry import Entry
-from app.schemas.digest import DigestCreate, DigestUpdate
+from app.schemas.digest import DigestCreate, DigestUpdate, ProjectDigestCreateRequest
 from app.services.soft_delete_service import SoftDeleteService
 from app.services.project_service import ProjectService
 from app.exceptions.resource_not_found_error import ResourceNotFoundError
@@ -120,6 +120,37 @@ class DigestService(SoftDeleteService[Digest]):
         self.db.commit()
         self.db.refresh(db_digest)
         return db_digest
+
+    def create_project_digest(
+        self, project_id: UUID, digest: ProjectDigestCreateRequest
+    ) -> Digest:
+        """Create a new digest scoped to a specific project."""
+
+        from app.services.digest_generation_config_service import (  # Local import to avoid circular dependency
+            DigestGenerationConfigService,
+        )
+
+        config_service = DigestGenerationConfigService(self.db)
+        config = config_service.get_digest_generation_config(
+            digest.digest_generation_config_id
+        )
+        if not config:
+            raise ResourceNotFoundError(
+                "Digest generation config "
+                f"with ID {digest.digest_generation_config_id} not found"
+            )
+
+        if config.project_id != project_id:
+            raise ResourceNotFoundError(
+                "Digest generation config does not belong to the specified project"
+            )
+
+        digest_create = DigestCreate(
+            **digest.model_dump(exclude_none=True),
+            project_id=project_id,
+        )
+
+        return self.create_digest(digest_create)
 
     def update_digest(self, digest_id: UUID, digest: DigestUpdate) -> Optional[Digest]:
         """Update an existing digest."""

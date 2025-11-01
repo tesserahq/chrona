@@ -30,7 +30,7 @@ from app.schemas.project_membership import (
     ProjectMembershipInDB,
     ProjectMembershipResponse,
 )
-from app.schemas.common import ListResponse
+from app.schemas.common import DataResponse, ListResponse
 from app.models.project_membership import ProjectMembership
 from app.schemas.project_import import ImportItemRequest, ImportItemResponse
 from app.commands.projects.import_items_command import ImportItemsCommand
@@ -38,7 +38,8 @@ from app.tasks.process_import_items import process_import_items
 from app.schemas.system import FeedProjectRequest, FeedProjectResponse
 from app.services.feed_project_service import FeedProjectService
 from app.services.digest_service import DigestService
-from app.schemas.digest import Digest
+from app.schemas.digest import Digest, ProjectDigestCreateRequest
+from app.exceptions.resource_not_found_error import ResourceNotFoundError
 
 router = APIRouter(prefix="/projects", tags=["workspace-projects"])
 
@@ -82,6 +83,28 @@ def list_project_memberships(
     service = ProjectMembershipService(db)
     memberships = service.get_memberships_by_project(UUID(str(project.id)), skip, limit)
     return ListResponse(data=memberships)
+
+
+@router.post(
+    "/{project_id}/digests",
+    response_model=DataResponse[Digest],
+    status_code=status.HTTP_201_CREATED,
+)
+def create_project_digest(
+    digest_request: ProjectDigestCreateRequest,
+    project: ProjectModel = Depends(get_project_by_id),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Create a new digest within a specific project."""
+
+    service = DigestService(db)
+
+    try:
+        digest = service.create_project_digest(UUID(str(project.id)), digest_request)
+    except ResourceNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    return DataResponse(data=digest)
 
 
 @router.get("/{project_id}/digests", response_model=Page[Digest])
