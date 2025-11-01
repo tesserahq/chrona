@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any, List, TYPE_CHECKING
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from app.constants.digest_constants import DigestStatuses
 
@@ -12,8 +12,8 @@ else:
     from app.schemas.digest_generation_config import DigestGenerationConfigSummary
 
 
-class DigestBase(BaseModel):
-    """Base digest schema with common fields."""
+class DigestSharedFields(BaseModel):
+    """Fields shared across digest payload representations."""
 
     title: str = Field(..., min_length=1, description="Title of the digest")
     body: Optional[str] = Field(None, description="Body content of the digest")
@@ -41,14 +41,22 @@ class DigestBase(BaseModel):
         ...,
         description="UUID of the digest generation config used to create this digest",
     )
-    project_id: UUID = Field(
-        ..., description="UUID of the project this digest belongs to"
-    )
     status: str = Field(
         default=DigestStatuses.DRAFT, description="Status of the digest"
     )
     ui_format: Optional[Dict[str, Any]] = Field(
         None, description="UI format for this digest"
+    )
+    created_at: datetime = Field(
+        default_factory=datetime.now, description="Creation time of the digest"
+    )
+
+
+class DigestBase(DigestSharedFields):
+    """Base digest schema with project linkage."""
+
+    project_id: UUID = Field(
+        ..., description="UUID of the project this digest belongs to"
     )
 
 
@@ -56,6 +64,12 @@ class DigestCreate(DigestBase):
     """Schema for creating a new digest."""
 
     pass
+
+
+class ProjectDigestCreateRequest(DigestSharedFields):
+    """Schema for creating a digest within a project scope via the API."""
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class DigestUpdate(BaseModel):
