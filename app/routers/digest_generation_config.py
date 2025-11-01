@@ -3,10 +3,12 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
+    Body,
     status,
 )
 from sqlalchemy.orm import Session
 from uuid import UUID
+from typing import Optional
 
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -17,6 +19,7 @@ from app.schemas.digest_generation_config import (
     DigestGenerationConfigUpdate,
     DigestGenerationConfig,
     DigestGenerationConfigSearchFilters,
+    DraftDigestRequest,
 )
 from app.schemas.digest import (
     Digest,
@@ -153,17 +156,33 @@ def update_digest_generation_config(
     status_code=status.HTTP_201_CREATED,
 )
 def generate_draft_digest(
+    request: Optional[DraftDigestRequest] = Body(default=None),
     digest_generation_config: DigestGenerationConfigModel = Depends(
         get_digest_generation_config_by_id
     ),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Generate a draft digest for a digest generation config."""
+    """Generate a draft digest for a digest generation config.
+
+    Optionally accepts settings to override default generation behavior:
+    - date_filter: Specify a custom date range for entries
+    - from_last_digest: Retrieve entries from the last digest's created_at date
+
+    Note: date_filter and from_last_digest are mutually exclusive.
+    """
     command = GenerateDraftDigestCommand(db)
     try:
-        draft_digest = command.execute(UUID(str(digest_generation_config.id)))
+        settings = request.settings if request else None
+        draft_digest = command.execute(
+            UUID(str(digest_generation_config.id)), settings=settings
+        )
         return draft_digest
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except ResourceNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

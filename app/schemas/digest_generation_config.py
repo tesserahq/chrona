@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any, List, Union, Literal
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from datetime import datetime
 
 
@@ -137,6 +137,49 @@ class DigestGenerationConfigSummary(BaseModel):
     )
 
     model_config = {"from_attributes": True}
+
+
+class DateFilter(BaseModel):
+    """Schema for date filter settings."""
+
+    from_date: datetime = Field(
+        ..., alias="from", description="Start date for the filter"
+    )
+    to_date: datetime = Field(..., alias="to", description="End date for the filter")
+
+    model_config = {"populate_by_name": True}
+
+
+class DigestGenerationSettings(BaseModel):
+    """Schema for digest generation settings that override default behavior."""
+
+    date_filter: Optional[DateFilter] = Field(
+        None,
+        description="Date range filter to override default cron-based date calculation",
+    )
+    from_last_digest: Optional[bool] = Field(
+        None,
+        description="If true, retrieve entries from the last digest's created_at date",
+    )
+
+    @model_validator(mode="after")
+    def validate_mutually_exclusive(self) -> "DigestGenerationSettings":
+        """Validate that date_filter and from_last_digest are mutually exclusive."""
+        if self.date_filter is not None and self.from_last_digest is True:
+            raise ValueError(
+                "date_filter and from_last_digest cannot both be set. "
+                "If date_filter is provided, from_last_digest must be false or not provided."
+            )
+        return self
+
+
+class DraftDigestRequest(BaseModel):
+    """Schema for draft digest generation request with optional settings."""
+
+    settings: Optional[DigestGenerationSettings] = Field(
+        None,
+        description="Optional settings to override default digest generation logic",
+    )
 
 
 # DigestGenerationConfigSearchResponse is no longer needed as we use Page[DigestGenerationConfig] from fastapi-pagination

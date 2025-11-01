@@ -10,6 +10,7 @@ from app.models.digest import Digest
 from app.schemas.digest_generation_config import (
     DigestGenerationConfigCreate,
     DigestGenerationConfigUpdate,
+    DigestGenerationSettings,
 )
 from app.schemas.digest import DigestCreate
 from app.services.soft_delete_service import SoftDeleteService
@@ -122,6 +123,7 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
         self,
         digest_generation_config_id: UUID,
         execution_time: Optional[datetime] = None,
+        settings: Optional[DigestGenerationSettings] = None,
     ) -> Tuple[List[Entry], List[EntryUpdate], DigestGenerationConfig]:
         """Get all entries and entry updates for a digest generation config.
 
@@ -129,10 +131,12 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
         - Belong to the specified project
         - Match the filter_tags and filter_labels (if specified)
         - Have entry updates created within the calculated date range based on cron expression
+        - Or within the date range specified by settings
 
         Args:
             digest_generation_config_id: ID of the digest generation config
             execution_time: Time when the digest is being generated (defaults to now)
+            settings: Optional settings to override default date calculation
 
         Returns:
             tuple: (entries, entry_updates, config)
@@ -144,10 +148,39 @@ class DigestGenerationConfigService(SoftDeleteService[DigestGenerationConfig]):
                 f"Digest generation config with ID {digest_generation_config_id} not found"
             )
 
-        # Calculate date range based on cron expression and timezone
-        start_date, end_date = calculate_digest_date_range(
-            str(config.cron_expression), str(config.timezone), execution_time
-        )
+        # Determine date range based on settings or default calculation
+        if settings and settings.date_filter:
+            # Use provided date filter
+            start_date = settings.date_filter.from_date
+            end_date = settings.date_filter.to_date
+        elif settings and settings.from_last_digest:
+            # Get the last digest for this config and use its created_at as start_date
+            last_digest = (
+                self.db.query(Digest)
+                .filter(
+                    and_(
+                        Digest.digest_generation_config_id
+                        == digest_generation_config_id,
+                        Digest.deleted_at.is_(None),
+                    )
+                )
+                .order_by(desc(Digest.created_at))
+                .first()
+            )
+            if last_digest:
+                start_date = last_digest.created_at
+                end_date = execution_time if execution_time else datetime.utcnow()
+            else:
+                # No previous digest found, raise an error
+                raise ResourceNotFoundError(
+                    f"No previous digest found for digest generation config {digest_generation_config_id}. "
+                    "Cannot use from_last_digest option."
+                )
+        else:
+            # Calculate date range based on cron expression and timezone
+            start_date, end_date = calculate_digest_date_range(
+                str(config.cron_expression), str(config.timezone), execution_time
+            )
 
         # Build the query to find entries with entry updates in the calculated date range
         # Join entries with entry_updates and filter by entry_update.source_created_at

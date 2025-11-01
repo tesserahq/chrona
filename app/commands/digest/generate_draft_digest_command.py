@@ -1,10 +1,12 @@
 from uuid import UUID
 from typing import Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
 from app.config import get_settings
 from app.constants.digest_constants import DigestStatuses
 from app.models.digest import Digest
 from app.schemas.digest import DigestCreate, DigestUpdate
+from app.schemas.digest_generation_config import DigestGenerationSettings
 from app.services.digest_generation_config_service import DigestGenerationConfigService
 from datetime import datetime
 from app.services.digest_service import DigestService
@@ -27,12 +29,14 @@ class GenerateDraftDigestCommand:
         self,
         digest_generation_config_id: UUID,
         execution_time: Optional[datetime] = None,
+        settings: Optional[DigestGenerationSettings] = None,
     ) -> Optional[Digest]:
         """
         Execute the command to generate a draft digest.
 
         :param digest_generation_config_id: The ID of the digest generation config.
         :param execution_time: Time when the digest is being generated (defaults to now).
+        :param settings: Optional settings to override default generation behavior.
         :return: The created draft Digest object.
         """
 
@@ -49,17 +53,41 @@ class GenerateDraftDigestCommand:
                 f"Digest generation config with ID {digest_generation_config_id} not found"
             )
 
-        # Calculate the date range based on cron expression and timezone
-        from_date, to_date = calculate_digest_date_range(
-            str(digest_generation_config.cron_expression),
-            str(digest_generation_config.timezone),
-            execution_time,
-        )
+        # Determine date range: use settings if provided, otherwise calculate from cron
+        if settings and settings.date_filter:
+            from_date = settings.date_filter.from_date
+            to_date = settings.date_filter.to_date
+        elif settings and settings.from_last_digest:
+            # Get the last digest for this config and use its created_at as start_date
+            last_digest = (
+                self.db.query(Digest)
+                .filter(
+                    Digest.digest_generation_config_id == digest_generation_config_id,
+                    Digest.deleted_at.is_(None),
+                )
+                .order_by(Digest.created_at.desc())
+                .first()
+            )
+            if last_digest:
+                from_date = last_digest.created_at
+                to_date = execution_time if execution_time else datetime.utcnow()
+            else:
+                raise ValueError(
+                    f"No previous digest found for digest generation config {digest_generation_config_id}. "
+                    "Cannot use from_last_digest option."
+                )
+        else:
+            # Calculate the date range based on cron expression and timezone
+            from_date, to_date = calculate_digest_date_range(
+                str(digest_generation_config.cron_expression),
+                str(digest_generation_config.timezone),
+                execution_time,
+            )
 
         # Get entries and entry updates for the digest
         entries, entry_updates, config = (
             self.digest_generation_config_service.get_entries_for_digest(
-                digest_generation_config_id, execution_time
+                digest_generation_config_id, execution_time, settings=settings
             )
         )
         entry_ids = [UUID(str(entry.id)) for entry in entries]
