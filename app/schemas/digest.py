@@ -50,6 +50,9 @@ class DigestSharedFields(BaseModel):
     created_at: datetime = Field(
         default_factory=datetime.now, description="Creation time of the digest"
     )
+    published_at: Optional[datetime] = Field(
+        None, description="Published time of the digest"
+    )
 
 
 class DigestBase(DigestSharedFields):
@@ -98,6 +101,9 @@ class DigestUpdate(BaseModel):
         None, description="UUID of the project this digest belongs to"
     )
     status: Optional[str] = Field(None, description="Status of the digest")
+    published_at: Optional[datetime] = Field(
+        None, description="Published time of the digest"
+    )
 
 
 class Digest(DigestBase):
