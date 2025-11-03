@@ -143,12 +143,35 @@ class SearchOperator(BaseModel):
     value: Any
 
 
+class DateRangeFilter(BaseModel):
+    """Schema for date range filter settings."""
+
+    from_date: datetime = Field(
+        ..., alias="from", description="Start date for the filter"
+    )
+    to_date: datetime = Field(..., alias="to", description="End date for the filter")
+
+    model_config = {"populate_by_name": True}
+
+
 class EntrySearchFilters(BaseModel):
     title: Optional[Union[str, SearchOperator]] = None
     source_id: Optional[Union[UUID, SearchOperator]] = None
     external_id: Optional[Union[str, SearchOperator]] = None
     source_author_id: Optional[Union[UUID, SearchOperator]] = None
     project_id: Optional[Union[UUID, SearchOperator]] = None
+    tags: Optional[Union[List[str], SearchOperator]] = Field(
+        None,
+        description="Filter by tags. Can be a list of tags (finds entries with ANY of these tags) or a SearchOperator.",
+    )
+    created_at: Optional[Union[datetime, SearchOperator, DateRangeFilter]] = Field(
+        None,
+        description="Filter by entry creation date. Can be a direct datetime value, a SearchOperator with >=, <=, etc., or a DateRangeFilter with 'from' and 'to' fields.",
+    )
+    updated_at: Optional[Union[datetime, SearchOperator, DateRangeFilter]] = Field(
+        None,
+        description="Filter by entry update date. Can be a direct datetime value, a SearchOperator with >=, <=, etc., or a DateRangeFilter with 'from' and 'to' fields.",
+    )
 
 
 # EntrySearchResponse is no longer needed as we use Page[EntryResponse] from fastapi-pagination

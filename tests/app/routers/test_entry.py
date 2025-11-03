@@ -386,3 +386,149 @@ def test_search_entries_invalid_project(client):
     )
     assert response.status_code == 404
     assert response.json()["detail"] == "Project not found"
+
+
+def test_search_entries_by_created_at_date_range(client, setup_entry):
+    """Test POST /projects/{project_id}/entries/search with created_at date range filter."""
+    entry = setup_entry
+    from datetime import datetime, timedelta
+
+    # Get entry's created_at date
+    entry_created_at = datetime.fromisoformat(
+        entry.created_at.isoformat().replace("+00:00", "")
+    )
+
+    # Search for entries created in a range that includes our entry
+    from_date = (entry_created_at - timedelta(days=1)).isoformat() + "Z"
+    to_date = (entry_created_at + timedelta(days=1)).isoformat() + "Z"
+
+    search_filters = {
+        "created_at": {"from": from_date, "to": to_date},
+    }
+
+    response = client.post(
+        f"/projects/{entry.project_id}/entries/search", json=search_filters
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert len(data["items"]) >= 1
+    assert any(item["id"] == str(entry.id) for item in data["items"])
+
+    # Search for entries created before our entry (should exclude it)
+    before_from = (entry_created_at - timedelta(days=2)).isoformat() + "Z"
+    before_to = (entry_created_at - timedelta(days=1)).isoformat() + "Z"
+
+    search_filters = {
+        "created_at": {"from": before_from, "to": before_to},
+    }
+
+    response = client.post(
+        f"/projects/{entry.project_id}/entries/search", json=search_filters
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    # Our entry should not be in the results
+    assert not any(item["id"] == str(entry.id) for item in data["items"])
+
+
+def test_search_entries_by_updated_at_date_range(client, setup_entry):
+    """Test POST /projects/{project_id}/entries/search with updated_at date range filter."""
+    entry = setup_entry
+    from datetime import datetime, timedelta
+
+    # Update the entry to set a specific updated_at
+    update_data = {"title": "Updated for date test"}
+    update_response = client.put(f"/entries/{entry.id}", json=update_data)
+    assert update_response.status_code == 200
+    updated_entry = update_response.json()
+
+    # Get entry's updated_at date
+    entry_updated_at = datetime.fromisoformat(
+        updated_entry["updated_at"].replace("Z", "+00:00")
+    )
+
+    # Search for entries updated in a range that includes our entry
+    from_date = (
+        (entry_updated_at - timedelta(days=1)).isoformat().replace("+00:00", "Z")
+    )
+    to_date = (entry_updated_at + timedelta(days=1)).isoformat().replace("+00:00", "Z")
+
+    search_filters = {
+        "updated_at": {"from": from_date, "to": to_date},
+    }
+
+    response = client.post(
+        f"/projects/{entry.project_id}/entries/search", json=search_filters
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert len(data["items"]) >= 1
+    assert any(item["id"] == str(entry.id) for item in data["items"])
+
+    # Search for entries updated before our entry was updated (should exclude it)
+    before_from = (
+        (entry_updated_at - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+    )
+    before_to = (
+        (entry_updated_at - timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+    )
+
+    search_filters = {
+        "updated_at": {"from": before_from, "to": before_to},
+    }
+
+    response = client.post(
+        f"/projects/{entry.project_id}/entries/search", json=search_filters
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    # Our entry should not be in the results since it was updated more recently
+    assert not any(item["id"] == str(entry.id) for item in data["items"])
+
+
+def test_search_entries_combined_date_range_filters(client, setup_entry):
+    """Test POST /projects/{project_id}/entries/search with both created_at and updated_at filters."""
+    entry = setup_entry
+    from datetime import datetime, timedelta
+
+    # Update the entry
+    update_data = {"title": "Updated for combined test"}
+    update_response = client.put(f"/entries/{entry.id}", json=update_data)
+    assert update_response.status_code == 200
+    updated_entry = update_response.json()
+
+    # Get dates
+    entry_created_at = datetime.fromisoformat(
+        entry.created_at.isoformat().replace("+00:00", "")
+    )
+    entry_updated_at = datetime.fromisoformat(
+        updated_entry["updated_at"].replace("Z", "+00:00")
+    )
+
+    # Search with both filters
+    created_from = (entry_created_at - timedelta(days=1)).isoformat() + "Z"
+    created_to = (entry_created_at + timedelta(days=1)).isoformat() + "Z"
+    updated_from = (
+        (entry_updated_at - timedelta(days=1)).isoformat().replace("+00:00", "Z")
+    )
+    updated_to = (
+        (entry_updated_at + timedelta(days=1)).isoformat().replace("+00:00", "Z")
+    )
+
+    search_filters = {
+        "created_at": {"from": created_from, "to": created_to},
+        "updated_at": {"from": updated_from, "to": updated_to},
+    }
+
+    response = client.post(
+        f"/projects/{entry.project_id}/entries/search", json=search_filters
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert len(data["items"]) >= 1
+    assert any(item["id"] == str(entry.id) for item in data["items"])

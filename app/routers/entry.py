@@ -49,11 +49,16 @@ def search_entries(
     - A search operator object with:
         - operator: One of "=", "!=", ">", "<", ">=", "<=", "ilike", "in", "not in"
         - value: The value to compare against
+    - For created_at and updated_at: A DateRangeFilter object with "from" and "to" fields for date range filtering
+    - For tags: A list of tags (finds entries that have ANY of the specified tags)
 
     Example:
     {
         "title": {"operator": "ilike", "value": "%test%"},
-        "author_id": "123e4567-e89b-12d3-a456-426614174000"
+        "author_id": "123e4567-e89b-12d3-a456-426614174000",
+        "tags": ["bug", "urgent"],
+        "created_at": {"from": "2025-01-01T00:00:00Z", "to": "2025-12-31T23:59:59Z"},
+        "updated_at": {"from": "2025-06-01T00:00:00Z", "to": "2025-06-30T23:59:59Z"}
     }
     """
     service = EntryService(db)
