@@ -1,7 +1,6 @@
 from uuid import UUID
 from typing import Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
 from app.config import get_settings
 from app.constants.digest_constants import DigestStatuses
 from app.models.digest import Digest
@@ -98,7 +97,7 @@ class GenerateDraftDigestCommand:
         if len(entry_ids) == 0 and not digest_generation_config.generate_empty_digest:
             return None
 
-        logger.info(f"Creating digest")
+        logger.info("Creating digest")
         # Create the digest from the entries
         digest = self.digest_service.create_digest(
             DigestCreate(

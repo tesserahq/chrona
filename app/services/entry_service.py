@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict, Any
 from uuid import UUID
+from datetime import datetime
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models.entry import Entry

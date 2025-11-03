@@ -8,7 +8,6 @@ from app.commands.digest.backfill_digests_command import (
     BackfillDigestsCommand,
     BackfillResult,
 )
-from app.schemas.digest import DigestBackfillRequest
 from app.exceptions.resource_not_found_error import ResourceNotFoundError
 
 

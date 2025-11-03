@@ -25,7 +25,7 @@ def process_import_items(import_request_id: str) -> None:
     print(f"DEBUG: Logger propagate: {logger.propagate}")
 
     logger.info(f"Processing import items for import request {import_request_id}")
-    print(f"DEBUG: Logger.info called")
+    print("DEBUG: Logger.info called")
     db = SessionLocal()
     try:
         try:
