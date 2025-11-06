@@ -388,22 +388,27 @@ def test_search_entries_invalid_project(client):
     assert response.json()["detail"] == "Project not found"
 
 
-def test_search_entries_by_created_at_date_range(client, setup_entry):
-    """Test POST /projects/{project_id}/entries/search with created_at date range filter."""
+def test_search_entries_by_source_created_at_date_range(client, setup_entry, db):
+    """Test POST /projects/{project_id}/entries/search with source_created_at date range filter."""
     entry = setup_entry
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
 
-    # Get entry's created_at date
-    entry_created_at = datetime.fromisoformat(
-        entry.created_at.isoformat().replace("+00:00", "")
-    )
+    # Set a specific source_created_at date for the entry
+    entry_source_created_at = datetime(2025, 11, 2, 12, 0, 0, tzinfo=timezone.utc)
+    entry.source_created_at = entry_source_created_at
+    db.commit()
+    db.refresh(entry)
 
     # Search for entries created in a range that includes our entry
-    from_date = (entry_created_at - timedelta(days=1)).isoformat() + "Z"
-    to_date = (entry_created_at + timedelta(days=1)).isoformat() + "Z"
+    from_date = (
+        (entry_source_created_at - timedelta(days=1)).isoformat().replace("+00:00", "Z")
+    )
+    to_date = (
+        (entry_source_created_at + timedelta(days=1)).isoformat().replace("+00:00", "Z")
+    )
 
     search_filters = {
-        "created_at": {"from": from_date, "to": to_date},
+        "source_created_at": {"from": from_date, "to": to_date},
     }
 
     response = client.post(
@@ -416,11 +421,15 @@ def test_search_entries_by_created_at_date_range(client, setup_entry):
     assert any(item["id"] == str(entry.id) for item in data["items"])
 
     # Search for entries created before our entry (should exclude it)
-    before_from = (entry_created_at - timedelta(days=2)).isoformat() + "Z"
-    before_to = (entry_created_at - timedelta(days=1)).isoformat() + "Z"
+    before_from = (
+        (entry_source_created_at - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+    )
+    before_to = (
+        (entry_source_created_at - timedelta(days=1)).isoformat().replace("+00:00", "Z")
+    )
 
     search_filters = {
-        "created_at": {"from": before_from, "to": before_to},
+        "source_created_at": {"from": before_from, "to": before_to},
     }
 
     response = client.post(
@@ -433,30 +442,27 @@ def test_search_entries_by_created_at_date_range(client, setup_entry):
     assert not any(item["id"] == str(entry.id) for item in data["items"])
 
 
-def test_search_entries_by_updated_at_date_range(client, setup_entry):
-    """Test POST /projects/{project_id}/entries/search with updated_at date range filter."""
+def test_search_entries_by_source_updated_at_date_range(client, setup_entry, db):
+    """Test POST /projects/{project_id}/entries/search with source_updated_at date range filter."""
     entry = setup_entry
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
 
-    # Update the entry to set a specific updated_at
-    update_data = {"title": "Updated for date test"}
-    update_response = client.put(f"/entries/{entry.id}", json=update_data)
-    assert update_response.status_code == 200
-    updated_entry = update_response.json()
-
-    # Get entry's updated_at date
-    entry_updated_at = datetime.fromisoformat(
-        updated_entry["updated_at"].replace("Z", "+00:00")
-    )
+    # Set a specific source_updated_at date for the entry
+    entry_source_updated_at = datetime(2025, 11, 2, 12, 0, 0, tzinfo=timezone.utc)
+    entry.source_updated_at = entry_source_updated_at
+    db.commit()
+    db.refresh(entry)
 
     # Search for entries updated in a range that includes our entry
     from_date = (
-        (entry_updated_at - timedelta(days=1)).isoformat().replace("+00:00", "Z")
+        (entry_source_updated_at - timedelta(days=1)).isoformat().replace("+00:00", "Z")
     )
-    to_date = (entry_updated_at + timedelta(days=1)).isoformat().replace("+00:00", "Z")
+    to_date = (
+        (entry_source_updated_at + timedelta(days=1)).isoformat().replace("+00:00", "Z")
+    )
 
     search_filters = {
-        "updated_at": {"from": from_date, "to": to_date},
+        "source_updated_at": {"from": from_date, "to": to_date},
     }
 
     response = client.post(
@@ -470,14 +476,16 @@ def test_search_entries_by_updated_at_date_range(client, setup_entry):
 
     # Search for entries updated before our entry was updated (should exclude it)
     before_from = (
-        (entry_updated_at - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+        (entry_source_updated_at - timedelta(days=2)).isoformat().replace("+00:00", "Z")
     )
     before_to = (
-        (entry_updated_at - timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+        (entry_source_updated_at - timedelta(hours=1))
+        .isoformat()
+        .replace("+00:00", "Z")
     )
 
     search_filters = {
-        "updated_at": {"from": before_from, "to": before_to},
+        "source_updated_at": {"from": before_from, "to": before_to},
     }
 
     response = client.post(
@@ -490,38 +498,36 @@ def test_search_entries_by_updated_at_date_range(client, setup_entry):
     assert not any(item["id"] == str(entry.id) for item in data["items"])
 
 
-def test_search_entries_combined_date_range_filters(client, setup_entry):
-    """Test POST /projects/{project_id}/entries/search with both created_at and updated_at filters."""
+def test_search_entries_combined_date_range_filters(client, setup_entry, db):
+    """Test POST /projects/{project_id}/entries/search with both source_created_at and source_updated_at filters."""
     entry = setup_entry
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
 
-    # Update the entry
-    update_data = {"title": "Updated for combined test"}
-    update_response = client.put(f"/entries/{entry.id}", json=update_data)
-    assert update_response.status_code == 200
-    updated_entry = update_response.json()
-
-    # Get dates
-    entry_created_at = datetime.fromisoformat(
-        entry.created_at.isoformat().replace("+00:00", "")
-    )
-    entry_updated_at = datetime.fromisoformat(
-        updated_entry["updated_at"].replace("Z", "+00:00")
-    )
+    # Set specific source_created_at and source_updated_at dates for the entry
+    entry_source_created_at = datetime(2025, 11, 1, 12, 0, 0, tzinfo=timezone.utc)
+    entry_source_updated_at = datetime(2025, 11, 2, 12, 0, 0, tzinfo=timezone.utc)
+    entry.source_created_at = entry_source_created_at
+    entry.source_updated_at = entry_source_updated_at
+    db.commit()
+    db.refresh(entry)
 
     # Search with both filters
-    created_from = (entry_created_at - timedelta(days=1)).isoformat() + "Z"
-    created_to = (entry_created_at + timedelta(days=1)).isoformat() + "Z"
+    created_from = (
+        (entry_source_created_at - timedelta(days=1)).isoformat().replace("+00:00", "Z")
+    )
+    created_to = (
+        (entry_source_created_at + timedelta(days=1)).isoformat().replace("+00:00", "Z")
+    )
     updated_from = (
-        (entry_updated_at - timedelta(days=1)).isoformat().replace("+00:00", "Z")
+        (entry_source_updated_at - timedelta(days=1)).isoformat().replace("+00:00", "Z")
     )
     updated_to = (
-        (entry_updated_at + timedelta(days=1)).isoformat().replace("+00:00", "Z")
+        (entry_source_updated_at + timedelta(days=1)).isoformat().replace("+00:00", "Z")
     )
 
     search_filters = {
-        "created_at": {"from": created_from, "to": created_to},
-        "updated_at": {"from": updated_from, "to": updated_to},
+        "source_created_at": {"from": created_from, "to": created_to},
+        "source_updated_at": {"from": updated_from, "to": updated_to},
     }
 
     response = client.post(
@@ -532,3 +538,199 @@ def test_search_entries_combined_date_range_filters(client, setup_entry):
     assert "items" in data
     assert len(data["items"]) >= 1
     assert any(item["id"] == str(entry.id) for item in data["items"])
+
+
+def test_search_entries_by_source_created_at_date_range_comprehensive(
+    client, setup_project, setup_source, setup_source_author, db
+):
+    """Test source_created_at date range filtering with entries created at specific dates."""
+    from datetime import datetime, timezone
+    from uuid import uuid4
+    from app.models.entry import Entry
+
+    project = setup_project
+    source = setup_source
+    source_author = setup_source_author
+
+    # Create entries with specific source_created_at dates
+    # Entry 1: Inside the range (2025-11-01)
+    entry1_date = datetime(2025, 11, 1, 12, 0, 0, tzinfo=timezone.utc)
+    entry1 = Entry(
+        title="Entry 1 - Inside Range",
+        body="Test body",
+        source_id=source.id,
+        external_id=str(uuid4()),
+        tags=["test"],
+        source_author_id=source_author.id,
+        project_id=project.id,
+        source_created_at=entry1_date,
+    )
+    db.add(entry1)
+    db.commit()
+    db.refresh(entry1)
+
+    # Entry 2: Inside the range (2025-11-02)
+    entry2_date = datetime(2025, 11, 2, 12, 0, 0, tzinfo=timezone.utc)
+    entry2 = Entry(
+        title="Entry 2 - Inside Range",
+        body="Test body",
+        source_id=source.id,
+        external_id=str(uuid4()),
+        tags=["test"],
+        source_author_id=source_author.id,
+        project_id=project.id,
+        source_created_at=entry2_date,
+    )
+    db.add(entry2)
+    db.commit()
+    db.refresh(entry2)
+
+    # Entry 3: Before the range (2025-10-29)
+    entry3_date = datetime(2025, 10, 29, 12, 0, 0, tzinfo=timezone.utc)
+    entry3 = Entry(
+        title="Entry 3 - Before Range",
+        body="Test body",
+        source_id=source.id,
+        external_id=str(uuid4()),
+        tags=["test"],
+        source_author_id=source_author.id,
+        project_id=project.id,
+        source_created_at=entry3_date,
+    )
+    db.add(entry3)
+    db.commit()
+    db.refresh(entry3)
+
+    # Entry 4: After the range (2025-11-05)
+    entry4_date = datetime(2025, 11, 5, 12, 0, 0, tzinfo=timezone.utc)
+    entry4 = Entry(
+        title="Entry 4 - After Range",
+        body="Test body",
+        source_id=source.id,
+        external_id=str(uuid4()),
+        tags=["test"],
+        source_author_id=source_author.id,
+        project_id=project.id,
+        source_created_at=entry4_date,
+    )
+    db.add(entry4)
+    db.commit()
+    db.refresh(entry4)
+
+    # Entry 5: At the start boundary (2025-10-30T00:00:00Z)
+    entry5_date = datetime(2025, 10, 30, 0, 0, 0, tzinfo=timezone.utc)
+    entry5 = Entry(
+        title="Entry 5 - Start Boundary",
+        body="Test body",
+        source_id=source.id,
+        external_id=str(uuid4()),
+        tags=["test"],
+        source_author_id=source_author.id,
+        project_id=project.id,
+        source_created_at=entry5_date,
+    )
+    db.add(entry5)
+    db.commit()
+    db.refresh(entry5)
+
+    # Entry 6: At the end boundary (2025-11-04T23:59:59Z)
+    entry6_date = datetime(2025, 11, 4, 23, 59, 59, tzinfo=timezone.utc)
+    entry6 = Entry(
+        title="Entry 6 - End Boundary",
+        body="Test body",
+        source_id=source.id,
+        external_id=str(uuid4()),
+        tags=["test"],
+        source_author_id=source_author.id,
+        project_id=project.id,
+        source_created_at=entry6_date,
+    )
+    db.add(entry6)
+    db.commit()
+    db.refresh(entry6)
+
+    # Test the exact date range provided by the user
+    search_filters = {
+        "source_created_at": {
+            "from": "2025-10-30T00:00:00Z",
+            "to": "2025-11-04T23:59:59Z",
+        },
+    }
+
+    response = client.post(
+        f"/projects/{project.id}/entries/search", json=search_filters
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+
+    # Get the IDs of returned entries
+    returned_ids = {item["id"] for item in data["items"]}
+
+    # Entries that should be included (inside range or at boundaries)
+    expected_ids = {
+        str(entry1.id),  # 2025-11-01 - inside
+        str(entry2.id),  # 2025-11-02 - inside
+        str(entry5.id),  # 2025-10-30T00:00:00Z - start boundary
+        str(entry6.id),  # 2025-11-04T23:59:59Z - end boundary
+    }
+
+    # Entries that should NOT be included (outside range)
+    excluded_ids = {
+        str(entry3.id),  # 2025-10-29 - before
+        str(entry4.id),  # 2025-11-05 - after
+    }
+
+    # Verify all expected entries are in the results
+    assert expected_ids.issubset(
+        returned_ids
+    ), f"Expected entries {expected_ids} not all in results {returned_ids}"
+
+    # Verify excluded entries are NOT in the results
+    assert not excluded_ids.intersection(
+        returned_ids
+    ), f"Excluded entries {excluded_ids} found in results {returned_ids}"
+
+    # Test that entries before the range are excluded
+    search_filters_before = {
+        "source_created_at": {
+            "from": "2025-10-25T00:00:00Z",
+            "to": "2025-10-29T23:59:59Z",
+        },
+    }
+
+    response = client.post(
+        f"/projects/{project.id}/entries/search", json=search_filters_before
+    )
+    assert response.status_code == 200
+    data = response.json()
+    returned_ids_before = {item["id"] for item in data["items"]}
+    assert str(entry3.id) in returned_ids_before  # Entry 3 should be in this range
+    assert (
+        str(entry1.id) not in returned_ids_before
+    )  # Entry 1 should NOT be in this range
+    assert (
+        str(entry2.id) not in returned_ids_before
+    )  # Entry 2 should NOT be in this range
+
+    # Test that entries after the range are excluded
+    search_filters_after = {
+        "source_created_at": {
+            "from": "2025-11-05T00:00:00Z",
+            "to": "2025-11-10T23:59:59Z",
+        },
+    }
+
+    response = client.post(
+        f"/projects/{project.id}/entries/search", json=search_filters_after
+    )
+    assert response.status_code == 200
+    data = response.json()
+    returned_ids_after = {item["id"] for item in data["items"]}
+    assert str(entry4.id) in returned_ids_after  # Entry 4 should be in this range
+    assert (
+        str(entry1.id) not in returned_ids_after
+    )  # Entry 1 should NOT be in this range
+    assert (
+        str(entry2.id) not in returned_ids_after
+    )  # Entry 2 should NOT be in this range

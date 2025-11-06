@@ -32,6 +32,7 @@ class Entry(Base, TimestampMixin, SoftDeleteMixin):
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
     source_created_at = Column(DateTime, nullable=True)
     source_updated_at = Column(DateTime, nullable=True)
+    last_update_created_at = Column(DateTime, nullable=True)
 
     # Relationships
     source_author = relationship(

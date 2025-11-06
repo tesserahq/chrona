@@ -7,7 +7,7 @@ from app.models.project import Project
 from app.models.import_request_item import ImportRequestItem
 from app.schemas.project_import import ImportItemData
 from app.schemas.author import AuthorCreate
-from app.schemas.entry import EntryCreate
+from app.schemas.entry import EntryCreate, EntryUpdate
 from app.schemas.entry_update import EntryUpdateCreate
 from app.schemas.import_request_item import ImportRequestItemUpdate
 from app.services.author_service import AuthorService
@@ -76,6 +76,14 @@ class ProcessImportItemCommand:
             # Create entry updates if any
             entry_updates = self._create_entry_updates(
                 item_data, entry.id, project.workspace_id, import_request_item.source_id  # type: ignore
+            )
+
+            # Update the entry with the last entry updated at
+            self.entry_service.update_entry(
+                entry.id,
+                EntryUpdate(
+                    last_update_created_at=self._last_update_created_at(entry_updates),
+                ),
             )
 
             return {
@@ -297,3 +305,11 @@ class ProcessImportItemCommand:
             return datetime.fromisoformat(datetime_str)
         except (ValueError, TypeError):
             return None
+
+    def _last_update_created_at(self, entry_updates: list) -> datetime | None:
+        """Get the last entry updated at from the entry updates."""
+
+        if not entry_updates:
+            return None
+
+        return max(entry_update.source_created_at for entry_update in entry_updates)

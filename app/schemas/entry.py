@@ -48,6 +48,11 @@ class EntryBase(BaseModel):
         description="The date and time the entry was updated in the source system.",
     )
 
+    last_update_created_at: Optional[datetime] = Field(
+        None,
+        description="The date and time the last entry update was created.",
+    )
+
 
 class EntryCreate(EntryBase):
     pass
@@ -65,6 +70,7 @@ class EntryUpdate(BaseModel):
     source_assignee_id: Optional[UUID] = None
     source_created_at: Optional[datetime] = None
     source_updated_at: Optional[datetime] = None
+    last_update_created_at: Optional[datetime] = None
 
 
 class EntryInDB(EntryBase):
@@ -164,13 +170,17 @@ class EntrySearchFilters(BaseModel):
         None,
         description="Filter by tags. Can be a list of tags (finds entries with ANY of these tags) or a SearchOperator.",
     )
-    created_at: Optional[Union[datetime, SearchOperator, DateRangeFilter]] = Field(
-        None,
-        description="Filter by entry creation date. Can be a direct datetime value, a SearchOperator with >=, <=, etc., or a DateRangeFilter with 'from' and 'to' fields.",
+    source_created_at: Optional[Union[datetime, SearchOperator, DateRangeFilter]] = (
+        Field(
+            None,
+            description="Filter by entry source creation date. Can be a direct datetime value, a SearchOperator with >=, <=, etc., or a DateRangeFilter with 'from' and 'to' fields.",
+        )
     )
-    updated_at: Optional[Union[datetime, SearchOperator, DateRangeFilter]] = Field(
-        None,
-        description="Filter by entry update date. Can be a direct datetime value, a SearchOperator with >=, <=, etc., or a DateRangeFilter with 'from' and 'to' fields.",
+    source_updated_at: Optional[Union[datetime, SearchOperator, DateRangeFilter]] = (
+        Field(
+            None,
+            description="Filter by entry source update date. Can be a direct datetime value, a SearchOperator with >=, <=, etc., or a DateRangeFilter with 'from' and 'to' fields.",
+        )
     )
 
 
